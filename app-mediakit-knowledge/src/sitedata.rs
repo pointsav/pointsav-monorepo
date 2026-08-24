@@ -12,10 +12,15 @@ use std::path::Path;
 use serde::Deserialize;
 
 /// A category from `categories.yaml` — `id` is the dir/route, `name` is display.
+/// `kind` is `"topic"` or `"guide"` — the sidebar's section-grouping field
+/// (added 2026-08-04; see `naming-convention.md`'s categories.yaml decision
+/// log). Defaults to `"topic"` when absent (older/other wikis' categories.yaml
+/// files may not carry it yet) — never silently drops a category from the nav.
 #[derive(Debug, Clone)]
 pub struct Category {
     pub id: String,
     pub name: String,
+    pub kind: String,
     pub order: i64,
 }
 
@@ -30,8 +35,14 @@ struct CatEntry {
     id: String,
     #[serde(default)]
     name: String,
+    #[serde(default = "default_kind")]
+    kind: String,
     #[serde(default)]
     order: i64,
+}
+
+fn default_kind() -> String {
+    "topic".to_string()
 }
 
 /// Load `categories.yaml` from the mount root, sorted by `order`. Empty if absent.
@@ -48,6 +59,7 @@ pub fn load_categories(root: &Path) -> Vec<Category> {
         .map(|c| Category {
             id: c.id,
             name: c.name,
+            kind: c.kind,
             order: c.order,
         })
         .collect();
@@ -100,6 +112,19 @@ mod tests {
         // Absent file → empty (graceful fallback).
         let empty = tempfile::tempdir().unwrap();
         assert!(load_categories(empty.path()).is_empty());
+    }
+
+    #[test]
+    fn kind_defaults_to_topic_when_absent_and_reads_guide_when_present() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("categories.yaml"),
+            "categories:\n  - id: architecture\n    name: \"How It's Built\"\n    order: 1\n  - id: how-to\n    name: \"How You Run It\"\n    kind: guide\n    order: 2\n",
+        )
+        .unwrap();
+        let cats = load_categories(dir.path());
+        assert_eq!(cats[0].kind, "topic"); // no kind: in the YAML — defaults
+        assert_eq!(cats[1].kind, "guide");
     }
 
     #[test]

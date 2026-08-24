@@ -123,6 +123,16 @@ impl Tenant {
         "Provided for information only — not an offer, solicitation, or advice. See Important Information."
     }
 
+    /// One-line site tagline for the footer's brand re-anchor block (re-establishes
+    /// identity once the masthead has scrolled off-screen on a long article).
+    pub fn tagline(&self) -> &'static str {
+        match self {
+            Tenant::Documentation => "Technical records for the PointSav platform.",
+            Tenant::Projects => "Project records for Woodfine Capital Projects Inc.",
+            Tenant::Corporate => "Corporate records for Woodfine Capital Projects Inc.",
+        }
+    }
+
     /// Registered seat of the maintaining entity.
     pub fn seat(&self) -> &'static str {
         match self {

@@ -15,6 +15,11 @@
 
 /* --- Breadcrumb (Home › Category › Article) -------------------------------- */
 .k-breadcrumb {
+  /* Sits directly below the sticky header with no other spacing above it
+     (`.k-page__body`/`.k-shell` carry no top padding) — without its own
+     top margin the breadcrumb text runs flush against the header's bottom
+     border, reading as "bleeding into" the nav line above it. */
+  margin-top: var(--k-space-4);
   margin-bottom: var(--k-space-3);
 }
 .k-breadcrumb__list {
@@ -46,6 +51,54 @@
   color: var(--k-ink-secondary);
   font-weight: var(--k-weight-medium);
 }
+
+/* --- JOURNAL masthead (SPEC-journal-wiki-render-contract.md §5 item 1) ---- */
+.k-masthead { padding-block: var(--k-space-4) var(--k-space-5); }
+.k-masthead__title {
+  font-family: var(--k-title-font);
+  font-size: var(--k-title-fs);
+  font-weight: var(--k-weight-bold);
+  line-height: var(--k-leading-tight);
+  letter-spacing: -0.015em;
+  color: var(--k-ink);
+  margin: 0 0 var(--k-space-2);
+}
+.k-masthead__authors {
+  margin: 0 0 var(--k-space-1);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-sm);
+  color: var(--k-ink-secondary);
+}
+.k-masthead__author-sep { color: var(--k-ink-muted); }
+.k-masthead__affiliation {
+  /* Superscript with no left margin sits flush against the author name
+     (e.g. "Test AuthorTest Org") — found via print-mode screenshot review. */
+  margin-left: 0.2em;
+  font-size: 0.75em;
+  color: var(--k-ink-muted);
+}
+.k-masthead__correspondence {
+  margin: 0;
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-sm);
+  color: var(--k-ink-muted);
+}
+
+/* --- JOURNAL research pages (/research/{slug}, /research/{slug}/full) ---- */
+.k-research__abstract {
+  margin-top: var(--k-space-4);
+  padding-top: var(--k-space-4);
+  border-top: 1px solid var(--k-border-subtle);
+}
+.k-research__abstract h2 {
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--k-tracking-caps);
+  color: var(--k-ink-muted);
+  margin: 0 0 var(--k-space-2);
+}
+.k-research__fulltext-link { margin-top: var(--k-space-5); }
 
 /* --- Article shell -------------------------------------------------------- */
 .k-article {
@@ -88,6 +141,39 @@
 .k-article__sha { font-family: var(--k-font-mono, monospace); font-size: 0.9em; }
 .k-article__lang { font-family: var(--k-font-sans); }
 
+/* Prev/next article pager (same category, title-sorted) — a real UX-review
+   finding: reading flow was strictly article -> back to category -> next
+   article, with no direct link between adjacent articles. */
+.k-article-pager {
+  display: flex;
+  gap: var(--k-space-4);
+  margin: var(--k-space-6) 0;
+  padding-top: var(--k-space-4);
+  border-top: 1px solid var(--k-border);
+}
+.k-article-pager__link {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--k-space-1);
+  padding: var(--k-space-3) var(--k-space-4);
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-md);
+  color: inherit;
+}
+.k-article-pager__link:hover { border-color: var(--k-accent); }
+.k-article-pager__link--next { text-align: right; margin-left: auto; }
+.k-article-pager__dir {
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-sm);
+  color: var(--k-ink-muted);
+}
+.k-article-pager__title {
+  font-family: var(--k-font-sans);
+  font-weight: var(--k-weight-medium);
+  color: var(--k-accent);
+}
+
 /* Point-in-time "as-of" banner (historical revision) */
 .k-asof {
   margin: 0 0 var(--k-space-5);
@@ -119,6 +205,24 @@
   border-bottom: 1px solid var(--k-heading-rule);
 }
 
+/* Content-type badge next to an article H1 — currently only "Index"/"Índice"
+   for Index Topics. No icon, no color block — matches the site's
+   understated register (plain text, same visual weight as a small eyebrow). */
+.k-content-badge {
+  display: inline-block;
+  margin-left: var(--k-space-3);
+  padding: 0.15em 0.5em;
+  vertical-align: middle;
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-2xs);
+  font-weight: var(--k-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--k-tracking-caps);
+  color: var(--k-ink-muted);
+  border: 1px solid var(--k-border-light);
+  border-radius: var(--k-radius-sm);
+}
+
 /* --- Prose column --------------------------------------------------------- */
 /* Fills the content column (Wikipedia-style full width). A measure is applied
    only to running paragraphs for readability, not to tables/code/figures. */
@@ -147,6 +251,14 @@
   padding-bottom: 0.25em;
   border-bottom: 1px solid var(--k-heading-rule);
   scroll-margin-top: calc(var(--k-header-height) + var(--k-space-4));
+}
+/* First heading right after the masthead (JOURNAL research pages) or right
+   at the top of .k-prose shouldn't carry its full top margin — stacked with
+   the masthead's own bottom padding, it read as an oversized blank gap
+   before the first section (found via Wikipedia print-mode comparison). */
+.k-prose > h2:first-child,
+.k-prose > h3:first-child {
+  margin-top: 0;
 }
 .k-prose h3 {
   font-family: var(--k-title-font);
@@ -445,9 +557,131 @@
   font-weight: var(--k-weight-semibold);
   text-transform: uppercase;
   letter-spacing: var(--k-tracking-caps);
-  color: var(--k-accent);
-  margin-bottom: var(--k-space-1);
+  color: var(--k-ink-muted);
+  margin-bottom: var(--k-space-2);
 }
+/* index_topic_header() (layout.rs) returns a bare fragment with no
+   .k-catpage wrapper — this page type otherwise loses the top padding every
+   other page type gets via `.k-home, .k-catpage { padding-block: ... }`
+   (the matching *bottom* padding was already re-added for the same reason,
+   see the .k-index-topic rule above). Child-combinator-scoped deliberately:
+   on every other page type the eyebrow is nested inside .k-catpage, which
+   already has its own top padding, so this must not double up there. */
+.k-page__body > .k-catpage__eyebrow {
+  margin-top: var(--k-space-5);
+}
+
+/* ========================================================================== */
+/* Index Topic — curated category hub (Wikipedia Portal-namespace "selected    */
+/* article" register: one highlighted pick + calm annotated link lists, not   */
+/* a second homepage).                                                        */
+/* ========================================================================== */
+
+/* .k-index-topic is the real outer container on this page — .k-catpage only
+   survives as the small eyebrow label above it, not the wrapper — so the
+   bottom-spacing convention .k-home/.k-catpage get (padding-block, 48px
+   bottom) needs its own rule here, or content bleeds straight into the
+   Important Information band with no breathing room. */
+.k-index-topic {
+  padding-block-end: var(--k-space-7);
+}
+
+/* Safety-net link back to the flat article list (`?view=all`) — always
+   present so drift between the curated groups and the category's real
+   membership can never make an article unreachable by browsing. */
+.k-index-topic__see-all {
+  margin: 0 0 var(--k-space-5);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-sm);
+  color: var(--k-ink-muted);
+}
+.k-index-topic__see-all a { color: var(--k-ink-secondary); }
+.k-index-topic__see-all a:hover { color: var(--k-accent); }
+
+.k-index-topic__start-here {
+  display: block;
+  margin: var(--k-space-5) 0 var(--k-space-6);
+  padding: var(--k-space-4) var(--k-space-5);
+  border: 1px solid var(--k-border-light);
+  border-left: 3px solid var(--k-accent);
+  border-radius: var(--k-radius-md);
+  background: var(--k-surface-sunken);
+}
+.k-index-topic__start-here-eyebrow {
+  display: block;
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-2xs);
+  font-weight: var(--k-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--k-tracking-caps);
+  color: var(--k-accent);
+  margin-bottom: var(--k-space-2);
+}
+.k-index-topic__start-here .k-prose { margin: 0; }
+
+.k-index-group {
+  margin-top: var(--k-space-7);
+  padding-top: var(--k-space-5);
+  border-top: 1px solid var(--k-border-subtle);
+}
+.k-index-group:first-of-type {
+  margin-top: var(--k-space-6);
+  padding-top: 0;
+  border-top: none;
+}
+.k-index-group__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--k-space-2);
+  margin-bottom: var(--k-space-2);
+}
+.k-index-group__title {
+  font-family: var(--k-title-font);
+  font-size: var(--k-h2-fs);
+  font-weight: var(--k-weight-semibold);
+  color: var(--k-ink);
+  margin: 0;
+}
+.k-index-group__count {
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-xs);
+  color: var(--k-ink-muted);
+  white-space: nowrap;
+}
+.k-index-group__intro {
+  margin-bottom: var(--k-space-3);
+  color: var(--k-ink-secondary);
+}
+
+/* Annotated member link list — calm and editorial, not a SaaS list
+   component: generous line-height, a subtle rule between entries, an
+   understated hover state. */
+.k-index-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.k-index-list__item {
+  padding: var(--k-space-3) 0;
+  border-bottom: 1px solid var(--k-border-subtle);
+  line-height: var(--k-leading-normal);
+}
+.k-index-list__item:last-child { border-bottom: none; }
+.k-index-list__link {
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-md);
+  font-weight: var(--k-weight-medium);
+  color: var(--k-link);
+}
+.k-index-list__link:hover { color: var(--k-accent); text-decoration: underline; }
+.k-index-list__annotation {
+  display: block;
+  margin-top: var(--k-space-1);
+  color: var(--k-ink-muted);
+  font-size: var(--k-text-sm);
+}
+
+.k-index-topic__tail { margin-top: var(--k-space-7); }
 
 /* --- Search page ---------------------------------------------------------- */
 /* No on-page search form — the header search bar carries the query (it echoes
@@ -557,6 +791,15 @@
 .k-prose .anchor {
   scroll-margin-top: calc(var(--k-header-height) + var(--k-space-5));
   text-decoration: none;
+  /* Landing on a #heading-id URL (a TOC link, or any external link into a
+     specific section) programmatically focuses this anchor, which counts as
+     :focus-visible in every major browser — without this, the browser's
+     default focus outline drew a stray rectangle right next to the § mark
+     for a moment (a real bug report: "square box flashes beside the section
+     symbol"). The §-turns-accent-colored treatment below is already a real,
+     visible focus indicator, so the native outline is redundant, not needed
+     for accessibility here. */
+  outline: none;
 }
 .k-prose :is(h2, h3, h4) .anchor::before {
   content: "\00a7";                    /* § — section mark, records register */
@@ -582,10 +825,45 @@
   text-decoration: none;
 }
 
+/* --- Geospatial research papers (SPEC-journal-wiki-render-contract.md §10) -
+   .full-bleed / .wide figure-width classes, scoped to .k-research--geospatial
+   so an ordinary article accidentally using either class is unaffected.
+   NOT browser-verified (no live geospatial paper content exists yet to check
+   against — see research_fulltext()'s doc comment). .wide is a conservative,
+   low-risk column-width increase; .full-bleed is currently only "fills the
+   prose column" (max-width: 100%), not a true viewport-width grid breakout
+   past the sidebar — that needs .k-shell grid restructuring this pass didn't
+   attempt without something real to visually verify it against. */
+.k-research--geospatial .k-prose figure.wide {
+  max-width: calc(var(--k-prose-measure) * 1.5);
+}
+.k-research--geospatial .k-prose figure.full-bleed {
+  max-width: 100%;
+}
+.k-research--geospatial .k-prose figure.wide img,
+.k-research--geospatial .k-prose figure.full-bleed img {
+  width: 100%;
+  height: auto;
+}
+.k-research--geospatial .k-prose figcaption {
+  font-size: 0.875rem;
+  color: var(--k-ink-muted);
+  margin-top: var(--k-space-2);
+}
+
 /* --- Print ---------------------------------------------------------------- */
 @media print {
   .k-codeblock__copy { display: none !important; }
   .k-prose pre { border: 1px solid #999; }
   .k-prose { max-width: none; }
   .k-prose .anchor::before { display: none; }
+
+  /* Stronger section-rule contrast than the on-screen hairline — matches
+     Wikipedia's bolder print hierarchy (found via direct comparison against
+     a real Wikipedia print render). --k-heading-rule is a light gray on
+     screen; on paper, a near-black rule reads as real structure instead of
+     a faint suggestion of one. */
+  .k-prose h2 { border-bottom: 1px solid #000; }
+  .k-masthead__title,
+  .k-article__title { border-bottom: 2px solid #000; }
 }

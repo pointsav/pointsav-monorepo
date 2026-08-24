@@ -74,9 +74,24 @@ pub fn file_history(repo_root: &Path, rel: &Path, limit: usize) -> Vec<Revision>
     out
 }
 
+/// `true` iff `s` is a plausible (possibly abbreviated) commit SHA — 7 to 40
+/// hex digits, nothing else. The engine only ever *generates* full-oid links
+/// (`Revision.sha`), so this is the entire legitimate input space; anything
+/// else (a git revspec like `HEAD~3`, `main@{upstream}`, or the `:/<regex>`
+/// commit-message-search syntax) is unintended surface for a public
+/// `?rev=`/`?rev=` query param and is rejected before it ever reaches git2's
+/// `revparse_single`, which accepts the full revspec grammar.
+fn looks_like_sha(s: &str) -> bool {
+    (7..=40).contains(&s.len()) && s.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
 /// The diff commit `sha` made to `rel` (vs its first parent; whole file for a
-/// root commit). Returns None on any git error.
+/// root commit). Returns None on any git error, or if `sha` isn't a
+/// plausible commit SHA.
 pub fn file_diff(repo_root: &Path, rel: &Path, sha: &str) -> Option<FileDiff> {
+    if !looks_like_sha(sha) {
+        return None;
+    }
     let repo = Repository::open(repo_root).ok()?;
     let commit = repo.revparse_single(sha).ok()?.peel_to_commit().ok()?;
     let tree = commit.tree().ok()?;
@@ -114,8 +129,12 @@ pub fn file_diff(repo_root: &Path, rel: &Path, sha: &str) -> Option<FileDiff> {
 
 /// The content of `rel` as it stood at commit `sha`, plus that commit's date
 /// (`YYYY-MM-DD`). Used by the point-in-time "as-of" article view. None on any
-/// git error or if the file did not exist at that revision.
+/// git error, if `sha` isn't a plausible commit SHA, or if the file did not
+/// exist at that revision.
 pub fn file_at_rev(repo_root: &Path, rel: &Path, sha: &str) -> Option<(String, String)> {
+    if !looks_like_sha(sha) {
+        return None;
+    }
     let repo = Repository::open(repo_root).ok()?;
     let commit = repo.revparse_single(sha).ok()?.peel_to_commit().ok()?;
     let tree = commit.tree().ok()?;
@@ -166,4 +185,47 @@ fn iso_date(secs: i64) -> String {
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = if m <= 2 { y + 1 } else { y };
     format!("{:04}-{:02}-{:02}", y, m, d)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn looks_like_sha_accepts_full_and_abbreviated_hex() {
+        assert!(looks_like_sha("1234567")); // 7 chars — the floor
+        assert!(looks_like_sha("0123456789abcdef0123456789abcdef01234567")); // 40 chars — a full oid
+        assert!(looks_like_sha("deadbeef"));
+    }
+
+    #[test]
+    fn looks_like_sha_rejects_git_revspec_syntax() {
+        assert!(!looks_like_sha("HEAD~3"));
+        assert!(!looks_like_sha("main@{upstream}"));
+        assert!(!looks_like_sha(":/some pattern"));
+        assert!(!looks_like_sha("HEAD"));
+    }
+
+    #[test]
+    fn looks_like_sha_rejects_too_short_or_too_long() {
+        assert!(!looks_like_sha("abc123")); // 6 chars, below the 7 floor
+        assert!(!looks_like_sha(&"a".repeat(41))); // above the 40 ceiling
+        assert!(!looks_like_sha(""));
+    }
+
+    #[test]
+    fn looks_like_sha_rejects_non_hex_chars() {
+        assert!(!looks_like_sha("123456g")); // 'g' is not hex
+        assert!(!looks_like_sha("HEAD-abc"));
+    }
+
+    #[test]
+    fn file_diff_and_file_at_rev_reject_non_sha_input_before_touching_git() {
+        // repo_root doesn't even need to exist — rejection happens before
+        // Repository::open, proving the guard runs first.
+        let bogus_repo = Path::new("/nonexistent-repo-path-for-test");
+        let rel = Path::new("file.md");
+        assert!(file_diff(bogus_repo, rel, "HEAD~3").is_none());
+        assert!(file_at_rev(bogus_repo, rel, ":/pattern").is_none());
+    }
 }

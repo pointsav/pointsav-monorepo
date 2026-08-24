@@ -1,0 +1,17 @@
+citations:
+  alpha-2020:
+    type: research-paper
+    title: "Alpha Paper"
+    authors: ["A. One"]
+    year: 2020
+    venue: "Venue Alpha"
+    doi: "10.1/alpha"
+    url: https://example.com/alpha
+  beta-2021:
+    type: research-paper
+    title: "Beta Paper"
+    authors: ["B. Two"]
+    year: 2021
+    venue: "Venue Beta"
+    arxiv_id: "2101.00001"
+    url: https://example.com/beta

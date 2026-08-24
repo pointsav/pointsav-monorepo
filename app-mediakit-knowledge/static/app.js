@@ -12,8 +12,12 @@
  *                              <html data-theme="light|dark">.
  *   2. Mobile nav drawer     — open/close, overlay click, Esc, focus trap,
  *                              scroll lock, focus restoration, aria state.
- *   3. P3 scaffolds (STUBS)  — initToc() and initArticleTabs() are wired to
- *                              nothing yet; P3 implements them. Clearly marked.
+ *   3. Article TOC scroll-spy — initToc() marks the current section's link
+ *                              active as the reader scrolls (IntersectionObserver).
+ *   4. Search typeahead      — initSearchSuggest() debounces `/api/search-
+ *                              suggest`, keyboard-navigable, `/`/Ctrl+K shortcut.
+ *   5. initArticleTabs() remains a P3 STUB — its `[data-k-tabs]` mount point
+ *      is not emitted by any template yet; wired here for shape only.
  *
  * Selectors match the k-* class/id manifest (deliverable D).
  * ========================================================================== */
@@ -23,6 +27,7 @@
   var STORAGE_KEY = "k-theme";
   var THEME_LIGHT = "light";
   var THEME_DARK = "dark";
+  var NAV_STORAGE_KEY = "k-nav";
   var SCROLL_LOCK_CLASS = "k-scroll-lock";
   var OPEN_CLASS = "is-open";
 
@@ -103,6 +108,43 @@
       if (mq.addEventListener) mq.addEventListener("change", onOsChange);
       else if (mq.addListener) mq.addListener(onOsChange); /* Safari <14 */
     }
+  }
+
+  function readStoredNav() {
+    try { return window.localStorage.getItem(NAV_STORAGE_KEY); }
+    catch (e) { return null; }
+  }
+  function writeStoredNav(value) {
+    try { window.localStorage.setItem(NAV_STORAGE_KEY, value); }
+    catch (e) { /* private mode / disabled storage — non-fatal */ }
+  }
+
+  /* ------------------------------------------------------------------------ *
+   * 1b. Reading-page sidebar collapse (Vector 2022 pattern)
+   * ------------------------------------------------------------------------ *
+   * Independent of the mobile drawer below — invisible under it (.k-sidebar
+   * is already display:none at the drawer breakpoint). Collapsed is the CSS
+   * default (.k-sidebar--reading .k-sidenav__browse{display:none} in
+   * app.css); a reader who explicitly opens it gets that choice persisted
+   * (localStorage 'k-nav') and pre-painted via the <head> guard in
+   * doc_head(), mirroring initTheme's fail-open try/catch idiom above. A
+   * no-op when the toggle isn't on the page (every page except a reading
+   * page with a browse nav to collapse — see sidebar() in layout.rs).
+   */
+  function initNavCollapse() {
+    var toggle = qs(".k-nav-toggle");
+    if (!toggle) return;
+    var setOpen = function (open) {
+      if (open) root.setAttribute("data-nav", "open");
+      else root.removeAttribute("data-nav");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    };
+    setOpen(readStoredNav() === "open");
+    on(toggle, "click", function () {
+      var open = root.getAttribute("data-nav") === "open";
+      setOpen(!open);
+      writeStoredNav(!open ? "open" : "collapsed");
+    });
   }
 
   /* ------------------------------------------------------------------------ *
@@ -236,17 +278,174 @@
    * shape and the integrator can confirm the mount points exist.
    */
 
-  /* STUB (P3): build the left-rail Table of Contents from article headings.
-   * Expected mount: [data-k-toc]  (rendered by the article template in P3).
-   * P3 responsibilities: read h2/h3 within the article body, emit nav links,
-   * scroll-spy the active section, honor prefers-reduced-motion. */
+  /* Scroll-spy the article TOC (sidebar `.k-toc`, rendered by `toc_nav()` in
+   * layout.rs — links already exist, this only tracks reading position).
+   * Real UX-review finding: this was a named, already-invoked stub wired to
+   * `[data-k-toc]`, an attribute the server never emits — the selector never
+   * matched anything, on any page, ever. */
   function initToc() {
-    var mount = qs("[data-k-toc]");
-    if (!mount) return; /* no TOC on this page — expected during P2 */
-    if (window.console && console.debug) {
-      console.debug("[k] initToc: P3 stub — TOC wiring not yet implemented.");
+    var toc = qs(".k-toc");
+    if (!toc) return; /* no TOC on this page (short article, or non-article page) */
+    var links = qsa(".k-toc__link", toc);
+    if (!links.length || !("IntersectionObserver" in window)) return;
+
+    var headings = [];
+    var linkByHref = {};
+    links.forEach(function (link) {
+      var id = link.getAttribute("href").slice(1);
+      var heading = id && document.getElementById(id);
+      if (heading) {
+        headings.push(heading);
+        linkByHref[id] = link;
+      }
+    });
+    if (!headings.length) return;
+
+    var active = null;
+    function setActive(id) {
+      if (id === active) return;
+      if (active && linkByHref[active]) {
+        linkByHref[active].classList.remove("k-toc__link--active");
+        linkByHref[active].removeAttribute("aria-current");
+      }
+      active = id;
+      if (active && linkByHref[active]) {
+        linkByHref[active].classList.add("k-toc__link--active");
+        linkByHref[active].setAttribute("aria-current", "location");
+      }
     }
-    /* P3: populate `mount` here. */
+
+    /* A heading is "current" once it crosses the upper third of the
+     * viewport (matching the sticky header) and hasn't yet reached the
+     * lower third — the same "reading position" window most scroll-spy
+     * implementations use, not literal full-element visibility. */
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        });
+      },
+      { rootMargin: "-15% 0px -70% 0px", threshold: 0 }
+    );
+    headings.forEach(function (h) { observer.observe(h); });
+  }
+
+  /* Search typeahead — `/api/search-suggest?q=`, debounced, keyboard-
+   * navigable. Real UX-review finding: search had no suggestions at all, and
+   * no `/`/Ctrl+K shortcut to reach it. Wires every `.k-search` block on the
+   * page (header + mobile drawer both render one via the same template). */
+  var ACTIVE_CLASS = "is-active";
+
+  function initSearchSuggest() {
+    qsa(".k-search").forEach(wireOneSearchBlock);
+    on(document, "keydown", function (e) {
+      var tag = document.activeElement && document.activeElement.tagName;
+      var editing = tag === "INPUT" || tag === "TEXTAREA" ||
+        (document.activeElement && document.activeElement.isContentEditable);
+      var isShortcut = e.key === "/" ? !editing
+        : (e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey);
+      if (!isShortcut) return;
+      var input = qs(".k-search__input");
+      if (!input) return;
+      e.preventDefault();
+      input.focus();
+      input.select();
+    });
+  }
+
+  function wireOneSearchBlock(block) {
+    var input = qs(".k-search__input", block);
+    var list = qs(".k-search__suggestions", block);
+    if (!input || !list) return;
+
+    var items = [];      /* current <li> elements, in display order */
+    var highlighted = -1;
+    var debounceTimer = null;
+    var inflight = 0;    /* request-id guard against out-of-order responses */
+
+    function close() {
+      list.hidden = true;
+      list.innerHTML = "";
+      items = [];
+      highlighted = -1;
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+    }
+
+    function highlight(index) {
+      if (items[highlighted]) items[highlighted].classList.remove(ACTIVE_CLASS);
+      highlighted = index;
+      if (items[highlighted]) {
+        items[highlighted].classList.add(ACTIVE_CLASS);
+        input.setAttribute("aria-activedescendant", items[highlighted].id);
+      } else {
+        input.removeAttribute("aria-activedescendant");
+      }
+    }
+
+    function render(suggestions) {
+      list.innerHTML = "";
+      items = suggestions.map(function (s, i) {
+        var li = document.createElement("li");
+        li.id = list.id + "-opt-" + i;
+        li.setAttribute("role", "option");
+        li.className = "k-search__suggestion";
+        var a = document.createElement("a");
+        a.href = "/wiki/" + encodeURIComponent(s.slug);
+        a.textContent = s.title;   /* textContent — never innerHTML on server data */
+        a.tabIndex = -1;
+        li.appendChild(a);
+        return li;
+      });
+      items.forEach(function (li) { list.appendChild(li); });
+      highlighted = -1;
+      list.hidden = items.length === 0;
+      input.setAttribute("aria-expanded", String(items.length > 0));
+    }
+
+    on(input, "input", function () {
+      var q = input.value.trim();
+      if (debounceTimer) clearTimeout(debounceTimer);
+      if (!q) { close(); return; }
+      debounceTimer = setTimeout(function () {
+        var requestId = ++inflight;
+        fetch("/api/search-suggest?q=" + encodeURIComponent(q))
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (suggestions) {
+            if (requestId !== inflight) return; /* a newer keystroke already fired */
+            render(suggestions || []);
+          })
+          .catch(function () { /* network hiccup — leave the dropdown as-is */ });
+      }, 150);
+    });
+
+    on(input, "keydown", function (e) {
+      if (list.hidden && e.key !== "Escape") return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        highlight(Math.min(highlighted + 1, items.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        highlight(Math.max(highlighted - 1, -1));
+      } else if (e.key === "Enter" && highlighted >= 0) {
+        e.preventDefault();
+        var link = items[highlighted].querySelector("a");
+        if (link) window.location.href = link.href;
+      } else if (e.key === "Escape") {
+        close();
+      }
+    });
+
+    on(document, "click", function (e) {
+      if (!block.contains(e.target)) close();
+    });
+    on(input, "blur", function () {
+      /* Deferred so a click on a suggestion (which blurs the input first)
+       * still registers before the list disappears. */
+      setTimeout(function () {
+        if (!block.contains(document.activeElement)) close();
+      }, 100);
+    });
   }
 
   /* STUB (P3): activate the article action tabs (Read / Notes / History …).
@@ -338,10 +537,12 @@
    * ------------------------------------------------------------------------ */
   function boot() {
     initTheme();
+    initNavCollapse();
     initDrawer();
     initCodeCopy();
     initTables();
-    initToc();          /* stub */
+    initToc();
+    initSearchSuggest();
     initArticleTabs();  /* stub */
   }
 

@@ -33,6 +33,12 @@ pub struct DocRef {
     pub last_edited: Option<String>,
     pub aliases: Vec<String>,
     pub mount_index: usize,
+    /// Set only for Index Topics (`_index.md`/`_index.es.md` files whose
+    /// frontmatter carries `index_type`) — `None` for ordinary articles.
+    pub index_type: Option<String>,
+    /// The category id this Index Topic is the curated hub for. Join key used
+    /// by `app.rs::category_page` to find the Index Topic for a category.
+    pub index_scope: Option<String>,
 }
 
 /// In-memory index of every content file, keyed by `(slug, lang)`.
@@ -73,12 +79,21 @@ impl ContentIndex {
     }
 
     /// Count of English documents in each category (categories with content only).
+    ///
+    /// Excludes each category's own Index Topic file (`_index.md`) from its
+    /// own count — `category_page`/`render_index_topic_category` already
+    /// exclude that same file from the listing itself (`not_own_index_topic`
+    /// in `app.rs`); this count previously disagreed with that listing by one.
     pub fn category_counts(&self) -> std::collections::BTreeMap<String, usize> {
         let mut counts = std::collections::BTreeMap::new();
         for doc in self.documents() {
             if let Some(cat) = doc.category.as_deref() {
                 if !cat.is_empty() && cat != "root" {
-                    *counts.entry(cat.to_string()).or_insert(0) += 1;
+                    let is_own_index_topic =
+                        doc.index_type.is_some() && doc.index_scope.as_deref() == Some(cat);
+                    if !is_own_index_topic {
+                        *counts.entry(cat.to_string()).or_insert(0) += 1;
+                    }
                 }
             }
         }
@@ -109,6 +124,16 @@ impl ContentIndex {
         self.by_alias.get(alias).map(String::as_str)
     }
 
+    /// The English Index Topic (if any) whose `index_scope` matches `category` —
+    /// the hub page `app.rs::category_page` should render in place of the flat
+    /// article list for that category. Linear scan: at the current scale (tens
+    /// of categories) this is cheaper than maintaining a second index that only
+    /// ever holds a handful of entries.
+    pub fn index_topic_for_scope(&self, category: &str) -> Option<&DocRef> {
+        self.documents()
+            .find(|d| d.index_type.is_some() && d.index_scope.as_deref() == Some(category))
+    }
+
     fn insert(&mut self, doc: DocRef) {
         if doc.lang == Lang::En {
             for a in &doc.aliases {
@@ -135,7 +160,7 @@ fn walk_dir(root: &Path, dir: &Path, mount_index: usize, idx: &mut ContentIndex)
                 continue;
             }
             walk_dir(root, &path, mount_index, idx);
-        } else if is_content_file(&name) {
+        } else if is_content_file(&name) || is_index_landing_name(&name) {
             if let Some(doc) = load_ref(root, &path, mount_index) {
                 idx.insert(doc);
             }
@@ -143,14 +168,24 @@ fn walk_dir(root: &Path, dir: &Path, mount_index: usize, idx: &mut ContentIndex)
     }
 }
 
+/// `_index.md`/`_index.es.md` — category/section landing file names. Excluded
+/// from `ContentIndex` by default (see `is_content_file`); `load_ref` lets one
+/// through only when its frontmatter carries `index_type`, making it a
+/// renderable Index Topic instead of inert landing metadata.
+fn is_index_landing_name(name: &str) -> bool {
+    name == "_index.md" || name == "_index.es.md"
+}
+
 /// A content file is a `.md` that is not a repo-meta doc or a section index.
 fn is_content_file(name: &str) -> bool {
     if !name.ends_with(".md") {
         return false;
     }
-    // `_index.md` files are category/section landing metadata, not articles —
-    // they must not count, list, or appear in the guides/browse surfaces.
-    if name == "_index.md" || name == "_index.es.md" {
+    // `_index.md` files are category/section landing metadata, not ordinary
+    // articles — they must not count, list, or appear in the guides/browse
+    // surfaces by default. See `is_index_landing_name` for the Index Topic
+    // carve-out (handled separately in `walk_dir`/`load_ref`, not here).
+    if is_index_landing_name(name) {
         return false;
     }
     // Chrome content, not an article: rendered into the Important Information band.
@@ -178,6 +213,11 @@ fn is_content_file(name: &str) -> bool {
 fn load_ref(root: &Path, path: &Path, mount_index: usize) -> Option<DocRef> {
     let text = std::fs::read_to_string(path).ok()?;
     let doc = frontmatter::parse(&text);
+    let name = path.file_name()?.to_str()?;
+    if is_index_landing_name(name) && doc.frontmatter.index_type.is_none() {
+        // Category-landing metadata, not an Index Topic — stays excluded.
+        return None;
+    }
     let rel = path.strip_prefix(root).unwrap_or(path);
     let lang = detect_lang(path);
     let slug = doc
@@ -205,6 +245,8 @@ fn load_ref(root: &Path, path: &Path, mount_index: usize) -> Option<DocRef> {
         last_edited: doc.frontmatter.last_edited.clone(),
         aliases: doc.frontmatter.aliases.clone(),
         mount_index,
+        index_type: doc.frontmatter.index_type.clone(),
+        index_scope: doc.frontmatter.index_scope.clone(),
     })
 }
 
@@ -275,6 +317,14 @@ pub fn humanize_slug(slug: &str) -> String {
 pub fn load(doc: &DocRef) -> std::io::Result<ParsedDoc> {
     let text = std::fs::read_to_string(&doc.path)?;
     Ok(frontmatter::parse(&text))
+}
+
+/// Like `load`, but preserves HTML comments in the body (see
+/// `frontmatter::parse_raw`) — used for Index Topics, whose structure depends
+/// on comment-delimited blocks that `load`/`parse` would otherwise strip.
+pub fn load_raw(doc: &DocRef) -> std::io::Result<ParsedDoc> {
+    let text = std::fs::read_to_string(&doc.path)?;
+    Ok(frontmatter::parse_raw(&text))
 }
 
 #[cfg(test)]
@@ -355,5 +405,58 @@ mod tests {
         assert!(!is_content_file("important-information.md"));
         assert!(!is_content_file("README.md"));
         assert!(is_content_file("architecture/topic-foo.md"));
+    }
+
+    #[test]
+    fn index_landing_file_excluded_without_index_type() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        write(
+            root,
+            "security/_index.md",
+            "---\ntitle: Security\nslug: security-index\ncategory: security\n---\nLanding text.\n",
+        );
+        write(
+            root,
+            "security/real-article.md",
+            "---\ntitle: Real\nslug: real-article\ncategory: security\n---\nBody\n",
+        );
+        let mounts = MountSet {
+            mounts: vec![super::super::mount::Mount {
+                path: root.to_path_buf(),
+                role: "primary".into(),
+                blueprint_set: vec![],
+            }],
+        };
+        let idx = ContentIndex::build(&mounts);
+        assert_eq!(idx.article_count(), 1); // only real-article — _index.md stays excluded
+        assert!(idx.resolve("security-index", Lang::En).is_none());
+        assert!(idx.index_topic_for_scope("security").is_none());
+    }
+
+    #[test]
+    fn index_landing_file_included_as_index_topic_with_index_type() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        write(
+            root,
+            "security/_index.md",
+            "---\ntitle: Security\nslug: security-index\ncategory: security\nindex_type: thematic\nindex_scope: security\n---\nLanding text.\n",
+        );
+        let mounts = MountSet {
+            mounts: vec![super::super::mount::Mount {
+                path: root.to_path_buf(),
+                role: "primary".into(),
+                blueprint_set: vec![],
+            }],
+        };
+        let idx = ContentIndex::build(&mounts);
+        assert_eq!(idx.article_count(), 1);
+        let doc = idx.resolve("security-index", Lang::En).unwrap();
+        assert_eq!(doc.index_type.as_deref(), Some("thematic"));
+        assert_eq!(doc.index_scope.as_deref(), Some("security"));
+        let found = idx.index_topic_for_scope("security").unwrap();
+        assert_eq!(found.slug, "security-index");
+        assert!(idx.index_topic_for_scope("no-such-category").is_none());
     }
 }

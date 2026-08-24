@@ -8,11 +8,15 @@
 //! repos actually use; unknown keys are ignored so content can carry
 //! editorial metadata the engine does not consume.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Parsed frontmatter. Every field is optional — a file with no frontmatter
 /// yields `Frontmatter::default()`.
-#[derive(Debug, Clone, Default, Deserialize)]
+///
+/// `Serialize` is used by the `?format=json` content-negotiation view on
+/// `GET /wiki/{slug}` (Phase 3.7) — this struct is that response's
+/// `frontmatter` field verbatim.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct Frontmatter {
     pub title: Option<String>,
     pub slug: Option<String>,
@@ -26,6 +30,16 @@ pub struct Frontmatter {
     // as its own field so both can coexist.
     #[serde(default, rename = "type")]
     pub kind: Option<String>,
+    /// Index Topic marker (e.g. `thematic`) — presence, not value, is what makes
+    /// an `_index.md`/`_index.es.md` file renderable content instead of excluded
+    /// category-landing metadata. See `walk.rs::is_content_file`/`load_ref`.
+    #[serde(default)]
+    pub index_type: Option<String>,
+    /// The category id an Index Topic is the curated hub for (e.g. `security`) —
+    /// the join key `app.rs::category_page` uses to find the Index Topic that
+    /// should render in place of the flat article list for that category.
+    #[serde(default)]
+    pub index_scope: Option<String>,
     pub short_description: Option<String>,
     pub last_edited: Option<String>,
     pub editor: Option<String>,
@@ -75,8 +89,16 @@ pub struct Frontmatter {
     pub doi: Option<String>,
 }
 
+impl Frontmatter {
+    /// SPEC §10.1: `paper_class: geospatial` is the only non-default value —
+    /// absent or any other value means the standard single-column layout.
+    pub fn is_geospatial(&self) -> bool {
+        self.paper_class.as_deref() == Some("geospatial")
+    }
+}
+
 /// One JOURNAL paper author (SPEC-journal-wiki-render-contract.md, masthead fields).
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Author {
     pub name: Option<String>,
     pub affiliation: Option<String>,
@@ -87,7 +109,7 @@ pub struct Author {
 }
 
 /// One entry of a `references:` list.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Reference {
     #[serde(default, deserialize_with = "scalar_to_string")]
     pub id: String,
@@ -202,13 +224,32 @@ fn strip_html_comments(md: &str) -> String {
 pub fn parse(text: &str) -> ParsedDoc {
     let (yaml, body) = split(text);
     let body = strip_html_comments(body);
-    let frontmatter = match yaml {
-        Some(y) => serde_yaml::from_str(y).unwrap_or_default(),
-        None => Frontmatter::default(),
-    };
+    let frontmatter = parse_frontmatter(yaml);
     ParsedDoc {
         frontmatter,
         body_md: body,
+    }
+}
+
+/// Like `parse`, but does **not** strip HTML comments from the body. For
+/// content that structurally depends on HTML-comment markers — currently only
+/// Index Topics (`index_topic::parse_index_topic` needs the
+/// `<!-- START-HERE-HIGHLIGHT -->`/`<!-- AUTO-GENERATED MEMBERSHIP -->`
+/// delimiters intact). Ordinary articles use `parse`; this is not a general-
+/// purpose alternative (the search index and `first_body_summary` still
+/// assume comment-stripped bodies elsewhere in the pipeline).
+pub fn parse_raw(text: &str) -> ParsedDoc {
+    let (yaml, body) = split(text);
+    ParsedDoc {
+        frontmatter: parse_frontmatter(yaml),
+        body_md: body.to_string(),
+    }
+}
+
+fn parse_frontmatter(yaml: Option<&str>) -> Frontmatter {
+    match yaml {
+        Some(y) => serde_yaml::from_str(y).unwrap_or_default(),
+        None => Frontmatter::default(),
     }
 }
 
@@ -323,6 +364,32 @@ mod tests {
     }
 
     #[test]
+    fn parse_raw_preserves_html_comments() {
+        let doc = parse_raw(
+            "---\ntitle: T\n---\n<!-- AUTO-GENERATED MEMBERSHIP: DO NOT EDIT BELOW -->\n- a\n<!-- END AUTO-GENERATED -->\n",
+        );
+        assert!(doc.body_md.contains("AUTO-GENERATED MEMBERSHIP"));
+        assert!(doc.body_md.contains("END AUTO-GENERATED"));
+        assert_eq!(doc.frontmatter.title.as_deref(), Some("T"));
+    }
+
+    #[test]
+    fn parses_index_topic_fields() {
+        let doc = parse(
+            "---\ntitle: T\nindex_type: thematic\nindex_scope: security\n---\nbody",
+        );
+        assert_eq!(doc.frontmatter.index_type.as_deref(), Some("thematic"));
+        assert_eq!(doc.frontmatter.index_scope.as_deref(), Some("security"));
+    }
+
+    #[test]
+    fn index_topic_fields_default_absent() {
+        let doc = parse("---\ntitle: X\n---\nbody");
+        assert!(doc.frontmatter.index_type.is_none());
+        assert!(doc.frontmatter.index_scope.is_none());
+    }
+
+    #[test]
     fn journal_fields_default_absent() {
         // A non-JOURNAL doc (no journal fields at all) must still parse cleanly —
         // every new field is optional, matching this struct's existing convention.
@@ -334,5 +401,15 @@ mod tests {
         assert!(!fm.forbidden_terms_cleared);
         assert!(fm.authors.is_empty());
         assert!(fm.keywords.is_empty());
+    }
+
+    #[test]
+    fn is_geospatial_matches_paper_class_exactly() {
+        let mut fm = Frontmatter::default();
+        assert!(!fm.is_geospatial(), "absent paper_class must default to standard");
+        fm.paper_class = Some("standard".to_string());
+        assert!(!fm.is_geospatial());
+        fm.paper_class = Some("geospatial".to_string());
+        assert!(fm.is_geospatial());
     }
 }

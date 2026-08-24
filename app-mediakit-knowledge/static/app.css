@@ -135,6 +135,11 @@ button:disabled { cursor: default; }
   align-self: start;
   max-height: calc(100vh - var(--k-header-height) - var(--k-space-5));
   overflow-y: auto;
+  /* Explicit — setting only overflow-y computes overflow-x to auto too (CSS
+     overflow spec), which was silently clipping/horizontal-scrolling long
+     category labels ("How AI Is Used and Contained", "Glossary and
+     Reference") instead of letting them wrap onto a second line. */
+  overflow-x: visible;
   padding-block: var(--k-space-5) var(--k-space-4);
   font-family: var(--k-font-sans);
   font-size: var(--k-text-sm);
@@ -164,8 +169,17 @@ button:disabled { cursor: default; }
   margin-left: calc(-1 * var(--k-space-2));
   color: var(--k-ink-secondary);
   border-left: 2px solid transparent;
+  /* Explicit, intended wrapping for long category labels — the browser
+     default without these is ambiguous enough to clip/scroll instead. */
+  white-space: normal;
+  word-break: break-word;
 }
 .k-sidenav__link:hover { color: var(--k-accent); border-left-color: var(--k-accent); }
+.k-sidenav__link[aria-current="page"] {
+  color: var(--k-accent);
+  font-weight: var(--k-weight-semibold);
+  border-left-color: var(--k-accent);
+}
 
 /* Article table of contents (in the sticky sidebar, Vector 2022 style). */
 .k-toc__list { list-style: none; margin: 0; padding: 0; }
@@ -179,11 +193,48 @@ button:disabled { cursor: default; }
   line-height: var(--k-leading-snug);
 }
 .k-toc__link:hover { color: var(--k-accent); border-left-color: var(--k-accent); }
+.k-toc__link[aria-current="location"] {
+  color: var(--k-accent);
+  font-weight: var(--k-weight-semibold);
+  border-left-color: var(--k-accent);
+}
 .k-toc__item--sub .k-toc__link {
   padding-left: var(--k-space-5);
   font-size: var(--k-text-xs);
   color: var(--k-ink-muted);
 }
+
+/* Reading-page sidebar collapse (Vector 2022 pattern). `.k-sidebar--reading`
+   is set server-side (see `sidebar()` in layout.rs) on the current-article
+   and as-of-revision views only — every other page type, including Index
+   Topic and category-landing pages, "earns its width" as a browsing surface
+   and never gets this class, so the browse nav stays open there unchanged.
+   Collapsed is the CSS default (no flash on the common path, the opposite of
+   the k-theme guard's problem); the pre-paint guard in doc_head() only
+   matters for a reader who explicitly chose "open" (localStorage key
+   `k-nav`, same fail-open idiom as `k-theme` — see app.js initNavCollapse). */
+.k-nav-toggle {
+  display: none;
+}
+.k-sidebar--reading .k-nav-toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-top: var(--k-space-5);
+  padding: var(--k-space-1) 0 var(--k-space-1) 2px;
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-2xs);
+  font-weight: var(--k-weight-semibold);
+  letter-spacing: var(--k-tracking-caps);
+  text-transform: uppercase;
+  color: var(--k-ink-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.k-sidebar--reading .k-nav-toggle:hover { color: var(--k-accent); }
+.k-sidebar--reading .k-sidenav__browse { display: none; }
+html[data-nav="open"] .k-sidebar--reading .k-sidenav__browse { display: block; }
 
 /* Below the drawer breakpoint the off-canvas nav takes over; collapse to one
    column. Kept in step with the hamburger (≤768px) so there is never a width
@@ -305,6 +356,7 @@ button:disabled { cursor: default; }
 /* Search — centered, light fill, max 480px                                   */
 /* ========================================================================== */
 .k-search {
+  position: relative;
   width: 100%;
   max-width: var(--k-search-max);
 }
@@ -367,6 +419,35 @@ button:disabled { cursor: default; }
 .k-search__button:disabled {
   background: var(--k-border-light);
   color: var(--k-ink-disabled);
+}
+
+.k-search__suggestions {
+  position: absolute;
+  top: calc(100% + var(--k-space-1));
+  left: 0;
+  right: 0;
+  z-index: calc(var(--k-z-header) + 1);
+  margin: 0;
+  padding: var(--k-space-1) 0;
+  list-style: none;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-radius-md);
+  box-shadow: var(--k-shadow-sm);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.k-search__suggestion a {
+  display: block;
+  padding: var(--k-space-2) var(--k-space-3);
+  color: var(--k-ink);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-text-sm);
+}
+.k-search__suggestion.is-active a,
+.k-search__suggestion a:hover {
+  background: var(--k-surface-inset);
+  color: var(--k-accent);
 }
 
 /* ========================================================================== */
@@ -547,15 +628,45 @@ button:disabled { cursor: default; }
 /* ========================================================================== */
 .k-footer {
   flex: 0 0 auto;
-  background: var(--k-footer-bg);
+  /* Elevation — soft upward shadow (now a named token, --k-shadow-footer)
+     + faint top-edge gradient wash (still a literal — no gradient $type
+     precedent in tokens/design-tokens.json yet), giving the footer a
+     distinct plane instead of a flat slab. Values proven on
+     bim.woodfinegroup.com's `.bim-footer` (Playwright-verified 2026-07-16). */
+  background:
+    linear-gradient(180deg, rgba(22, 70, 121, 0.035), transparent 46%),
+    var(--k-footer-bg);
+  box-shadow: var(--k-shadow-footer);
   border-top: 1px solid var(--k-border);
   color: var(--k-ink-secondary);
   font-size: var(--k-text-sm);
+}
+:root[data-theme="dark"] .k-footer {
+  /* Navy wash reads muddy against a dark surface — swap for a light,
+     near-transparent tint (same treatment bim.woodfinegroup.com uses for
+     its own dark-mode footer). */
+  background:
+    linear-gradient(180deg, rgba(180, 197, 213, 0.05), transparent 46%),
+    var(--k-footer-bg);
 }
 .k-footer__inner {
   max-width: var(--k-content-max);
   margin-inline: auto;
   padding: var(--k-gutter-lg) var(--k-gutter) var(--k-gutter);
+}
+.k-footer__brand {
+  margin-bottom: var(--k-gutter-lg);
+}
+.k-footer__brand-name {
+  margin: 0;
+  font-weight: var(--k-weight-semibold);
+  font-size: var(--k-text-sm);
+  color: var(--k-ink);
+}
+.k-footer__brand-tagline {
+  margin: var(--k-space-1) 0 0;
+  color: var(--k-ink-muted);
+  font-size: var(--k-text-xs);
 }
 .k-footer__grid {
   display: grid;
@@ -564,58 +675,78 @@ button:disabled { cursor: default; }
 }
 .k-footer__col { min-width: 0; }
 .k-footer__col-title {
-  margin-bottom: var(--k-space-3);
-  font-size: var(--k-text-2xs);
-  font-weight: var(--k-weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--k-tracking-caps);
+  /* Real heading weight, not a micro-label — the prior all-caps 2xs
+     treatment read as fine print and let the 3 columns run together.
+     Values proven on bim.woodfinegroup.com's `.bim-footer__heading`
+     (Playwright-verified 2026-07-16), now named tokens:
+     --k-text-footer-heading + --k-leading-relaxed (see
+     tokens/design-tokens.json). */
+  margin: 0 0 0.875rem;
+  font-size: var(--k-text-footer-heading);
+  font-weight: var(--k-weight-bold);
+  color: var(--k-ink);
+}
+.k-footer__col-fact {
+  margin: 0 0 var(--k-space-3);
+  font-size: var(--k-text-xs);
   color: var(--k-ink-muted);
 }
-.k-footer__list { display: flex; flex-direction: column; gap: var(--k-space-2); }
+.k-footer__list {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--k-text-sm);
+  line-height: var(--k-leading-relaxed);
+}
+.k-footer__list li { margin-bottom: 0.375rem; }
+.k-footer__list li:last-child { margin-bottom: 0; }
 .k-footer__link {
   color: var(--k-link);
-  font-size: var(--k-text-sm);
+  font-size: inherit;
 }
 .k-footer__link:hover  { color: var(--k-link-hover); }
 .k-footer__link:active { color: var(--k-link-active); }
 .k-footer__link:visited { color: var(--k-link-visited); }
 .k-footer__link:focus-visible { outline: var(--k-focus-outline); outline-offset: 2px; border-radius: var(--k-radius-xs); }
 
-/* Base row — copyright + cities (left) · badges (right). */
-.k-footer__base {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--k-space-3) var(--k-space-5);
+/* Identity bar — 4 stacked rows, per pointsav-design-system's site-footer
+   recipe (dtcg-vault/components/site-footer/recipe.json): locations+badge,
+   copyright, disclaimer, trademark — each its own row rather than one
+   crowded flex row. Token names kept as this wiki's own `--k-*` palette,
+   not the recipe's literal `--ps-*` prefix (same reasoning as the brand
+   block commit: the shared accent scale doesn't apply here). */
+.k-footer__identity {
   margin-top: var(--k-gutter-lg);
   padding-top: var(--k-space-4);
   border-top: 1px solid var(--k-border-subtle);
-  color: var(--k-ink-muted);
-  font-size: var(--k-text-xs);
-}
-.k-footer__meta {
   display: flex;
-  flex-direction: column;               /* cities above the copyright line */
-  align-items: flex-start;
-  gap: var(--k-space-3);
+  flex-direction: column;
+  gap: var(--k-space-2);
+}
+.k-footer__identity-row {
+  display: flex;
+  align-items: center;
+  gap: var(--k-space-2);
+  font-size: var(--k-text-xs);
+  color: var(--k-ink-secondary);
+}
+.k-footer__identity-row--locations {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--k-space-3) var(--k-space-5);
+}
+.k-footer__identity-row--muted {
+  font-size: var(--k-text-2xs);
+  color: var(--k-ink-muted);
+}
+.k-footer__identity-row--trademark {
+  font-size: var(--k-text-2xs);
+  color: var(--k-ink-muted);
+  line-height: var(--k-leading-snug);
+  max-width: 60ch;
 }
 .k-footer__copyright { margin: 0; color: var(--k-ink-muted); }
-.k-footer__trademark {
-  margin: var(--k-space-4) 0 0;
-  padding-top: var(--k-space-3);
-  border-top: 1px solid var(--k-border-subtle);
-  color: var(--k-ink-muted);
-  font-size: var(--k-text-2xs);
-  line-height: var(--k-leading-snug);
-  max-width: 70ch;
-}
-.k-footer__disclaimer {
-  margin: var(--k-space-3) 0 0;
-  color: var(--k-ink-muted);
-  font-size: var(--k-text-xs);
-  max-width: 72ch;
-}
+.k-footer__disclaimer { margin: 0; }
+.k-footer__trademark { margin: 0; }
 
 /* --- Important Information band (above the footer) ------------------------- */
 .k-compliance {
@@ -659,16 +790,19 @@ button:disabled { cursor: default; }
 .k-compliance__body p { margin: 0 0 var(--k-space-2); }
 
 @media print {
-  /* The record copy carries the full disclaimer, expanded. */
-  .k-compliance__body { display: block !important; }
-  .k-compliance__summary::before { display: none; }
+  /* Wikipedia print model: replace the site footer/legal chrome with one
+     minimal citation line (.k-print-citation, below), not carry it forward.
+     Supersedes the earlier "expanded disclaimer" decision — see
+     BRIEF-print-mode.md's 2026-07-15 revision. */
+  .k-compliance { display: none !important; }
 }
 .k-footer__cities {
   display: flex;
   align-items: center;
   gap: var(--k-space-3);
   font-weight: var(--k-weight-medium);
-  letter-spacing: var(--k-tracking-wide);
+  text-transform: uppercase;
+  letter-spacing: var(--k-tracking-caps);
   color: var(--k-ink-secondary);
 }
 .k-footer__cities-sep { color: var(--k-border); }
@@ -734,11 +868,22 @@ button:disabled { cursor: default; }
 
   .k-control--menu { display: inline-flex; } /* hamburger revealed           */
 
-  .k-header__inner { gap: var(--k-space-2); }
   .k-header__center { order: 3; flex-basis: 100%; }  /* search wraps below    */
 
-  /* Compact: search drops below the logo/controls row on small screens. */
-  .k-header__inner { flex-wrap: wrap; row-gap: var(--k-space-2); }
+  /* Compact: search drops below the logo/controls row on small screens.
+     justify-content: space-between pins the controls (theme + hamburger) to
+     the right edge of that row — without it they pack flush against the logo
+     once .k-header__center (which normally absorbs the space) wraps away.
+     padding-inline tightens the side margin from the desktop --k-gutter (24px)
+     to --k-space-4 (16px) — closer to the screen edge, matching common mobile
+     header conventions, while still leaving a comfortable touch margin. */
+  .k-header__inner {
+    gap: var(--k-space-2);
+    flex-wrap: wrap;
+    row-gap: var(--k-space-2);
+    justify-content: space-between;
+    padding-inline: var(--k-space-4);
+  }
   .k-search { max-width: none; }
 
   .k-logo__descriptor { display: none; }    /* brand word only on small screens */
@@ -758,8 +903,31 @@ button:disabled { cursor: default; }
 }
 
 /* ========================================================================== */
-/* Print                                                                      */
+/* Print (Phase 9 — KNOWLEDGE-PLATFORM-PLAN.md; see BRIEF-print-mode.md)      */
+/*                                                                            */
+/* Pure CSS, deliberately no JS pagination library. Verified against real     */
+/* research before writing this: MediaWiki/Wikipedia's own print output is    */
+/* CSS-only (MediaWiki:Print.css) — the retired PDF export path (Collection   */
+/* extension → Proton) is server-side headless-Chromium rendering this same  */
+/* kind of stylesheet, not a client library. Paged.js (the JS alternative)    */
+/* is a stale project (last real release July 2023, ~5.9 MB, depends on the  */
+/* deprecated @babel/polyfill) — a bad trade to become this engine's first    */
+/* client-side JS dependency for a gap (running headers) that even Wikipedia */
+/* doesn't bother closing client-side; the browser's own default print       */
+/* header (title + URL + page number) already covers it honestly. If         */
+/* deterministic archival PDFs are ever needed, the correct answer is a      */
+/* server-side ?format=pdf route rendering this stylesheet via headless      */
+/* Chromium — Wikipedia's actual Proton pattern — not a client library.       */
 /* ========================================================================== */
+/* .k-print-citation and .k-print-brand are print-only chrome; hidden on
+   screen by default here, BEFORE the @media print block below overrides
+   them — same-specificity rules resolve by source order, so this must come
+   first or the print override (later in the cascade) would lose to this one
+   even while printing (this is the exact bug the citation stamp shipped
+   with originally — see the "Verified" section of BRIEF-print-mode.md). */
+.k-print-citation,
+.k-print-brand { display: none; }
+
 @media print {
   .k-skip-link,
   .k-utility,
@@ -767,18 +935,91 @@ button:disabled { cursor: default; }
   .k-controls,
   .k-search,
   .k-overlay,
-  .k-nav-drawer { display: none !important; }
+  .k-nav-drawer,
+  .k-sidenav,
+  .k-tabs { display: none !important; }
 
-  body { color: #000; background: #fff; }
-  .k-page { min-height: 0; }
-  .k-footer {
-    background: transparent;
-    border-top: 1px solid #000;
-    color: #000;
-    font-size: 10pt;
+  /* Minimal top-of-page brand mark — Wikipedia keeps one even though it
+     hides all interactive header chrome (see BRIEF-print-mode.md's
+     2026-07-15 revision). Same visual weight as the article title's own
+     print rule for a consistent top/bottom bracket around the record. */
+  .k-print-brand {
+    display: block;
+    margin: 0 0 1em;
+    padding-bottom: 0.5em;
+    border-bottom: 2px solid #000;
   }
-  .k-footer__link { color: #000; text-decoration: underline; }
-  .k-footer__grid { grid-template-columns: repeat(3, 1fr); }
+  .k-print-brand__name {
+    margin: 0;
+    font-family: var(--k-title-font);
+    font-weight: var(--k-weight-bold);
+    font-size: 14pt;
+    color: #000;
+  }
+  .k-print-brand__tagline {
+    margin: 0.15em 0 0;
+    font-size: 9pt;
+    color: #333;
+  }
+
+  @page {
+    margin: 2cm 1.5cm;
+  }
+
+  body { color: #000; background: #fff; font-size: 11pt; line-height: 1.4; }
+
+  .k-shell { display: block; padding: 0; }
+  .k-page__body { padding: 0; }
+  .k-page { min-height: 0; }
+
+  /* Full print measure — the on-screen reading-width constraint exists to
+     bound line length on a wide monitor; a printed page's own margins
+     already bound it. */
+  .k-prose { max-width: none; font-size: 11pt; }
+  .k-article__title { font-size: 20pt; }
+
+  /* Orphan/widow control — no single line stranded alone at a page break. */
+  p, li, dd { orphans: 3; widows: 3; }
+
+  /* Break control — never split a table row, figure, code block, or
+     blockquote across a page boundary; never leave a heading stranded at
+     the bottom of a page with its content pushed to the next. */
+  table, figure, blockquote, pre, .k-prose img { break-inside: avoid; }
+  h1, h2, h3, h4 { break-after: avoid; }
+
+  /* URL reveal — a printed page has no clickable links, so the destination
+     of every external citation link is spelled out inline. Internal wiki
+     links (relative /wiki/... hrefs) are left alone; their target is this
+     same site and printing the path adds no information. */
+  .k-prose a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #333;
+    word-break: break-all;
+  }
+
+  /* The citation/permalink block (see ui::layout::print_citation) — always
+     hidden on screen, always shown in print. Wikipedia print model: this
+     replaces the site footer as the page's only closing record (a minimal
+     "Retrieved from ..." line), not a supplement alongside the full footer —
+     see the .k-footer rule directly below, which now hides the footer
+     entirely rather than restyling it for print. */
+  .k-print-citation {
+    display: block;
+    margin: 1.5em 0 0;
+    padding-top: 0.75em;
+    border-top: 1px solid #000;
+    font-size: 9pt;
+    color: #333;
+  }
+
+  /* Full site footer (badges, network links, trademark/copyright legal
+     text, multi-column nav) is website chrome, not part of the article
+     record — .k-print-citation above is the article's own self-contained
+     citation line, same role Wikipedia's minimal "Retrieved from" footer
+     plays. Supersedes the earlier "B&W condensed footer" decision — see
+     BRIEF-print-mode.md's 2026-07-15 revision. */
+  .k-footer { display: none !important; }
 }
 
 /* ========================================================================== */

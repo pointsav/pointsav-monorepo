@@ -13,7 +13,9 @@ use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde_json::json;
 
 use super::tenant::Tenant;
+use crate::content::frontmatter::Author;
 use crate::content::render::Heading;
+use crate::content::IndexTopic;
 use crate::history::{FileDiff, Revision};
 use crate::legal::LegalTokens;
 
@@ -123,6 +125,21 @@ pub fn doc_head(title: &str, description: &str, tenant: Tenant, path: &str, noin
         script {
             (PreEscaped(r#"(function(){try{var t=localStorage.getItem('k-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();"#))
         }
+        // Pre-paint nav-collapse guard — mirrors the theme guard above, but in
+        // the opposite direction: collapsed is the CSS *default* (no rule to
+        // race), so this only matters for a reader who previously chose
+        // "open" (key 'k-nav', shared with app.js's initNavCollapse()).
+        script {
+            (PreEscaped(r#"(function(){try{if(localStorage.getItem('k-nav')==='open'){document.documentElement.setAttribute('data-nav','open');}}catch(e){}})();"#))
+        }
+        // No-JS fallback: without JavaScript there is no way to reach the
+        // toggle button, so the browse nav must stay reachable regardless —
+        // force it open and hide the now-inert (non-functional) toggle.
+        noscript {
+            style {
+                ".k-sidebar--reading .k-sidenav__browse{display:block}.k-sidebar--reading .k-nav-toggle{display:none}"
+            }
+        }
     }
 }
 
@@ -136,9 +153,14 @@ fn search_block(input_id: &str, query: &str) -> Markup {
                 }
                 label."k-visually-hidden" for=(input_id) { "Search this registry" }
                 input."k-search__input" id=(input_id) type="search" name="q" value=(query)
-                    placeholder="Search" autocomplete="off" spellcheck="false";
+                    placeholder="Search" autocomplete="off" spellcheck="false"
+                    role="combobox" aria-expanded="false" aria-autocomplete="list"
+                    aria-controls={ (input_id) "-suggest" };
                 button."k-search__button" type="submit" { "Search" }
             }
+            // Populated client-side from `/api/search-suggest` — a real
+            // UX-review finding: search had no suggestions/typeahead at all.
+            ul."k-search__suggestions" id={ (input_id) "-suggest" } role="listbox" hidden {}
         }
     }
 }
@@ -221,7 +243,14 @@ pub fn header(tenant: Tenant, _lang: &str, query: &str) -> Markup {
 }
 
 /// Off-canvas mobile nav drawer + overlay (ships hidden; app.js manages state).
-pub fn mobile_nav(tenant: Tenant, query: &str) -> Markup {
+pub fn mobile_nav(tenant: Tenant, query: &str, cats: &[(String, String, String)]) -> Markup {
+    // Same split `sidebar()` uses — the drawer previously dropped the wiki
+    // entirely at mobile widths (search/Navigate/Resources/external links
+    // only, no category browse at all; a real UX-review finding).
+    let topics: Vec<&(String, String, String)> =
+        cats.iter().filter(|(_, _, kind)| kind != "guide").collect();
+    let guides: Vec<&(String, String, String)> =
+        cats.iter().filter(|(_, _, kind)| kind == "guide").collect();
     html! {
         div."k-overlay" #"k-overlay" hidden {}
         div."k-nav-drawer" #"k-nav-drawer" role="dialog" aria-modal="true"
@@ -242,6 +271,26 @@ pub fn mobile_nav(tenant: Tenant, query: &str) -> Markup {
                         li { a."k-nav-link" href="/" { "Home" } }
                         li { a."k-nav-link" href="/special/all-pages" { "Index of record" } }
                         li { a."k-nav-link" href="/special/recent-changes" { "Recent changes" } }
+                    }
+                }
+                @if !topics.is_empty() {
+                    section."k-nav-section" {
+                        h2."k-nav-section__title" { "Topics" }
+                        ul."k-nav-list" {
+                            @for (slug, label, _) in &topics {
+                                li { a."k-nav-link" href={ "/category/" (slug) } { (label) } }
+                            }
+                        }
+                    }
+                }
+                @if !guides.is_empty() {
+                    section."k-nav-section" {
+                        h2."k-nav-section__title" { "Guides" }
+                        ul."k-nav-list" {
+                            @for (slug, label, _) in &guides {
+                                li { a."k-nav-link" href={ "/category/" (slug) } { (label) } }
+                            }
+                        }
                     }
                 }
                 section."k-nav-section" {
@@ -272,13 +321,32 @@ pub fn mobile_nav(tenant: Tenant, query: &str) -> Markup {
 /// link columns. Disclaimer and Contact live here only. Copyright holder and
 /// trademark notice come from `legal` (loaded from the canonical
 /// `legal-tokens-{brand}.yaml`, falling back to `LegalTokens::default()`).
-pub fn footer(tenant: Tenant, legal: &LegalTokens) -> Markup {
+pub fn footer(tenant: Tenant, legal: &LegalTokens, site_description: Option<&str>, article_count: usize) -> Markup {
     html! {
         footer."k-footer" role="contentinfo" {
             div."k-footer__inner" {
+                // Brand re-anchor — repeats the site identity once the masthead
+                // has scrolled off-screen on a long article. Tagline reuses the
+                // site's own canonical description (site-footer recipe,
+                // pointsav-design-system: "deliberately not a second hand-
+                // authored copy, to avoid a second copy drifting out of sync") —
+                // falls back to Tenant::tagline() only when no index.md
+                // short_description exists.
+                div."k-footer__brand" {
+                    p."k-footer__brand-name" { (tenant.home_label()) }
+                    p."k-footer__brand-tagline" { (site_description.unwrap_or_else(|| tenant.tagline())) }
+                }
                 div."k-footer__grid" {
                     div."k-footer__col" {
                         h2."k-footer__col-title" { "Browse" }
+                        // One editorial fact line under the heading — the
+                        // bim.woodfinegroup.com pattern (a real fact per
+                        // column instead of a bare link list) applied
+                        // minimally: one line, one column, real live data.
+                        p."k-footer__col-fact" {
+                            @if article_count == 1 { "1 article" }
+                            @else { (article_count) " articles" }
+                        }
                         ul."k-footer__list" {
                             li { a."k-footer__link" href="/" { "Home" } }
                             li { a."k-footer__link" href="/special/all-pages" { "All articles" } }
@@ -307,60 +375,77 @@ pub fn footer(tenant: Tenant, legal: &LegalTokens) -> Markup {
                         }
                     }
                 }
-                // Base row — copyright + cities on the left, badges on the right.
-                div."k-footer__base" {
-                    div."k-footer__meta" {
+                // Identity bar — 4 distinct stacked rows (site-footer recipe,
+                // pointsav-design-system), not one crowded row: locations+badge,
+                // then copyright, then disclaimer, then trademark each get their
+                // own row. Restructured 2026-07-15 — the prior single-row
+                // "locations+copyright left, badges right" layout is the
+                // recipe's own documented mobile-legibility bug (badges buried
+                // under legal text); this is a real fix, not restyling for its
+                // own sake.
+                div."k-footer__identity" {
+                    div."k-footer__identity-row k-footer__identity-row--locations" {
                         div."k-footer__cities" {
+                            // Middot separator, not pipe — site-footer recipe's
+                            // content_conventions.separator: "the live sites'
+                            // current 'Vancouver | New York' is the one
+                            // inconsistency this component corrects."
                             @for (i, city) in tenant.cities().iter().enumerate() {
-                                @if i > 0 { span."k-footer__cities-sep" aria-hidden="true" { "|" } }
+                                @if i > 0 { span."k-footer__cities-sep" aria-hidden="true" { "\u{00b7}" } }
                                 span { (city) }
                             }
                         }
+                        div."k-footer__badges" {
+                            // Powered by MediaKit (the engine).
+                            a."k-badge" href="/wiki/about" {
+                                span."k-badge__glyph" aria-hidden="true" {
+                                    svg viewBox="0 0 24 24" width="15" height="15" {
+                                        path fill="currentColor" d="M3 5.5A1.5 1.5 0 0 1 4.5 4h15A1.5 1.5 0 0 1 21 5.5v13A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-13zM6 8v8l3.2-2.4L6 8zm7 6.5h5V13h-5v1.5zm0-3h5V10h-5v1.5z" {}
+                                    }
+                                }
+                                span."k-badge__text" {
+                                    span."k-badge__lead" { "Powered by" }
+                                    span."k-badge__name" { "MediaKit" }
+                                }
+                            }
+                            // Content licence — per tenant (CC BY for the open docs
+                            // library; CC BY-ND for the verbatim disclosure records).
+                            a."k-badge k-badge--license" href=(tenant.license_url())
+                              target="_blank" rel="noopener license"
+                              aria-label={ "Content licensed " (tenant.license_name()) } {
+                                span."k-badge__cc" aria-hidden="true" {
+                                    img."k-cc-icon" src="/static/cc.svg" alt="" width="20" height="20";
+                                    img."k-cc-icon" src="/static/cc-by.svg" alt="" width="20" height="20";
+                                    @if tenant.license_nd() {
+                                        img."k-cc-icon" src="/static/cc-nd.svg" alt="" width="20" height="20";
+                                    }
+                                }
+                                span."k-badge__text" {
+                                    span."k-badge__lead" { "Licensed" }
+                                    span."k-badge__name" { (tenant.license_name()) }
+                                }
+                            }
+                        }
+                    }
+                    div."k-footer__identity-row" {
                         p."k-footer__copyright" {
                             "\u{00a9} 2026 " (legal.copyright.holder)
                         }
                     }
-                    div."k-footer__badges" {
-                        // Powered by MediaKit (the engine).
-                        a."k-badge" href="/wiki/about" {
-                            span."k-badge__glyph" aria-hidden="true" {
-                                svg viewBox="0 0 24 24" width="15" height="15" {
-                                    path fill="currentColor" d="M3 5.5A1.5 1.5 0 0 1 4.5 4h15A1.5 1.5 0 0 1 21 5.5v13A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-13zM6 8v8l3.2-2.4L6 8zm7 6.5h5V13h-5v1.5zm0-3h5V10h-5v1.5z" {}
-                                }
-                            }
-                            span."k-badge__text" {
-                                span."k-badge__lead" { "Powered by" }
-                                span."k-badge__name" { "MediaKit" }
-                            }
-                        }
-                        // Content licence — per tenant (CC BY for the open docs
-                        // library; CC BY-ND for the verbatim disclosure records).
-                        a."k-badge k-badge--license" href=(tenant.license_url())
-                          target="_blank" rel="noopener license"
-                          aria-label={ "Content licensed " (tenant.license_name()) } {
-                            span."k-badge__cc" aria-hidden="true" {
-                                img."k-cc-icon" src="/static/cc.svg" alt="" width="20" height="20";
-                                img."k-cc-icon" src="/static/cc-by.svg" alt="" width="20" height="20";
-                                @if tenant.license_nd() {
-                                    img."k-cc-icon" src="/static/cc-nd.svg" alt="" width="20" height="20";
-                                }
-                            }
-                            span."k-badge__text" {
-                                span."k-badge__lead" { "Licensed" }
-                                span."k-badge__name" { (tenant.license_name()) }
-                            }
+                    div."k-footer__identity-row k-footer__identity-row--muted" {
+                        // Persistent one-line disclaimer (always visible; the band expands it).
+                        p."k-footer__disclaimer" { (tenant.disclaimer_line()) }
+                    }
+                    div."k-footer__identity-row k-footer__identity-row--trademark" {
+                        // Trademark notice — sourced from the canonical
+                        // legal-tokens-{brand}.yaml (factory-release-engineering), not
+                        // hardcoded here. The marks are reserved independently of the
+                        // CC BY 4.0 content licence, so no blanket "all rights reserved"
+                        // (content is openly licensed).
+                        p."k-footer__trademark" {
+                            (legal.trademarks.statement)
                         }
                     }
-                }
-                // Persistent one-line disclaimer (always visible; the band expands it).
-                p."k-footer__disclaimer" { (tenant.disclaimer_line()) }
-                // Trademark notice — sourced from the canonical
-                // legal-tokens-{brand}.yaml (factory-release-engineering), not
-                // hardcoded here. The marks are reserved independently of the
-                // CC BY 4.0 content licence, so no blanket "all rights reserved"
-                // (content is openly licensed).
-                p."k-footer__trademark" {
-                    (legal.trademarks.statement)
                 }
             }
         }
@@ -402,13 +487,25 @@ fn format_date(iso: &str) -> String {
 /// "article" or "history"; the current one is a non-link span, the other links.
 /// (No "Notes" placeholder — a reviewer-annotation channel ships as a real tab or
 /// not at all; no dead controls in front of auditors.)
-fn tab_bar(slug: &str, active: &str) -> Markup {
+/// `active` is "article" or "history" — the current one is a non-link span,
+/// the other links. `slug` is always the *content's own file slug* (used for
+/// the History link regardless of `hub`; an Index Topic's own slug, e.g.
+/// `security-index`, not its category id). `hub`, when `Some(category_slug)`,
+/// is what makes this the Index Topic variant: the first tab reads
+/// "Overview" and links to `/category/{category_slug}` — the canonical hub
+/// URL a reader should land back on — instead of "Article" →
+/// `/wiki/{slug}`. `None` is the ordinary-article behavior, unchanged.
+fn tab_bar(slug: &str, active: &str, hub: Option<&str>) -> Markup {
+    let (first_label, first_href) = match hub {
+        Some(category_slug) => ("Overview", format!("/category/{category_slug}")),
+        None => ("Article", format!("/wiki/{slug}")),
+    };
     html! {
         nav."k-tabs" aria-label="Views" {
             @if active == "article" {
-                span."k-tab k-tab--active" aria-current="page" { "Article" }
+                span."k-tab k-tab--active" aria-current="page" { (first_label) }
             } @else {
-                a."k-tab" href={ "/wiki/" (slug) } { "Article" }
+                a."k-tab" href=(first_href) { (first_label) }
             }
             @if active == "history" {
                 span."k-tab k-tab--active" aria-current="page" { "History" }
@@ -424,6 +521,12 @@ fn tab_bar(slug: &str, active: &str) -> Markup {
 /// `sha` is the short commit hash the render is drawn from (provenance line);
 /// `asof` is set only for the point-in-time view (a historical revision) and
 /// carries that revision's date, which switches the meta label + shows a banner.
+/// `badge` is a plain-text content-type label next to the H1 (currently only
+/// "Index"/"Índice" for Index Topics — ordinary TOPIC/GUIDE articles pass
+/// `None`; there's no icon or color block, matching the site's understated
+/// register). The caller resolves the exact label string (language included)
+/// since it already knows which language the loaded file actually is.
+#[allow(clippy::too_many_arguments)]
 pub fn article(
     title: &str,
     slug: &str,
@@ -431,12 +534,19 @@ pub fn article(
     sha: Option<&str>,
     asof: Option<&str>,
     alt_lang: Option<(&str, &str)>,
+    badge: Option<&str>,
     body_html: &str,
+    // Adjacent articles in the same category, by title order — `(slug, title)`.
+    // `None`/`None` when the article has no category or sits at either end
+    // of it. A real UX-review finding: no prev/next navigation existed
+    // anywhere, forcing article -> back to category -> next article.
+    prev: Option<(&str, &str)>,
+    next: Option<(&str, &str)>,
 ) -> Markup {
     html! {
         article."k-article" {
             div."k-article-nav" {
-                (tab_bar(slug, "article"))
+                (tab_bar(slug, "article", None))
                 @if updated.is_some() || asof.is_some() || sha.is_some() {
                     p."k-article__meta" {
                         @if let Some(d) = asof {
@@ -462,8 +572,46 @@ pub fn article(
                     a."k-asof__link" href={ "/wiki/" (slug) } { "View the current record \u{2192}" }
                 }
             }
-            h1."k-article__title" { (title) }
+            h1."k-article__title" {
+                (title)
+                @if let Some(b) = badge {
+                    span."k-content-badge" { (b) }
+                }
+            }
             div."k-prose" { (PreEscaped(body_html)) }
+            @if prev.is_some() || next.is_some() {
+                nav."k-article-pager" aria-label="Article navigation" {
+                    @if let Some((p_slug, p_title)) = prev {
+                        a."k-article-pager__link"."k-article-pager__link--prev" href={ "/wiki/" (p_slug) } {
+                            span."k-article-pager__dir" { "\u{2190} Previous" }
+                            span."k-article-pager__title" { (p_title) }
+                        }
+                    }
+                    @if let Some((n_slug, n_title)) = next {
+                        a."k-article-pager__link"."k-article-pager__link--next" href={ "/wiki/" (n_slug) } {
+                            span."k-article-pager__dir" { "Next \u{2192}" }
+                            span."k-article-pager__title" { (n_title) }
+                        }
+                    }
+                }
+            }
+            @if asof.is_none() {
+                // Print-only citation stamp (Phase 9 — .k-print-citation is
+                // display:none on screen, shown only in @media print).
+                // Placed after the body, not before it — Wikipedia's own
+                // "Retrieved from ..." line is the article's closing record,
+                // not a header (2026-07-15 revision, see BRIEF-print-mode.md).
+                // A historical (asof) view already carries its own "Revision
+                // as of" banner above, so this doesn't duplicate for that case.
+                p."k-print-citation" {
+                    "Cite this record: /wiki/" (slug)
+                    @if let Some(s) = sha { " \u{2014} revision " code { (s) } }
+                    @if let Some(d) = updated.filter(|s| !s.trim().is_empty()) {
+                        ", last updated " (format_date(d))
+                    }
+                    "."
+                }
+            }
         }
     }
 }
@@ -472,7 +620,7 @@ pub fn article(
 pub fn history_page(title: &str, slug: &str, issuer: &str, revs: &[Revision]) -> Markup {
     html! {
         article."k-article" {
-            div."k-article-nav" { (tab_bar(slug, "history")) }
+            div."k-article-nav" { (tab_bar(slug, "history", None)) }
             h1."k-article__title" { (title) }
             div."k-home__stat" { strong { (revs.len()) } " " (count_word_rev(revs.len())) }
             p."k-history__note" {
@@ -521,7 +669,7 @@ fn diff_line_class(origin: char) -> &'static str {
 pub fn diff_page(title: &str, slug: &str, issuer: &str, diff: &FileDiff) -> Markup {
     html! {
         article."k-article" {
-            div."k-article-nav" { (tab_bar(slug, "history")) }
+            div."k-article-nav" { (tab_bar(slug, "history", None)) }
             h1."k-article__title" { (title) }
             div."k-diff__head" {
                 a."k-diff__back" href={ "/history/" (slug) } { "\u{2190} All revisions" }
@@ -639,6 +787,113 @@ pub fn category_index(label: &str, docs: &[(String, String, String)]) -> Markup 
     }
 }
 
+/// The header + chrome above an Index Topic rendered at its category's own
+/// `/category/{slug}` URL. Unified with the ordinary Article chrome — tab
+/// bar (Overview/History) + "Last updated · sha" — rather than the plain
+/// `.k-catpage__eyebrow` label: an Index Topic is real, file-backed,
+/// human-authored content with real git history, same as any other article,
+/// so a plain metadata eyebrow with no history/provenance would be
+/// dishonest chrome. The eyebrow itself is untouched and still used by
+/// every category that does *not* have `index_type:` set — those are
+/// genuinely engine-synthesized listings with no file/history/sha behind
+/// them (see `category_index()`) — this is a deliberate scope boundary
+/// ("chrome follows provenance"), not an inconsistency.
+///
+/// `index_slug` is the `_index.md` file's own slug (e.g. `security-index`)
+/// — used for the History tab's link, since that resolves against the
+/// file's real slug, not the category id. `category_slug` is only used for
+/// the Overview tab's link and the safety-net link — the canonical URL a
+/// reader should land back on is the category page, not the raw file route.
+/// `total` is the category's real article count
+/// (`ContentIndex::in_category(name).len()`), not the sum of the Index
+/// Topic's own group counts — the two can legitimately differ.
+pub fn index_topic_header(
+    label: &str,
+    total: usize,
+    category_slug: &str,
+    index_slug: &str,
+    updated: Option<&str>,
+    sha: Option<&str>,
+) -> Markup {
+    html! {
+        div."k-article-nav" {
+            (tab_bar(index_slug, "article", Some(category_slug)))
+            @if updated.is_some() || sha.is_some() {
+                p."k-article__meta" {
+                    @if let Some(d) = updated.filter(|s| !s.trim().is_empty()) {
+                        "Last updated "
+                        time."k-article__date" datetime=(d) { (format_date(d)) }
+                    }
+                    @if let Some(s) = sha {
+                        " \u{00b7} " code."k-article__sha" { (s) }
+                    }
+                }
+            }
+        }
+        h1."k-article__title" { (label) }
+        p."k-index-topic__see-all" {
+            a href={ "/category/" (category_slug) "?view=all" } {
+                "See all " (total) " " (count_word(total)) " in " (label) " \u{2192}"
+            }
+        }
+    }
+}
+
+/// An Index Topic's body: the highlighted "start here" pick, each curated
+/// group with a live member-count pill and calm annotated link list, then any
+/// trailing prose ("What this is not", "See also") as authored.
+///
+/// The "start here" block is rendered as a styled card containing its
+/// `prose_html` as-is — deliberately *not* also wrapped in a separate `<a
+/// href=(sh.href)>`: `prose_html` already contains its own inline link (the
+/// wikilink resolved as part of "**Start here:** [[...]]..."), and wrapping
+/// that in another anchor would nest `<a>` inside `<a>` — invalid HTML and an
+/// ambiguous click target. `StartHere.href`/`.label` exist for callers that
+/// need the target structurally (e.g. future structured data), not for this
+/// render.
+///
+/// Each member's wikilink, by contrast, *is* rendered as a distinct link
+/// (`m.href`/`m.label`) followed by `annotation_html` — `parse_index_topic`
+/// already strips the wikilink out of the annotation text, so there's no
+/// duplication risk there.
+pub fn index_topic_body(topic: &IndexTopic) -> Markup {
+    html! {
+        div."k-index-topic" {
+            @if !topic.intro_html.is_empty() {
+                div."k-prose" { (PreEscaped(topic.intro_html.clone())) }
+            }
+            @if let Some(sh) = &topic.start_here {
+                aside."k-index-topic__start-here" aria-label="Start here" {
+                    span."k-index-topic__start-here-eyebrow" { "Start here" }
+                    div."k-prose" { (PreEscaped(sh.prose_html.clone())) }
+                }
+            }
+            @for group in &topic.groups {
+                section."k-index-group" {
+                    div."k-index-group__head" {
+                        h2."k-index-group__title" { (group.title) }
+                        span."k-index-group__count" { (group.count()) " " (count_word(group.count())) }
+                    }
+                    @if let Some(intro) = &group.intro_html {
+                        div."k-prose k-index-group__intro" { (PreEscaped(intro.clone())) }
+                    }
+                    ul."k-index-list" {
+                        @for m in &group.members {
+                            li."k-index-list__item" {
+                                a."k-index-list__link" href=(m.href) { (m.label) }
+                                span."k-index-list__annotation" { (PreEscaped(m.annotation_html.clone())) }
+                            }
+                        }
+                    }
+                }
+            }
+            @if !topic.tail_html.is_empty() {
+                div."k-prose k-index-topic__tail" { (PreEscaped(topic.tail_html.clone())) }
+            }
+        }
+    }
+}
+
 /// A generic index page — "Index of record" (A–Z all articles) and "Recent
 /// changes". `items` is `(slug, title, meta)`; `meta` is a description or a date.
 pub fn special_list(heading: &str, eyebrow: &str, items: &[(String, String, String)]) -> Markup {
@@ -676,7 +931,9 @@ pub fn search_results(query: &str, results: &[(String, String, String)]) -> Mark
     let q = query.trim();
     html! {
         div."k-catpage" {
-            div."k-catpage__eyebrow" { "Search" }
+            // No eyebrow here, unlike other `.k-catpage` renders — the H1
+            // already reads "Search" one line below; the eyebrow would just
+            // repeat it verbatim (a real UX-review finding, 2026-08-23).
             h1."k-article__title" { "Search" }
             // The header search bar carries the query — no second on-page box.
             @if q.is_empty() {
@@ -705,40 +962,116 @@ pub fn search_results(query: &str, results: &[(String, String, String)]) -> Mark
     }
 }
 
-/// The left navigation column (Wikipedia Vector 2022 pattern): Main page,
-/// Browse-by-area, Guides. Sticky on desktop; hidden below the tablet breakpoint
-/// where the off-canvas drawer covers navigation. `cats` is `(slug, label)`.
-fn sidebar(tenant: Tenant, cats: &[(String, String)], toc: &[Heading]) -> Markup {
+/// Article table of contents — a `k-sidenav__group` on its own, present only
+/// on pages with headings. Extracted so `sidebar()` can place it either above
+/// or below the browse nav depending on whether this is a "reading page".
+fn toc_nav(toc: &[Heading]) -> Markup {
     html! {
-        aside."k-sidebar" aria-label="Site navigation" {
+        @if !toc.is_empty() {
+            nav."k-sidenav__group k-toc" aria-label="Contents" {
+                h2."k-sidenav__heading" { "Contents" }
+                ul."k-toc__list" {
+                    @for h in toc {
+                        li."k-toc__item"."k-toc__item--sub"[h.level == 3] {
+                            a."k-toc__link" href={ "#" (h.id) } { (h.text) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The left navigation column (Wikipedia Vector 2022 pattern): Main page,
+/// [Contents], Topics, Guides. Sticky on desktop; hidden below the tablet
+/// breakpoint where the off-canvas drawer covers navigation. `cats` is
+/// `(slug, label, kind)` — `kind` (`"topic"`/`"guide"`, from
+/// `categories.yaml`, see `sitedata::Category`) is the section a category
+/// renders under. Reading it structurally, rather than hardcoding a
+/// `how-to`-id special case (the previous approach), fixes a real duplicate —
+/// `how-to` used to render both in the flat category list AND in a separate
+/// hardcoded "Guides" block — and means a future guide-category split needs
+/// zero engine change: a new category just carries `kind: guide` and appears
+/// in the right section automatically. Anything not `"guide"` renders under
+/// Topics (not just `"topic"` exactly) so a missing/malformed `kind` value
+/// never silently drops a category from the nav.
+///
+/// A page with a non-empty `toc` is a "reading page" (the current-article and
+/// as-of-revision views — every other page type passes `&[]`, and Index Topic
+/// pages do too, deliberately, so they keep the full browse sidebar "for
+/// free" as a browsing surface). On a reading page: the TOC renders first
+/// (the article's own contents, not buried under the full category list), a
+/// `.k-sidebar--reading` marker class is added, and the Topics/Guides nav is
+/// CSS-default-collapsed behind a toggle button — see `.k-sidebar--reading`
+/// in `app.css` and `initNavCollapse()` in `app.js`.
+/// `current_category` marks the active Topics/Guides link with `aria-current`
+/// (a real UX-review finding: no "you are here" existed anywhere in the
+/// sidebar). `siblings` — `(slug, title)`, current article already excluded
+/// by the caller — renders an "In this topic" list above the Browse toggle,
+/// the single structural feature every hyperscaler-docs benchmark shares
+/// that this engine previously lacked entirely.
+fn sidebar(
+    cats: &[(String, String, String)],
+    toc: &[Heading],
+    current_category: Option<&str>,
+    siblings: &[(String, String)],
+) -> Markup {
+    let reading = !toc.is_empty();
+    let topics: Vec<&(String, String, String)> =
+        cats.iter().filter(|(_, _, kind)| kind != "guide").collect();
+    let guides: Vec<&(String, String, String)> =
+        cats.iter().filter(|(_, _, kind)| kind == "guide").collect();
+    let has_browse = !cats.is_empty();
+    html! {
+        aside."k-sidebar"."k-sidebar--reading"[reading] aria-label="Site navigation" {
             nav."k-sidenav" {
                 a."k-sidenav__home" href="/" { "Main page" }
-                @if !cats.is_empty() {
+                (toc_nav(toc))
+                @if !siblings.is_empty() {
                     div."k-sidenav__group" {
-                        h2."k-sidenav__heading" { "Browse by area" }
+                        h2."k-sidenav__heading" { "In this topic" }
                         ul."k-sidenav__list" {
-                            @for (slug, label) in cats {
-                                li { a."k-sidenav__link" href={ "/category/" (slug) } { (label) } }
+                            @for (slug, title) in siblings {
+                                li { a."k-sidenav__link" href={ "/wiki/" (slug) } { (title) } }
                             }
                         }
                     }
                 }
-                @if tenant.serves_guides() {
-                    div."k-sidenav__group" {
-                        h2."k-sidenav__heading" { "Guides" }
-                        ul."k-sidenav__list" {
-                            li { a."k-sidenav__link" href="/category/how-to" { "How-to guides" } }
-                        }
+                @if has_browse {
+                    button."k-nav-toggle" type="button"
+                        aria-expanded="false" aria-controls="k-sidenav-browse" {
+                        "Browse"
                     }
-                }
-                // Article table of contents (present only on pages with headings).
-                @if !toc.is_empty() {
-                    nav."k-sidenav__group k-toc" aria-label="Contents" {
-                        h2."k-sidenav__heading" { "Contents" }
-                        ul."k-toc__list" {
-                            @for h in toc {
-                                li."k-toc__item"."k-toc__item--sub"[h.level == 3] {
-                                    a."k-toc__link" href={ "#" (h.id) } { (h.text) }
+                    nav."k-sidenav__browse" #"k-sidenav-browse" {
+                        @if !topics.is_empty() {
+                            div."k-sidenav__group" {
+                                h2."k-sidenav__heading" { "Topics" }
+                                ul."k-sidenav__list" {
+                                    @for (slug, label, _) in &topics {
+                                        @let active = current_category == Some(slug.as_str());
+                                        li {
+                                            a."k-sidenav__link"
+                                                href={ "/category/" (slug) }
+                                                aria-current=[active.then_some("page")]
+                                                { (label) }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        @if !guides.is_empty() {
+                            div."k-sidenav__group" {
+                                h2."k-sidenav__heading" { "Guides" }
+                                ul."k-sidenav__list" {
+                                    @for (slug, label, _) in &guides {
+                                        @let active = current_category == Some(slug.as_str());
+                                        li {
+                                            a."k-sidenav__link"
+                                                href={ "/category/" (slug) }
+                                                aria-current=[active.then_some("page")]
+                                                { (label) }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -849,6 +1182,165 @@ pub fn article_jsonld(
     }
 }
 
+/// JOURNAL paper masthead (SPEC-journal-wiki-render-contract.md §5 item 1):
+/// title + authors + affiliations + correspondence, generated from
+/// frontmatter. A JOURNAL body has no h1 — this element IS the title (the
+/// engine owns it, same as it owns References and the notice banners; see
+/// §1.2 item 4 for why the body never writes any of these itself).
+/// Correspondence renders for every author carrying an email — the frontmatter
+/// schema has no dedicated "is corresponding author" flag, so this is a
+/// simplification (all listed emails are contactable), not a spec-mandated
+/// single-author pick.
+pub fn masthead(title: &str, authors: &[Author]) -> Markup {
+    html! {
+        header."k-masthead" {
+            h1."k-masthead__title" { (title) }
+            @if !authors.is_empty() {
+                p."k-masthead__authors" {
+                    @for (i, author) in authors.iter().enumerate() {
+                        @if i > 0 { span."k-masthead__author-sep" aria-hidden="true" { ", " } }
+                        span."k-masthead__author" {
+                            @if let Some(name) = author.name.as_deref() { (name) }
+                            @if let Some(aff) = author.affiliation.as_deref().filter(|a| !a.is_empty()) {
+                                sup."k-masthead__affiliation" { (aff) }
+                            }
+                        }
+                    }
+                }
+            }
+            @for author in authors {
+                @if let Some(email) = author.email.as_deref().filter(|e| !e.is_empty()) {
+                    p."k-masthead__correspondence" {
+                        "Correspondence: "
+                        a href={ "mailto:" (email) } { (email) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Working-paper / disclosure notice banner (SPEC §4) — **not yet
+/// implemented**. Blocked on Command's placement decision for the canonical
+/// notice-text data source (routed 2026-07-10 by project-editorial, still
+/// open as of BRIEF-knowledge-ng-rewrite.md's 2026-07-11 status update). The
+/// banner text (working-paper notice, forward-looking-statements advisory,
+/// citation banner, superseded notice) is disclosure copy this engine must
+/// never author locally — every word has to load verbatim from wherever that
+/// canonical file lands, the same discipline `legal.rs` already follows for
+/// trademark/copyright text. This signature is final per SPEC §4's table, so
+/// wiring it up once the data source exists is a one-line load-and-template
+/// change here, not a redesign — until then it renders nothing.
+pub fn notice_banner(
+    _state: Option<&str>,
+    _version: Option<&str>,
+    _preprint_posted_date: Option<&str>,
+    _license: Option<&str>,
+    _corresponding_author: Option<&str>,
+    _cite_as: Option<&str>,
+) -> Markup {
+    html! {}
+}
+
+/// `/research/{slug}` landing page (SPEC §0 render model): masthead +
+/// abstract + a link to the full-text rendition — **not** the full body
+/// (that's `research_fulltext`). `notice_banner()` composes in once its data
+/// source exists (Phase 3); until then it renders nothing, same as here.
+pub fn research_landing(
+    title: &str,
+    authors: &[Author],
+    abstract_html: &str,
+    slug: &str,
+    cite_as: Option<&str>,
+) -> Markup {
+    html! {
+        article."k-research k-research--landing" {
+            (masthead(title, authors))
+            @if !abstract_html.is_empty() {
+                section."k-research__abstract" {
+                    h2 { "Abstract" }
+                    div."k-prose" { (PreEscaped(abstract_html)) }
+                }
+            }
+            p."k-research__fulltext-link" {
+                a."k-button" href={ "/research/" (slug) "/full" } { "Read the full text \u{2192}" }
+            }
+            (print_citation_stamp(slug, cite_as))
+        }
+    }
+}
+
+/// Print-only brand mark at the very top of the page — same `display:none`-
+/// then-`@media print`-override mechanism as `.k-print-citation` below.
+/// Added 2026-07-15 after comparing our print render directly against a real
+/// Wikipedia print render: Wikipedia keeps a minimal top-of-page brand
+/// element (small wordmark + one-line tagline, then a rule) even though it
+/// hides all interactive header/search/nav chrome — a printed page identifies
+/// its source at both the top and the bottom, not only via the closing
+/// citation line. `site_description` is the same canonical description
+/// `footer()`'s brand block uses (site-footer recipe, `pointsav-design-
+/// system`: the tagline must reuse the site's own description, never a
+/// second hand-authored copy) — falls back to `Tenant::tagline()` only when
+/// no description exists (e.g. `index.md` has no `short_description`).
+fn print_brand_mark(tenant: Tenant, site_description: Option<&str>) -> Markup {
+    html! {
+        div."k-print-brand" {
+            p."k-print-brand__name" { (tenant.home_label()) }
+            p."k-print-brand__tagline" { (site_description.unwrap_or_else(|| tenant.tagline())) }
+        }
+    }
+}
+
+/// Print-only citation stamp for JOURNAL pages — same purpose and CSS
+/// mechanism as `article()`'s own (Phase 9 print mode, `.k-print-citation`
+/// is `display:none` on screen, shown only in `@media print`). Prefers the
+/// author-specified `cite_as` frontmatter string (SPEC §2 table) when
+/// present; falls back to the landing page's own URL. The landing page,
+/// not `/full`, is the citable record per academic-page convention (a DOI
+/// landing page cites the abstract page, not the full-text rendition).
+fn print_citation_stamp(slug: &str, cite_as: Option<&str>) -> Markup {
+    html! {
+        p."k-print-citation" {
+            "Cite this record: "
+            @if let Some(c) = cite_as.filter(|s| !s.is_empty()) {
+                (c)
+            } @else {
+                "/research/" (slug)
+            }
+            "."
+        }
+    }
+}
+
+/// `/research/{slug}/full` — the full-text rendition (SPEC §0): the ~22-
+/// section body plus the generated References section (already appended to
+/// `body_html` by `content::render_journal_doc`), reachable in one click
+/// from the landing page. `geospatial` (`Frontmatter::is_geospatial`, SPEC
+/// §10.1) scopes the `.full-bleed`/`.wide` figure-width CSS classes (SPEC
+/// §10.2) — those classes are usable today via hand-authored raw HTML
+/// `<figure>` blocks (comrak's unsafe rendering already passes them
+/// through); the Markdown attribute shorthand `{#fig-id .full-bleed}` SPEC
+/// §10.2 also describes is deferred (no comrak attribute-extension exists to
+/// build on — confirmed against comrak 0.52's `Extension` options — so it
+/// needs a hand-rolled parser, not yet justified with zero real geospatial
+/// papers locally to validate one against).
+pub fn research_fulltext(
+    title: &str,
+    authors: &[Author],
+    body_html: &str,
+    geospatial: bool,
+    slug: &str,
+    cite_as: Option<&str>,
+) -> Markup {
+    html! {
+        article."k-research k-research--fulltext"."k-research--geospatial"[geospatial] {
+            (masthead(title, authors))
+            div."k-prose" { (PreEscaped(body_html)) }
+            (print_citation_stamp(slug, cite_as))
+        }
+    }
+}
+
 /// Shift every `<h1...>`/`</h1>` in comrak-rendered HTML down to `<h2>` — used
 /// for embedded content (the Important Information band) that must never
 /// introduce a second `<h1>` alongside the page's own article title. Comrak's
@@ -908,11 +1400,15 @@ pub fn page(
     lang: &str,
     head: Markup,
     body: Markup,
-    cats: &[(String, String)],
+    cats: &[(String, String, String)],
     toc: &[Heading],
     query: &str,
     disclaimer: Option<&str>,
     legal: &LegalTokens,
+    site_description: Option<&str>,
+    article_count: usize,
+    current_category: Option<&str>,
+    siblings: &[(String, String)],
 ) -> Markup {
     html! {
         (DOCTYPE)
@@ -920,16 +1416,17 @@ pub fn page(
             head { (head) }
             body {
                 a."k-skip-link" href="#k-main" { "Skip to content" }
-                (mobile_nav(tenant, query))
+                (mobile_nav(tenant, query, cats))
                 div."k-page" {
+                    (print_brand_mark(tenant, site_description))
                     (utility_bar(tenant))
                     (header(tenant, lang, query))
                     div."k-shell" {
-                        (sidebar(tenant, cats, toc))
+                        (sidebar(cats, toc, current_category, siblings))
                         main."k-page__body" #"k-main" tabindex="-1" { (body) }
                     }
                     (compliance_band(tenant, disclaimer))
-                    (footer(tenant, legal))
+                    (footer(tenant, legal, site_description, article_count))
                 }
                 script src="/static/app.js" defer {}
             }
@@ -1013,6 +1510,83 @@ mod tests {
     fn jsonld_neutralizes_script_breakout() {
         let evil = article_jsonld(Tenant::Corporate, "</script><script>alert(1)</script>", "", "https://corporate.woodfinegroup.com/wiki/x", None).into_string();
         assert!(!evil.contains("</script><script>alert"), "raw script-breakout sequence must not survive into the HTML: {evil}");
+    }
+
+    fn test_author(name: &str, affiliation: &str, email: &str) -> Author {
+        Author {
+            name: Some(name.to_string()),
+            affiliation: Some(affiliation.to_string()),
+            email: Some(email.to_string()),
+            orcid: None,
+            credit_roles: vec![],
+        }
+    }
+
+    #[test]
+    fn masthead_renders_title_as_h1_and_lists_authors() {
+        let authors = vec![
+            test_author("J. Woodfine", "PointSav Digital Systems", "j@example.com"),
+            test_author("P. Woodfine", "Woodfine Management Corp", "p@example.com"),
+        ];
+        let html = masthead("Capability Geometry", &authors).into_string();
+        assert!(html.contains("<h1"));
+        assert!(html.contains("Capability Geometry"));
+        assert!(html.contains("J. Woodfine"));
+        assert!(html.contains("P. Woodfine"));
+        assert!(html.contains("PointSav Digital Systems"));
+    }
+
+    #[test]
+    fn masthead_renders_correspondence_for_every_author_with_an_email() {
+        let authors = vec![test_author("A. One", "Org", "a@example.com"), test_author("B. Two", "Org", "b@example.com")];
+        let html = masthead("Title", &authors).into_string();
+        assert!(html.contains(r#"href="mailto:a@example.com""#));
+        assert!(html.contains(r#"href="mailto:b@example.com""#));
+    }
+
+    #[test]
+    fn masthead_with_no_authors_still_renders_the_title() {
+        let html = masthead("Solo Title", &[]).into_string();
+        assert!(html.contains("Solo Title"));
+        assert!(!html.contains("k-masthead__authors"));
+    }
+
+    #[test]
+    fn notice_banner_renders_nothing_until_the_data_source_exists() {
+        // Blocked stub (SPEC §4) — must not fabricate disclosure text locally.
+        let html = notice_banner(Some("draft"), Some("0.4.0"), Some("2026-07-02"), Some("CC BY 4.0"), Some("a@example.com"), Some("Woodfine (2026)")).into_string();
+        assert_eq!(html, "");
+    }
+
+    #[test]
+    fn research_fulltext_carries_geospatial_class_only_when_requested() {
+        let with_class = research_fulltext("T", &[], "<p>body</p>", true, "slug", None).into_string();
+        assert!(with_class.contains("k-research--geospatial"));
+        let without_class = research_fulltext("T", &[], "<p>body</p>", false, "slug", None).into_string();
+        assert!(!without_class.contains("k-research--geospatial"));
+    }
+
+    #[test]
+    fn print_citation_stamp_prefers_cite_as_over_url_fallback() {
+        let with_cite_as = research_fulltext("T", &[], "<p>b</p>", false, "my-slug", Some("Woodfine (2026)")).into_string();
+        assert!(with_cite_as.contains("Cite this record: Woodfine (2026)."));
+        let without_cite_as = research_fulltext("T", &[], "<p>b</p>", false, "my-slug", None).into_string();
+        assert!(without_cite_as.contains("Cite this record: /research/my-slug."));
+    }
+
+    #[test]
+    fn print_brand_mark_falls_back_to_tenant_tagline_when_no_site_description() {
+        let html = print_brand_mark(Tenant::Documentation, None).into_string();
+        assert!(html.contains("PointSav Documentation"));
+        assert!(html.contains("Technical records for the PointSav platform."));
+        assert!(html.contains("k-print-brand"));
+    }
+
+    #[test]
+    fn print_brand_mark_prefers_site_description_over_tenant_tagline() {
+        let html = print_brand_mark(Tenant::Documentation, Some("A record repository.")).into_string();
+        assert!(html.contains("A record repository."));
+        assert!(!html.contains("Technical records for the PointSav platform."));
     }
 
     #[test]

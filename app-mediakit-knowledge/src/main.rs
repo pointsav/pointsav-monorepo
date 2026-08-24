@@ -6,6 +6,7 @@
 //! Subcommands:
 //!   serve   — bind and serve an instance from a knowledge.toml
 //!   check   — validate content without serving (CI gate; grows in P1)
+//!   mcp     — run the claim-query MCP server on stdio (Phase 3.6)
 
 use std::path::PathBuf;
 
@@ -38,6 +39,13 @@ enum Command {
         #[arg(long, env = "WIKI_KNOWLEDGE_TOML")]
         knowledge_toml: PathBuf,
     },
+    /// Run the claim-query MCP server on stdio. Provisional — see
+    /// `KNOWLEDGE-PLATFORM-PLAN.md` Decision 3 (pending reconciliation with
+    /// `service-slm`'s `slm-mcp-server`).
+    Mcp {
+        #[arg(long, env = "WIKI_KNOWLEDGE_TOML")]
+        knowledge_toml: PathBuf,
+    },
 }
 
 #[tokio::main]
@@ -53,6 +61,7 @@ async fn main() -> anyhow::Result<()> {
     match cli.command {
         Command::Serve { knowledge_toml } => serve(knowledge_toml).await,
         Command::Check { knowledge_toml } => check(knowledge_toml),
+        Command::Mcp { knowledge_toml } => mcp_serve(knowledge_toml).await,
     }
 }
 
@@ -62,6 +71,10 @@ async fn serve(toml_path: PathBuf) -> anyhow::Result<()> {
     let title = config.site.title.clone();
 
     let state = AppState::build(config);
+    let claims = state.claims.clone();
+    let citations = (*state.citations).clone();
+    app_mediakit_knowledge::verification::spawn_scheduler(claims, citations);
+
     let app = router(state);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
@@ -82,6 +95,15 @@ fn check(toml_path: PathBuf) -> anyhow::Result<()> {
         config.mounts.len()
     );
     Ok(())
+}
+
+async fn mcp_serve(toml_path: PathBuf) -> anyhow::Result<()> {
+    let config = Config::load(&toml_path)?;
+    // AppState::build indexes content and extracts claims into the same
+    // redb file the `serve` process uses — the MCP server queries that
+    // store directly, it doesn't duplicate extraction logic.
+    let state = AppState::build(config);
+    app_mediakit_knowledge::mcp::run_stdio(state.claims.clone()).await
 }
 
 async fn shutdown_signal() {

@@ -24,7 +24,7 @@ path = "src/lib.rs"
 # P0/P1 set: HTTP stack, templating, config, markdown, embedded assets.
 [dependencies]
 axum = "0.8"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs", "io-util"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs", "io-util", "net"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "set-header", "compression-br", "compression-gzip"] }
 maud = { version = "0.27", features = ["axum"] }
@@ -43,8 +43,20 @@ anyhow = "1"
 thiserror = "2"
 tantivy = "0.24"
 git2 = "0.20"
+# P9 (claim layer): embedded claim-graph store, content hashing, citation
+# re-verification HTTP client, and the MCP query surface.
+redb = "4"
+blake3 = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+rmcp = { version = "2", features = ["transport-io", "schemars"] }
+schemars = "1"
+futures-util = "0.3"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
 tempfile = "3"
+
+# build.rs (Phase 4: DTCG token pipeline) parses tokens/design-tokens.json.
+[build-dependencies]
+serde_json = "1"

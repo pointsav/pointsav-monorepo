@@ -1,0 +1,4 @@
+citations_in_order: alpha-2020, beta-2021
+references:
+1. A. One. (2020). Alpha Paper. Venue Alpha. doi:10.1/alpha
+2. B. Two. (2021). Beta Paper. Venue Beta. arXiv:2101.00001
