@@ -56,6 +56,16 @@ fn default_max_bytes() -> usize {
     2 * 1024 * 1024
 }
 
+/// Expands a leading "$HOME" in a config.toml root's fs_path via the real
+/// $HOME env var. Lets the committed config.toml reference "$HOME/sandbox"
+/// instead of a literal absolute path with a real username baked in.
+fn expand_home(path: &str) -> String {
+    match path.strip_prefix("$HOME") {
+        Some(rest) => std::env::var("HOME").map(|h| h + rest).unwrap_or_else(|_| path.to_string()),
+        None => path.to_string(),
+    }
+}
+
 #[derive(Clone)]
 pub(crate) struct AppState {
     pub(crate) workspace_dir: Arc<PathBuf>,
@@ -116,7 +126,7 @@ async fn main() {
         .iter()
         .map(|r| WorkbenchRoot {
             url_prefix: r.url_prefix.clone(),
-            fs_path: PathBuf::from(&r.fs_path),
+            fs_path: PathBuf::from(expand_home(&r.fs_path)),
             writable: r.writable,
         })
         .collect();

@@ -5,7 +5,7 @@ weasyprint = "/usr/bin/weasyprint"
 
 [[root]]
 url_prefix = "sandbox-jennifer"
-fs_path = "/home/jennifer/sandbox"
+fs_path = "$HOME/sandbox"
 writable = true
 
 [[root]]
