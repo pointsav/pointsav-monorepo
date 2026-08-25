@@ -1,0 +1,36 @@
+[package]
+name = "service-search"
+version = "0.1.0"
+edition = "2021"
+
+# Standalone workspace for now so it builds independently of the monorepo root.
+# Becoming a root workspace member (and dropping this block + the patch below in
+# favour of the root's) is the Command-routed step — see the archive's outbox.
+[workspace]
+
+[dependencies]
+moonshot-index = { path = "../moonshot-index" }
+tantivy = "0.24"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+notify = "6"
+blake3 = "1"
+
+[[bin]]
+name = "forge"
+path = "src/bin/forge.rs"
+
+[[bin]]
+name = "strike"
+path = "src/bin/strike.rs"
+
+# Mirror the monorepo root's vendored-Tantivy patch so `tantivy = "0.24"` resolves
+# to the sovereign vendored source, not crates.io.
+[patch.crates-io]
+tantivy-common = { path = "../vendor-tantivy-common" }
+tantivy-columnar = { path = "../vendor-tantivy-columnar" }
+tantivy = { path = "../vendor-tantivy" }

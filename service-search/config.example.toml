@@ -1,0 +1,44 @@
+# service-search — example config for the DEV workbench corpus.
+#
+# The Forge reads this, indexes every root, writes to index_path, and exits.
+# The Strike reads the same file, loads index_path read-only, and serves :bind.
+#
+# ROOTS: index EVERY root the workbench serves EXCEPT `_command` (→ /srv/foundry, 83 GB,
+# redundant with the clones). That is the 22 `_clones/project-*` + `_sandbox-jennifer`.
+# Keep `url_prefix` values IDENTICAL to local-workbench-dev/config.toml so a search hit's
+# id opens directly via the workbench roots API. The live runtime config on the VM is
+# generated from the workbench config — see cargo-target/jennifer/service-search/dev.toml.
+#
+# BUSINESS-ADMIN: several roots (project-documents/bookkeeping/jennifer/orgcharts/proforma/
+# mathew) are `content_class: business-admin`. Indexing them is gated by the standing rule
+# and was done with explicit OPERATOR SIGN-OFF (2026-07-17). The index is read-only, LEXICAL
+# (trigram floor + Tantivy BM25 — NOT AI/embeddings, so SYS-ADR-07-safe) and served only to
+# the operator over localhost/PPN. A future semantic (embeddings) layer must re-gate
+# business-admin exclusion separately — that sign-off does NOT extend to AI indexing.
+
+index_path = "/srv/foundry/cargo-target/jennifer/service-search/index"
+bind = "127.0.0.1:9310"
+max_content_bytes = 5242880   # 5 MiB — larger files are indexed by name only
+exclude_dirs = ["target", "node_modules", "vendor", "dist", ".venv", ".git"]
+
+# One [[roots]] block per workbench root (minus _command). Representative entries — the live
+# dev.toml has all 23. url_prefix MUST match the workbench config exactly.
+[[roots]]
+url_prefix = "_sandbox-jennifer"
+fs_path = "/home/jennifer/sandbox"
+
+[[roots]]
+url_prefix = "_clones/project-documents"
+fs_path = "/srv/foundry/clones/project-documents"
+
+[[roots]]
+url_prefix = "_clones/project-bookkeeping"
+fs_path = "/srv/foundry/clones/project-bookkeeping"
+
+[[roots]]
+url_prefix = "_clones/project-workplace"
+fs_path = "/srv/foundry/clones/project-workplace"
+
+# … + the remaining project-* clones (jennifer, bim, command, console, data, design,
+# editorial, gis, infrastructure, intelligence, knowledge, marketing, mathew, orchestration,
+# orgcharts, proforma, software, source, system, woodfine).
