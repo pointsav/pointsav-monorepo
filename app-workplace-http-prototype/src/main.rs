@@ -79,7 +79,7 @@ pub(crate) struct AppState {
 #[tokio::main]
 async fn main() {
     let workspace_dir = std::env::var("WORKPLACE_PROTO_WORKSPACE")
-        .unwrap_or_else(|_| "/home/jennifer/workbench".to_string());
+        .unwrap_or_else(|_| expand_home("$HOME/workbench"));
     let port: u16 = std::env::var("WORKPLACE_PROTO_PORT")
         .ok()
         .and_then(|v| v.parse().ok())
