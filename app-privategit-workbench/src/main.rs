@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: FSL-1.1-ALv2
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
-
 use anyhow::{anyhow, Context, Result};
 use axum::{
     body::Bytes,
@@ -61,12 +60,42 @@ struct Config {
     #[serde(default = "default_module_id")]
     module_id: String,
     log_dir: Option<String>,
+    /// Page <title>/<h1> text. Defaults to a generic label — a deployer sets this
+    /// to brand the app for their own environment. None of this crate's own logic
+    /// depends on the value; it's purely cosmetic bootstrap injection.
+    #[serde(default = "default_app_title")]
+    app_title: String,
+    /// Override for the WeasyPrint binary used by PDF export. Defaults to a bare
+    /// "weasyprint" (resolved via $PATH, matching how `git` is invoked elsewhere in
+    /// this file) rather than assuming a fixed absolute install path.
+    weasyprint_bin: Option<String>,
+    /// Label for the sidebar's "browse everything under one root" section (this
+    /// deployment's own `_command`-prefixed root, if configured). None hides the
+    /// section entirely — a deployer may not want to expose a whole-tree browse
+    /// root at all.
+    #[serde(default)]
+    command_root_label: Option<String>,
+    /// Subfolder names to show as top-level nodes in the sidebar's "Staged"
+    /// section (matching this deployment's own `_staged`-prefixed root
+    /// convention, if any). Empty hides the section.
+    #[serde(default)]
+    staged_subfolders: Vec<String>,
+    /// Folder names under the `_command` root's "business-admin/" convention
+    /// that the search indexer should scan directly, since they aren't
+    /// reachable via the `_clones` root. Empty means nothing extra is scanned —
+    /// a deployer without this folder convention just gets no-op behavior here.
+    #[serde(default)]
+    business_admin_dirs: Vec<String>,
     #[serde(rename = "root")]
     roots: Vec<RootEntry>,
 }
 
 fn default_max_bytes() -> usize {
     2 * 1024 * 1024
+}
+
+fn default_app_title() -> String {
+    "Workbench".to_string()
 }
 
 fn default_module_id() -> String {
@@ -91,6 +120,7 @@ struct AppState {
     spa_html: Arc<String>,
     events_tx: broadcast::Sender<String>,
     log_dir: Option<PathBuf>,
+    weasyprint_bin: String,
     pending_edits: mcp::PendingEdits,
 }
 
@@ -139,13 +169,111 @@ fn resolve_path_with_root(roots: &[RootEntry], url_path: &str) -> Result<(PathBu
 
         let root_canonical = base.canonicalize().context("canonicalize root")?;
         if !canonical.starts_with(&root_canonical) {
-            return Err(anyhow!("path traversal attempt"));
+            // The resolved path left the literal root directory. This legitimately
+            // happens when a symlink inside the root points elsewhere on disk (e.g.
+            // /srv/foundry/business-admin -> /mnt/business-admin) — not a traversal
+            // attempt, since the target is still inside a *registered* root's tree.
+            // Only reject if it isn't contained in any registered root at all.
+            let permitted = roots.iter().any(|r| {
+                PathBuf::from(&r.fs_path)
+                    .canonicalize()
+                    .map(|rc| canonical.starts_with(&rc))
+                    .unwrap_or(false)
+            });
+            if !permitted {
+                return Err(anyhow!("path traversal attempt"));
+            }
         }
 
         return Ok((canonical, root.writable, root_canonical));
     }
 
     Err(anyhow!("no matching root for path: {}", url_path))
+}
+
+// ---------------------------------------------------------------------------
+// Filesystem watch scoping
+// ---------------------------------------------------------------------------
+
+/// Directory names never worth watching: VCS internals, build output and
+/// dependency caches. They are churned constantly by tooling and none of that
+/// churn is anything the sidebar tree needs to react to.
+///
+/// Measured 2026-08-23 on the DEV instance: a single concurrent `cargo build`
+/// under `/srv/foundry/cargo-target/` produced 1,298 of 1,314 SSE events in a
+/// 12-second window (~110/s). That flood both overran the broadcast channel and
+/// held the frontend's refresh debounce open indefinitely, so no real edit ever
+/// reached the tree.
+const WATCH_SKIP_DIRS: &[&str] = &[
+    ".git",
+    "target",
+    "cargo-target",
+    "node_modules",
+    ".venv",
+    "__pycache__",
+    ".cargo",
+    ".rustup",
+    ".mypy_cache",
+    ".pytest_cache",
+];
+
+/// Upper bound on inotify watches we will register across all roots.
+/// `/proc/sys/fs/inotify/max_user_watches` is 253,316 on this host, and the DEV
+/// root set registers ~97,000 directories after exclusions, so this leaves
+/// headroom while still failing safe if a root ever explodes in size. The
+/// startup line reports the remaining budget — if it ever reads 0, watches were
+/// dropped and coverage is partial.
+const WATCH_BUDGET: usize = 150_000;
+
+fn is_skipped_dir_name(name: &std::ffi::OsStr) -> bool {
+    name.to_str()
+        .map(|n| WATCH_SKIP_DIRS.contains(&n))
+        .unwrap_or(false)
+}
+
+/// True if any path component is a skipped directory name. Belt-and-braces
+/// filter on the event side: a watch registered before a directory was renamed
+/// into a skipped name would otherwise keep reporting.
+fn path_is_watch_noise(path: &str) -> bool {
+    path.split('/').any(|c| WATCH_SKIP_DIRS.contains(&c))
+}
+
+/// Register a non-recursive watch on `root` and every directory beneath it,
+/// skipping `WATCH_SKIP_DIRS` and never descending through a symlink.
+///
+/// `notify`'s own `RecursiveMode::Recursive` cannot exclude subtrees, and its
+/// walk aborts on the first unreadable directory — which on this host left
+/// three roots (`/srv/foundry`, `project-design`, `project-system`) with only a
+/// partial watch set and silently unwatched remainders. Walking it here means
+/// one unreadable directory costs exactly that directory.
+///
+/// Returns the number of watches added; `budget` is decremented accordingly.
+fn watch_tree<W: Watcher>(watcher: &mut W, root: &Path, budget: &mut usize) -> usize {
+    let mut added = 0usize;
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        if *budget == 0 {
+            break;
+        }
+        if watcher.watch(&dir, RecursiveMode::NonRecursive).is_ok() {
+            added += 1;
+            *budget -= 1;
+        }
+        let Ok(rd) = fs::read_dir(&dir) else {
+            continue; // unreadable directory: skip it, keep walking everything else
+        };
+        for entry in rd.flatten() {
+            // `file_type()` does not follow symlinks, so a symlinked tree is not
+            // descended here — it is either covered by its own configured root
+            // (e.g. business-admin/*) or deliberately out of scope.
+            if matches!(entry.file_type(), Ok(ft) if ft.is_dir())
+                && !is_skipped_dir_name(&entry.file_name())
+            {
+                stack.push(entry.path());
+            }
+        }
+    }
+    added
 }
 
 // ---------------------------------------------------------------------------
@@ -222,19 +350,6 @@ struct FileResponse {
 }
 
 #[derive(Serialize)]
-struct DirEntry {
-    name: String,
-    is_dir: bool,
-    mtime: u64,
-    size: u64,
-}
-
-#[derive(Serialize)]
-struct DirResponse {
-    entries: Vec<DirEntry>,
-}
-
-#[derive(Serialize)]
 struct ErrorBody {
     error: String,
 }
@@ -267,30 +382,11 @@ fn log_activity(log_dir: &Option<PathBuf>, action: &str, path: &str, meta: serde
 }
 
 /// GET /file?path=<url_path>
-/// - Empty path  → {entries: [{name, is_dir:true}]} listing all configured roots
-/// - Directory   → {entries: [{name, is_dir}]} listing directory contents
-/// - File        → {content, mtime, writable}
 async fn get_file(
     State(state): State<AppState>,
     headers: HeaderMap,
     Query(q): Query<FileQuery>,
 ) -> Response {
-    // Empty path — return all configured roots as top-level directory entries.
-    if q.path.trim_matches('/').is_empty() {
-        let mut entries: Vec<DirEntry> = state
-            .roots
-            .iter()
-            .map(|r| DirEntry {
-                name: r.url_prefix.trim_end_matches('/').to_string(),
-                is_dir: true,
-                mtime: 0,
-                size: 0,
-            })
-            .collect();
-        entries.sort_by(|a, b| a.name.cmp(&b.name));
-        return Json(DirResponse { entries }).into_response();
-    }
-
     if headers.get("x-wb-source").and_then(|v| v.to_str().ok()) == Some("user") {
         let ext = q.path.rsplit('.').next().unwrap_or("").to_string();
         log_activity(
@@ -308,39 +404,8 @@ async fn get_file(
     if !fs_path.exists() {
         return err(StatusCode::NOT_FOUND, "file not found");
     }
-
-    // Directory — list contents.
-    if fs_path.is_dir() {
-        let rd = match fs::read_dir(&fs_path) {
-            Ok(r) => r,
-            Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
-        };
-        let mut entries: Vec<DirEntry> = rd
-            .filter_map(|de| {
-                let de = de.ok()?;
-                let name = de.file_name().to_string_lossy().to_string();
-                if name.starts_with('.') {
-                    return None;
-                }
-                let meta = de.metadata().ok()?;
-                let is_dir = meta.is_dir();
-                let mtime = meta
-                    .modified()
-                    .ok()
-                    .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-                    .map(|d| d.as_secs())
-                    .unwrap_or(0);
-                let size = if is_dir { 0 } else { meta.len() };
-                Some(DirEntry {
-                    name,
-                    is_dir,
-                    mtime,
-                    size,
-                })
-            })
-            .collect();
-        entries.sort_by(|a, b| b.is_dir.cmp(&a.is_dir).then(a.name.cmp(&b.name)));
-        return Json(DirResponse { entries }).into_response();
+    if !fs_path.is_file() {
+        return err(StatusCode::BAD_REQUEST, "not a file");
     }
 
     let meta = match fs::metadata(&fs_path) {
@@ -369,8 +434,8 @@ async fn get_file(
 }
 
 /// PUT /file?path=<url_path>
-/// Body: raw UTF-8 text. Header X-Foundry-Editor: 1 required.
-/// Optional header X-Foundry-Mtime: <u64> — if provided and mtime differs, returns 409.
+/// Body: raw UTF-8 text. Header X-WB-Editor: 1 required.
+/// Optional header X-WB-Mtime: <u64> — if provided and mtime differs, returns 409.
 async fn put_file(
     State(state): State<AppState>,
     Query(q): Query<FileQuery>,
@@ -378,12 +443,8 @@ async fn put_file(
     body: Bytes,
 ) -> Response {
     // CSRF guard
-    if headers
-        .get("x-foundry-editor")
-        .and_then(|v| v.to_str().ok())
-        != Some("1")
-    {
-        return err(StatusCode::FORBIDDEN, "missing X-Foundry-Editor header");
+    if headers.get("x-wb-editor").and_then(|v| v.to_str().ok()) != Some("1") {
+        return err(StatusCode::FORBIDDEN, "missing X-WB-Editor header");
     }
 
     let (fs_path, writable) = match resolve_path(&state.roots, &q.path) {
@@ -410,7 +471,7 @@ async fn put_file(
     }
 
     // mtime conflict check
-    if let Some(client_mtime_str) = headers.get("x-foundry-mtime").and_then(|v| v.to_str().ok()) {
+    if let Some(client_mtime_str) = headers.get("x-wb-mtime").and_then(|v| v.to_str().ok()) {
         if let Ok(client_mtime) = client_mtime_str.parse::<u64>() {
             if fs_path.exists() {
                 if let Ok(meta) = fs::metadata(&fs_path) {
@@ -1141,8 +1202,6 @@ fn detect_doc_type(path: &Path, content_peek: Option<&str>) -> DocType {
 // Platform PDF rendering helpers
 // ---------------------------------------------------------------------------
 
-const WEASYPRINT_BIN: &str = "/usr/bin/weasyprint";
-
 /// Inject a minimal @page CSS block before </head>.
 /// Respects print config from the request query: paper size, page numbers, position.
 /// The document content and all existing styles are untouched.
@@ -1178,15 +1237,17 @@ fn inject_page_css(html: &str, q: &FileQuery) -> String {
 }
 
 /// Spawn weasyprint and pipe HTML → PDF bytes.
-/// Blocking — call via spawn_blocking from async context.
-fn run_weasyprint(html: String) -> Result<Vec<u8>> {
-    let mut child = Command::new(WEASYPRINT_BIN)
+/// Blocking — call via spawn_blocking from async context. `bin` resolves via
+/// $PATH by default (matching how `git` is invoked elsewhere in this file);
+/// a deployer can override it in config.toml for a non-$PATH install.
+fn run_weasyprint(bin: &str, html: String) -> Result<Vec<u8>> {
+    let mut child = Command::new(bin)
         .args(["-", "-"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .spawn()
-        .context("spawning weasyprint — is it installed at /usr/bin/weasyprint?")?;
+        .with_context(|| format!("spawning weasyprint — is \"{}\" on $PATH (or configured correctly via weasyprint_bin)?", bin))?;
 
     if let Some(stdin) = child.stdin.as_mut() {
         stdin
@@ -1457,6 +1518,111 @@ fn zip_add_dir<W: std::io::Write + std::io::Seek>(
 }
 
 // ---------------------------------------------------------------------------
+// Directory listing
+// ---------------------------------------------------------------------------
+
+/// A directory listing entry. Field names/shape match local-intranet-lister.py's
+/// JSON exactly (this crate is replacing that Python service, not changing its
+/// contract) — a bare array of these, `mtime` as "YYYY-MM-DDTHH:MM:SS" (UTC, no
+/// offset suffix — the frontend's formatMtime() already appends "Z" itself
+/// before parsing), `size` present only on files.
+#[derive(Serialize)]
+struct ListEntry {
+    name: String,
+    #[serde(rename = "type")]
+    entry_type: &'static str,
+    mtime: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    size: Option<u64>,
+}
+
+/// GET /list?path=<url_path> — list a directory's immediate children.
+/// Reuses the same root-resolution/containment logic as every other handler;
+/// the JSON shape matches local-intranet-lister.py so the frontend needed no
+/// parsing changes, only different URLs to fetch.
+async fn list_dir(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
+    let fs_path = match resolve_path(&state.roots, &q.path) {
+        Ok((p, _writable)) => p,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+    if !fs_path.is_dir() {
+        return err(StatusCode::NOT_FOUND, "not a directory");
+    }
+
+    match tokio::task::spawn_blocking(move || read_dir_entries(&fs_path)).await {
+        Ok(Ok(entries)) => Json(entries).into_response(),
+        Ok(Err(e)) => err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+        Err(e) => err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    }
+}
+
+fn read_dir_entries(dir: &Path) -> Result<Vec<ListEntry>> {
+    let mut out = Vec::new();
+    for entry in fs::read_dir(dir).context("reading directory")? {
+        let Ok(entry) = entry else { continue }; // matches Python's per-entry OSError-skip
+        let path = entry.path();
+        // fs::metadata (not DirEntry::metadata) follows symlinks — this app's
+        // business-admin roots are reached entirely through symlinks, and
+        // Python's os.stat() already followed them; DirEntry::metadata() does
+        // not, which would have silently misclassified every symlinked entry.
+        let Ok(meta) = fs::metadata(&path) else {
+            continue;
+        };
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let mtime = format_mtime_iso(meta.modified().unwrap_or(UNIX_EPOCH));
+        if meta.is_dir() {
+            out.push(ListEntry {
+                name,
+                entry_type: "directory",
+                mtime,
+                size: None,
+            });
+        } else {
+            out.push(ListEntry {
+                name,
+                entry_type: "file",
+                mtime,
+                size: Some(meta.len()),
+            });
+        }
+    }
+    out.sort_by(|a, b| a.name.cmp(&b.name)); // matches Python's sorted(os.listdir(...))
+    Ok(out)
+}
+
+/// Formats a SystemTime as "YYYY-MM-DDTHH:MM:SS" (UTC, no offset/Z suffix) to
+/// match local-intranet-lister.py's exact timestamp format. No date-formatting
+/// crate is a dependency of this binary; the civil-date conversion below is
+/// the standard Hinnant days_from_civil algorithm (public domain,
+/// http://howardhinnant.github.io/date_algorithms.html) rather than pulling in
+/// chrono for one conversion.
+fn format_mtime_iso(t: std::time::SystemTime) -> String {
+    let secs = t
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0) as i64;
+    let days = secs.div_euclid(86400);
+    let rem = secs.rem_euclid(86400);
+    let (hour, minute, second) = (rem / 3600, (rem % 3600) / 60, rem % 60);
+
+    let z = days + 719468;
+    let era = z.div_euclid(146097);
+    let doe = z - era * 146097; // [0, 146096]
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365; // [0, 399]
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100); // [0, 365]
+    let mp = (5 * doy + 2) / 153; // [0, 11]
+    let d = doy - (153 * mp + 2) / 5 + 1; // [1, 31]
+    let m = if mp < 10 { mp + 3 } else { mp - 9 }; // [1, 12]
+    let y = if m <= 2 { y + 1 } else { y };
+
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
+        y, m, d, hour, minute, second
+    )
+}
+
+// ---------------------------------------------------------------------------
 
 /// GET /pdf?path=<url_path>
 /// Renders the file to PDF via WeasyPrint and returns it as a download.
@@ -1591,7 +1757,8 @@ pre {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
         .unwrap_or("document")
         .to_string();
 
-    match tokio::task::spawn_blocking(move || run_weasyprint(html)).await {
+    let weasyprint_bin = state.weasyprint_bin.clone();
+    match tokio::task::spawn_blocking(move || run_weasyprint(&weasyprint_bin, html)).await {
         Ok(Ok(pdf_bytes)) => {
             let cd = format!("attachment; filename=\"{}.pdf\"", stem);
             let mut headers = HeaderMap::new();
@@ -1813,28 +1980,70 @@ async fn main() -> Result<()> {
         1,
     );
 
+    // Brand the page title/header from config instead of a hardcoded shipped string.
+    let spa_html = spa_html
+        .replacen(
+            "<title>Foundry Intranet</title>",
+            &format!("<title>{}</title>", config.app_title),
+            1,
+        )
+        .replacen(
+            "<h1>Foundry Intranet</h1>",
+            &format!("<h1>{}</h1>", config.app_title),
+            1,
+        );
+
+    // Inject the deployer-configured sidebar structure (which of the optional
+    // "browse everything" / "staged subfolders" / "business-admin scan" sections
+    // to show, and with what values) as a bootstrap global the frontend reads at
+    // boot instead of hardcoding this deployment's own folder-naming convention.
+    let sidebar_config = serde_json::json!({
+        "commandRootLabel": config.command_root_label,
+        "stagedSubfolders": config.staged_subfolders,
+        "businessAdminDirs": config.business_admin_dirs,
+    });
+    let spa_html = spa_html.replacen(
+        "<head>",
+        &format!(
+            "<head>\n<script>window.WORKBENCH_SIDEBAR_CONFIG = {};</script>",
+            sidebar_config
+        ),
+        1,
+    );
+
     // SSE broadcast channel + inotify watcher.
     // Watches ALL configured roots so inotify fires for external writes
-    // (e.g. Claude Code editing files in _clones/).
-    let (events_tx, _) = broadcast::channel::<String>(64);
+    // (e.g. Claude Code editing files in _clones/, or git checking out a branch).
+    let (events_tx, _) = broadcast::channel::<String>(1024);
     let watcher_tx = events_tx.clone();
-    let root_mappings: Vec<(String, String)> = config
+    // Most-specific root first. `_command` maps to `/srv/foundry`, which is a
+    // prefix of every `_clones/project-*` root's fs_path, so a first-match lookup
+    // labelled every clone event `_command/clones/project-x/...`. No `/_clones/…`
+    // tree node or open tab ever matched that, which is why live refresh only ever
+    // appeared to work inside the `~/Foundry` section of the sidebar.
+    let mut roots_for_watcher: Vec<(String, String)> = config
         .roots
         .iter()
         .map(|r| (r.url_prefix.clone(), r.fs_path.clone()))
         .collect();
-    let roots_for_watcher = root_mappings.clone();
+    roots_for_watcher
+        .sort_by_key(|(_, fs_path)| std::cmp::Reverse(fs_path.trim_end_matches('/').len()));
     tokio::spawn(async move {
-        let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<String>(8);
+        let (inner_tx, mut inner_rx) = tokio::sync::mpsc::channel::<(String, bool)>(1024);
         let mut watcher = match recommended_watcher(move |res: notify::Result<notify::Event>| {
-            if let Ok(event) = res {
-                let path_str = event
-                    .paths
-                    .first()
-                    .and_then(|p| p.to_str())
-                    .unwrap_or("")
-                    .to_string();
-                let _ = inner_tx.blocking_send(path_str);
+            let Ok(event) = res else { return };
+            // Access events (open/read/close-nowrite) cannot change what the tree
+            // or an open tab shows, and were a large share of raw event volume.
+            if matches!(event.kind, notify::EventKind::Access(_)) {
+                return;
+            }
+            let is_create = matches!(event.kind, notify::EventKind::Create(_));
+            // A rename carries both the old and the new path; emit for each so the
+            // source and destination directories both refresh.
+            for p in &event.paths {
+                if let Some(s) = p.to_str() {
+                    let _ = inner_tx.blocking_send((s.to_string(), is_create));
+                }
             }
         }) {
             Ok(w) => w,
@@ -1843,37 +2052,73 @@ async fn main() -> Result<()> {
                 return;
             }
         };
+        let mut budget = WATCH_BUDGET;
+        let started = std::time::Instant::now();
+        let mut watched = 0usize;
         for (_, fs_path) in &roots_for_watcher {
-            if let Err(e) = watcher.watch(std::path::Path::new(fs_path), RecursiveMode::Recursive) {
-                eprintln!("warning: could not watch {:?}: {}", fs_path, e);
-            }
+            watched += watch_tree(&mut watcher, Path::new(fs_path), &mut budget);
         }
-        while let Some(path_str) = inner_rx.recv().await {
-            if path_str.is_empty() {
+        println!(
+            "file watcher: {} directories watched in {:.1}s ({} watch budget remaining)",
+            watched,
+            started.elapsed().as_secs_f32(),
+            budget
+        );
+
+        while let Some((path_str, is_create)) = inner_rx.recv().await {
+            if path_str.is_empty() || path_is_watch_noise(&path_str) {
                 continue;
             }
-            let rel = roots_for_watcher
-                .iter()
-                .find_map(|(prefix, base)| {
-                    let base = base.trim_end_matches('/');
-                    if let Some(rest_stripped) = path_str.strip_prefix(base) {
-                        let rest = rest_stripped.trim_start_matches('/');
-                        Some(format!("{}/{}", prefix, rest))
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or_else(|| path_str.clone());
+            // A directory that was just created has no watch of its own yet, and
+            // it may already have been populated (e.g. `git checkout`, `cp -r`).
+            if is_create {
+                let p = Path::new(&path_str);
+                if p.is_dir() {
+                    watch_tree(&mut watcher, p, &mut budget);
+                }
+            }
+            // Every root that contains this path, most specific first. The tree
+            // shows the same file under more than one prefix (`/_clones/project-x/…`
+            // and `/_command/clones/project-x/…`), so emit all of them and let the
+            // frontend refresh whichever nodes it actually has on screen.
+            let mut aliases: Vec<String> = Vec::new();
+            for (prefix, base) in &roots_for_watcher {
+                let base = base.trim_end_matches('/');
+                let Some(rest) = path_str.strip_prefix(base) else {
+                    continue;
+                };
+                // Guard against a sibling root sharing a name prefix
+                // (`…/project-design` vs `…/project-design-notes`).
+                if !rest.is_empty() && !rest.starts_with('/') {
+                    continue;
+                }
+                let rest = rest.trim_start_matches('/');
+                let prefix = prefix.trim_matches('/');
+                aliases.push(if rest.is_empty() {
+                    prefix.to_string()
+                } else {
+                    format!("{}/{}", prefix, rest)
+                });
+            }
+            if aliases.is_empty() {
+                aliases.push(path_str.clone());
+            }
             let mtime = std::fs::metadata(&path_str)
                 .ok()
                 .and_then(|m| m.modified().ok())
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|d| d.as_secs())
                 .unwrap_or(0);
-            let msg = format!(
-                r#"{{"event":"changed","path":"{}","mtime":{}}}"#,
-                rel, mtime
-            );
+            // Built through serde_json rather than format!: a filename may contain
+            // a quote or a backslash, which the old hand-rolled literal emitted raw
+            // and the frontend's JSON.parse then silently discarded.
+            let msg = serde_json::json!({
+                "event": "changed",
+                "path": aliases[0],
+                "paths": aliases,
+                "mtime": mtime,
+            })
+            .to_string();
             let _ = watcher_tx.send(msg);
         }
     });
@@ -1889,6 +2134,9 @@ async fn main() -> Result<()> {
         spa_html: Arc::new(spa_html),
         events_tx,
         log_dir,
+        weasyprint_bin: config
+            .weasyprint_bin
+            .unwrap_or_else(|| "weasyprint".to_string()),
         pending_edits: Arc::new(Mutex::new(HashMap::new())),
     };
 
@@ -1907,6 +2155,7 @@ async fn main() -> Result<()> {
         .route("/document", get(get_document))
         .route("/pdf", get(get_pdf))
         .route("/zip", get(get_zip))
+        .route("/list", get(list_dir))
         .route("/events", get(get_events))
         .route("/mcp", post(mcp::mcp_handler))
         .route("/section", get(get_section))

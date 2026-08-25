@@ -1,8 +1,3 @@
-<!--
-  SPDX-License-Identifier: FSL-1.1-ALv2
-  SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -156,6 +151,8 @@ header .tag {
   flex-shrink: 0; line-height: 1.6;
 }
 .bar-btn:hover { background: #4a4a4a; color: #eee; }
+.sibling-chips { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.sibling-chip { font-size: 11px; padding: 4px 10px; }
 .viewer-bar .bar-link {
   font-size: 10px; color: #4d9fff; text-decoration: none; white-space: nowrap; flex-shrink: 0;
 }
@@ -506,6 +503,13 @@ header .tag {
   margin-left: 4px;
   flex-shrink: 0;
 }
+.tree-mtime {
+  font-size: 10px;
+  color: #666;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+.tree-item:hover .tree-mtime { color: #999; }
 .tree-git[data-s="modified"]  { color: #e8c07d; }
 .tree-git[data-s="untracked"] { color: #79c0ff; }
 .tree-git[data-s="staged"]    { color: #89d185; }
@@ -647,6 +651,7 @@ header .tag {
     <div id="sidebar-toolbar" role="toolbar" aria-label="Sidebar tools">
       <button id="sb-toggle-btn" class="sb-tool-btn" title="Toggle sidebar (collapse/expand)" aria-label="Toggle sidebar (collapse/expand)">☰</button>
       <button id="sb-hidden-btn" class="sb-tool-btn" title="Toggle hidden files (.agent, .claude, etc.)" aria-label="Toggle hidden files" aria-pressed="false">👁</button>
+      <button id="sb-sort-btn" class="sb-tool-btn" title="Sort mode (name / date / size)" aria-label="Sort mode">A-Z</button>
     </div>
 
     <div id="search-panel">
@@ -660,17 +665,10 @@ header .tag {
         <div id="pinned-body" class="section-body" role="group" aria-label="Pinned items"></div>
       </div>
 
-      <div class="section-header open" data-section="command" role="treeitem" tabindex="-1" aria-expanded="true" aria-owns="section-command" aria-label="~/Foundry">
-        <span class="arrow">▶</span> ~/Foundry
+      <div class="section-header open" data-section="command" role="treeitem" tabindex="-1" aria-expanded="true" aria-owns="section-command" aria-label="Command root" id="command-section-header">
+        <span class="arrow">▶</span> <span id="command-section-label"></span>
       </div>
-      <div class="section-body" id="section-command" role="group" aria-label="~/Foundry">
-        <div class="tree-node" role="none">
-          <div class="tree-item" data-api="/_api/command/" data-browse="/_command/" data-type="dir" style="padding-left:14px" role="treeitem" aria-label="~/Foundry" aria-expanded="false" aria-selected="false" aria-owns="tc-command" tabindex="-1">
-            <span class="arrow">▶</span><span class="icon">📁</span><span class="label">~/Foundry</span>
-          </div>
-          <div id="tc-command" class="tree-children collapsed" style="padding-left:12px" role="group"></div>
-        </div>
-      </div>
+      <div class="section-body" id="section-command" role="group" aria-label="Command root"></div>
 
       <div class="section-header open" data-section="clones" role="treeitem" tabindex="-1" aria-expanded="true" aria-owns="section-clones" aria-label="clones/">
         <span class="arrow">▶</span> 📁 clones/
@@ -679,35 +677,10 @@ header .tag {
         <div class="loading">Loading archives…</div>
       </div>
 
-      <div class="section-header" data-section="staged" role="treeitem" tabindex="-1" aria-expanded="false" aria-owns="section-staged" aria-label="Staged Outputs">
+      <div class="section-header" data-section="staged" role="treeitem" tabindex="-1" aria-expanded="false" aria-owns="section-staged" aria-label="Staged Outputs" id="staged-section-header">
         <span class="arrow">▶</span> Staged Outputs
       </div>
-      <div class="section-body collapsed" id="section-staged" role="group" aria-label="Staged Outputs">
-        <div class="tree-node" role="none">
-          <div class="tree-item" data-api="/_api/staged/bim/" data-browse="/bim/" data-type="dir" style="padding-left:14px" role="treeitem" aria-label="bim" aria-expanded="false" aria-selected="false" aria-owns="tc-staged-bim" tabindex="-1">
-            <span class="arrow">▶</span><span class="icon">📁</span><span class="label">bim</span>
-          </div>
-          <div id="tc-staged-bim" class="tree-children collapsed" style="padding-left:12px" role="group"></div>
-        </div>
-        <div class="tree-node" role="none">
-          <div class="tree-item" data-api="/_api/staged/bookkeeping/" data-browse="/bookkeeping/" data-type="dir" style="padding-left:14px" role="treeitem" aria-label="bookkeeping" aria-expanded="false" aria-selected="false" aria-owns="tc-staged-bookkeeping" tabindex="-1">
-            <span class="arrow">▶</span><span class="icon">📁</span><span class="label">bookkeeping</span>
-          </div>
-          <div id="tc-staged-bookkeeping" class="tree-children collapsed" style="padding-left:12px" role="group"></div>
-        </div>
-        <div class="tree-node" role="none">
-          <div class="tree-item" data-api="/_api/staged/legal/" data-browse="/legal/" data-type="dir" style="padding-left:14px" role="treeitem" aria-label="legal" aria-expanded="false" aria-selected="false" aria-owns="tc-staged-legal" tabindex="-1">
-            <span class="arrow">▶</span><span class="icon">📁</span><span class="label">legal</span>
-          </div>
-          <div id="tc-staged-legal" class="tree-children collapsed" style="padding-left:12px" role="group"></div>
-        </div>
-        <div class="tree-node" role="none">
-          <div class="tree-item" data-api="/_api/staged/staging/" data-browse="/staging/" data-type="dir" style="padding-left:14px" role="treeitem" aria-label="staging" aria-expanded="false" aria-selected="false" aria-owns="tc-staged-staging" tabindex="-1">
-            <span class="arrow">▶</span><span class="icon">📁</span><span class="label">staging</span>
-          </div>
-          <div id="tc-staged-staging" class="tree-children collapsed" style="padding-left:12px" role="group"></div>
-        </div>
-      </div>
+      <div class="section-body collapsed" id="section-staged" role="group" aria-label="Staged Outputs"></div>
 
     </div><!-- /tree-panel -->
   </div><!-- /sidebar -->
@@ -830,6 +803,21 @@ let sidebarPinnedWidth = parseInt(sessionStorage.getItem('wb-sidebar-w') || '300
 // Hidden-files toggle (persists across reloads)
 let showHidden = localStorage.getItem('wb-show-hidden') === '1';
 
+// Sort mode toggle (persists across reloads) — cycles name / date / size.
+// Directories still always sort before files; the mode only orders within each group.
+const SORT_MODE_LABELS = { alpha: 'A-Z', date: 'Date', size: 'Size' };
+let sortMode = localStorage.getItem('wb-sort-mode') || 'alpha';
+function sortEntriesCmp(a, b) {
+  if (sortMode === 'date') {
+    const at = a.mtime || '', bt = b.mtime || '';
+    if (at !== bt) return bt < at ? -1 : 1;   // newest first; ISO strings compare lexically
+  } else if (sortMode === 'size') {
+    const as = a.size || 0, bs = b.size || 0;
+    if (as !== bs) return bs - as;            // largest first
+  }
+  return a.name.localeCompare(b.name);
+}
+
 // Last undo function — set by showWbToast when an undoFn is provided; cleared on dismiss.
 let lastUndoFn = null;
 
@@ -869,7 +857,7 @@ const TEXT_EXTS   = new Set([
   'py','rb','go','java','c','cpp','h','hpp','xml','html','htm',
 ]);
 const VIEWABLE_RE  = /\.(html?|pdf|md|txt|csv|json|yaml|yml|toml|ini|conf|env|log|sh|bash|rs|js|ts|jsx|tsx|css|py|png|jpg|jpeg|gif|svg|webp|bmp)$/i;
-const INDEXABLE_RE = /\.(html?|md|txt|pdf|csv|json|yaml|yml)$/i;
+const INDEXABLE_RE = /\.(html?|md|txt|pdf|csv|json|yaml|yml|docx|xlsx|py)$/i;
 
 // Document types rendered via the server-side /document route.
 // JSON schema detection (proforma, etc.) happens in openFile() after content is fetched.
@@ -888,6 +876,21 @@ const BINARY_EXTS = new Set([
   'woff','woff2','ttf','otf','eot',
   'mp3','mp4','mov','avi','mkv','wav','flac','ogg','webm',
 ]);
+
+// ── Search matching: normalize + tokenize + AND-match ──────────────────────────
+// Filenames are underscore/dash-delimited ("Agreements_Shareholders_JW1.html")
+// but queries are typed space-delimited ("Agreements Shareholders"). Normalize
+// both sides the same way, then require every query token to be a substring
+// (AND semantics) rather than one whole-string substring test.
+function normalizeSearchText(s) {
+  return s.toLowerCase().replace(/[_.-]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function tokenizeQuery(q) {
+  return normalizeSearchText(q).split(' ').filter(Boolean);
+}
+function matchesAllTokens(key, tokens) {
+  return tokens.every(t => key.includes(t));
+}
 
 function fileMode(name) {
   const ext = name.split('.').pop().toLowerCase();
@@ -968,47 +971,124 @@ function toggleHiddenFiles() {
   });
 }
 
-// ── Scoped, debounced sidebar refresh on external file-tree changes ───────────
+// ── Sort-mode cycle (name → date → size → name) ────────────────────────────────
+function cycleSortMode() {
+  const modes = Object.keys(SORT_MODE_LABELS);
+  sortMode = modes[(modes.indexOf(sortMode) + 1) % modes.length];
+  localStorage.setItem('wb-sort-mode', sortMode);
+  logActivity('cycle-sort', null, { mode: sortMode });
+  const btn = document.getElementById('sb-sort-btn');
+  if (btn) btn.textContent = SORT_MODE_LABELS[sortMode];
+  // Reload all expanded directory nodes so the new order applies.
+  document.querySelectorAll('.tree-item[data-type="dir"][data-loaded]').forEach(item => {
+    item.removeAttribute('data-loaded');
+    const node = item.closest('.tree-node');
+    const children = node && node.querySelector('.tree-children');
+    if (children && !children.classList.contains('collapsed')) {
+      children.innerHTML = '';
+      const depth = Math.round((parseInt(item.style.paddingLeft) - 14) / 14) + 1;
+      loadChildren(item, children, depth);
+    }
+  });
+}
+
+// ── Scoped, throttled sidebar refresh on external file-tree changes ───────────
 // Collapses a burst of SSE "changed" events into a single re-fetch per affected
 // parent directory, and only touches directory nodes that are currently expanded
 // (untouched/collapsed dirs pick up fresh contents on next expand anyway).
 const pendingTreeRefreshDirs = new Set();
 let treeRefreshTimer = null;
+const TREE_REFRESH_WINDOW_MS = 400;
+const TREE_REFRESH_MAX_DIRS  = 200;
 
 function normTreePath(p) {
   return (p || '').replace(/^\/+/, '').replace(/\/+$/, '') + '/';
 }
 
+// Re-fetch one expanded directory node in place, preserving which of its
+// descendants are expanded and which item is selected. Without that, a refresh
+// triggered by an unrelated write would collapse whatever the operator had open
+// underneath — worse than not refreshing at all.
+async function refreshTreeNode(item) {
+  const node = item.closest('.tree-node');
+  const children = node && node.querySelector('.tree-children');
+  if (!children) return;
+
+  const openPaths = new Set(
+    Array.from(children.querySelectorAll('.tree-item[data-type="dir"].open'))
+      .map(el => el.dataset.browse)
+      .filter(Boolean)
+  );
+  const activePath = activeTreeEl
+    ? (activeTreeEl.dataset.browse || activeTreeEl.dataset.href || '')
+    : '';
+
+  item.removeAttribute('data-loaded');
+  children.innerHTML = '';
+  const pl = parseInt(item.style.paddingLeft) || 14;
+  // Cache-bust this one refresh only — set the API url, kick off loadChildren
+  // (its fetch() call reads dataset.api synchronously before the first await),
+  // then restore immediately so any later reads of dataset.api (e.g. building
+  // child item API paths after the fetch resolves) see the original,
+  // un-suffixed value.
+  const originalApi = item.dataset.api;
+  item.dataset.api = originalApi + (originalApi.includes('?') ? '&' : '?') + '_t=' + Date.now();
+  const loading = loadChildren(item, children, Math.round(pl / 14));
+  item.dataset.api = originalApi;
+  await loading;
+
+  await restoreTreeState(children, openPaths, activePath);
+}
+
+async function restoreTreeState(childrenEl, openPaths, activePath) {
+  const kids = Array.from(childrenEl.children)
+    .map(n => n.querySelector(':scope > .tree-item'))
+    .filter(Boolean);
+  for (const kid of kids) {
+    const kidPath = kid.dataset.browse || kid.dataset.href || '';
+    if (activePath && kidPath === activePath) setTreeActive(kid);
+    if (kid.dataset.type !== 'dir' || !openPaths.has(kid.dataset.browse)) continue;
+    const kidChildren = kid.nextElementSibling;
+    if (!kidChildren) continue;
+    kid.classList.add('open');
+    kid.setAttribute('aria-expanded', 'true');
+    kidChildren.classList.remove('collapsed');
+    const kidPl = parseInt(kid.style.paddingLeft) || 14;
+    await loadChildren(kid, kidChildren, Math.round(kidPl / 14));
+    await restoreTreeState(kidChildren, openPaths, activePath);
+  }
+}
+
+function flushTreeRefresh() {
+  // Defer (not drop) while the boot-time saved-expansion replay is running —
+  // both mutate the same .open/dataset.loaded/innerHTML state on tree nodes,
+  // and the replay's own loadChildren calls are already idempotent/safe, but
+  // an SSE refresh interleaving mid-replay is not something to reason about.
+  if (treeReplayInFlight) { treeRefreshTimer = setTimeout(flushTreeRefresh, TREE_REFRESH_WINDOW_MS); return; }
+  treeRefreshTimer = null;
+  const wanted = new Set(Array.from(pendingTreeRefreshDirs).map(normTreePath));
+  pendingTreeRefreshDirs.clear();
+  document.querySelectorAll('.tree-item[data-type="dir"]').forEach(item => {
+    if (!wanted.has(normTreePath(item.dataset.browse))) return;
+    if (!item.classList.contains('open') || !item.dataset.loaded) return;
+    refreshTreeNode(item);
+  });
+}
+
 function queueTreeRefresh(parentPath) {
+  if (!parentPath) return;
   pendingTreeRefreshDirs.add(parentPath);
-  if (treeRefreshTimer) clearTimeout(treeRefreshTimer);
-  treeRefreshTimer = setTimeout(() => {
-    const parents = Array.from(pendingTreeRefreshDirs);
-    pendingTreeRefreshDirs.clear();
-    treeRefreshTimer = null;
-    parents.forEach(parentPath => {
-      const norm = normTreePath(parentPath);
-      document.querySelectorAll('.tree-item[data-type="dir"]').forEach(item => {
-        if (normTreePath(item.dataset.browse) !== norm) return;
-        if (!item.classList.contains('open') || !item.dataset.loaded) return;
-        const node = item.closest('.tree-node');
-        const children = node && node.querySelector('.tree-children');
-        if (!children) return;
-        item.removeAttribute('data-loaded');
-        children.innerHTML = '';
-        const pl = parseInt(item.style.paddingLeft) || 14;
-        // Cache-bust this one refresh only — set the API url, kick off
-        // loadChildren (its fetch() call reads dataset.api synchronously
-        // before the first await), then restore immediately so any later
-        // reads of dataset.api (e.g. building child item API paths after
-        // the fetch resolves) see the original, un-suffixed value.
-        const originalApi = item.dataset.api;
-        item.dataset.api = originalApi + (originalApi.includes('?') ? '&' : '?') + '_t=' + Date.now();
-        loadChildren(item, children, Math.round(pl / 14));
-        item.dataset.api = originalApi;
-      });
-    });
-  }, 350);
+  // Bound the set — a runaway writer must not grow it without limit.
+  while (pendingTreeRefreshDirs.size > TREE_REFRESH_MAX_DIRS) {
+    pendingTreeRefreshDirs.delete(pendingTreeRefreshDirs.values().next().value);
+  }
+  // Fixed-window throttle, NOT a resetting debounce. The previous version called
+  // clearTimeout() on every event, so a sustained stream (a build, a git checkout,
+  // an autosave loop) pushed the flush back indefinitely and the tree never
+  // refreshed at all. Leaving an already-scheduled timer alone guarantees a flush
+  // within TREE_REFRESH_WINDOW_MS of the first event in a burst.
+  if (treeRefreshTimer) return;
+  treeRefreshTimer = setTimeout(flushTreeRefresh, TREE_REFRESH_WINDOW_MS);
 }
 
 // ── Markdown renderer ─────────────────────────────────────────────────────────
@@ -1498,9 +1578,9 @@ async function saveFile() {
   const content = document.getElementById('editor-textarea').value;
   const headers = {
     'Content-Type': 'text/plain; charset=utf-8',
-    'X-Foundry-Editor': '1',
+    'X-WB-Editor': '1',
   };
-  if (editorMtime) headers['X-Foundry-Mtime'] = String(editorMtime);
+  if (editorMtime) headers['X-WB-Mtime'] = String(editorMtime);
 
   showEditorStatus('Saving…', '#888', 0);
 
@@ -1520,7 +1600,7 @@ async function saveFile() {
     logActivity('mtime-conflict', editorPath, {});
     showEditorStatus('', null, 0);
     if (!confirm('This file was modified on disk since you opened it.\nOverwrite the disk version with your edits?')) return;
-    const h2 = { 'Content-Type': 'text/plain; charset=utf-8', 'X-Foundry-Editor': '1' };
+    const h2 = { 'Content-Type': 'text/plain; charset=utf-8', 'X-WB-Editor': '1' };
     try {
       const res2 = await fetch('/_api/edit/file?path=' + encodeURIComponent(editorPath), {
         method: 'PUT', headers: h2, body: content,
@@ -1598,9 +1678,9 @@ async function autosaveFile() {
     const content = document.getElementById('editor-textarea').value;
     const headers = {
       'Content-Type': 'text/plain; charset=utf-8',
-      'X-Foundry-Editor': '1',
+      'X-WB-Editor': '1',
     };
-    if (editorMtime) headers['X-Foundry-Mtime'] = String(editorMtime);
+    if (editorMtime) headers['X-WB-Mtime'] = String(editorMtime);
     try {
       const res = await fetch('/_api/edit/file?path=' + encodeURIComponent(editorPath), {
         method: 'PUT', headers, body: content,
@@ -1774,12 +1854,21 @@ function addRenameDuplicateButtons() {
   dupBtn.setAttribute('aria-label', 'Duplicate this file in place');
   dupBtn.addEventListener('click', duplicateCurrent);
 
+  const newVerBtn = document.createElement('button');
+  newVerBtn.className = 'bar-btn';
+  newVerBtn.textContent = '🆕 New version';
+  newVerBtn.title = 'Duplicate and bump the version number (e.g. _JW9 -> _JW10)';
+  newVerBtn.setAttribute('aria-label', 'Create a new version of this file');
+  newVerBtn.addEventListener('click', newVersionCurrent);
+
   if (anchor && anchor.nextSibling) {
     anchor.parentNode.insertBefore(renameBtn, anchor.nextSibling);
     anchor.parentNode.insertBefore(dupBtn, renameBtn.nextSibling);
+    anchor.parentNode.insertBefore(newVerBtn, dupBtn.nextSibling);
   } else {
     bar.appendChild(renameBtn);
     bar.appendChild(dupBtn);
+    bar.appendChild(newVerBtn);
   }
 }
 
@@ -1885,6 +1974,13 @@ async function duplicateCurrent() {
   openFile('/' + data.new_path, data.new_name);
 }
 
+async function newVersionCurrent() {
+  if (!editorPath) return;
+  const name = editorPath.split('/').pop();
+  const r = await newVersionOf(editorPath, name);
+  if (r) openFile(r.path, r.name);
+}
+
 // ── Open file in viewer + optional editor ─────────────────────────────────────
 // ── Cache-bust helper ────────────────────────────────────────────────────────
 // Appends a `_cb=<timestamp>` query param to bypass any browser / proxy cache
@@ -1894,6 +1990,34 @@ async function duplicateCurrent() {
 function cacheBust(path) {
   const sep = path.indexOf('?') >= 0 ? '&' : '?';
   return path + sep + '_cb=' + Date.now();
+}
+
+// ── Sibling-format chips (docx/xlsx/pdf/html variants of the same document) ──
+function siblingListingApi(browsePath) {
+  const dir = browsePath.slice(0, browsePath.lastIndexOf('/') + 1);
+  let queryPath;
+  if (dir.startsWith('/_clones/'))       queryPath = '_clones/'  + dir.slice('/_clones/'.length);
+  else if (dir.startsWith('/_command/')) queryPath = '_command/' + dir.slice('/_command/'.length);
+  else                                    queryPath = '_staged/'  + dir.slice(1); // root-level staged paths, e.g. /bim/... -> _staged/bim/...
+  const api = '/_api/edit/list?path=' + encodeUrlPath(queryPath.replace(/\/$/, ''));
+  return { api, dir };
+}
+
+async function findSiblingFormats(browsePath, fname) {
+  const dot = fname.lastIndexOf('.');
+  if (dot < 0) return [];
+  const stem = fname.slice(0, dot), ext = fname.slice(dot + 1).toLowerCase();
+  const { api, dir } = siblingListingApi(browsePath);
+  try {
+    const res = await fetch(api);
+    if (!res.ok) return [];
+    const entries = await res.json();
+    return entries
+      .filter(e => e.type !== 'directory')
+      .map(e => e.name.replace(/\/$/, ''))
+      .filter(n => { const d = n.lastIndexOf('.'); return d > 0 && n.slice(0, d) === stem && n.slice(d + 1).toLowerCase() !== ext; })
+      .map(n => ({ name: n, path: dir + n }));
+  } catch(e) { return []; }
 }
 
 async function openFile(path, name) {
@@ -1960,6 +2084,21 @@ async function openFile(path, name) {
     const ext = fname.split('.').pop().toUpperCase();
     tc.textContent = 'Preview not available for ' + ext + ' files.\n\nUse the ⬇ Download button above to save it locally.';
     hideEditorPanel();
+
+    const openedPath = path; // guard: don't render into a since-abandoned view
+    findSiblingFormats(path, fname).then(sibs => {
+      if (!sibs.length || currentPath !== openedPath) return;
+      const row = document.createElement('div');
+      row.className = 'sibling-chips';
+      sibs.forEach(s => {
+        const chip = document.createElement('button');
+        chip.className = 'bar-btn sibling-chip';
+        chip.textContent = 'View as ' + s.name.split('.').pop().toUpperCase();
+        chip.addEventListener('click', () => openFile(s.path, s.name));
+        row.appendChild(chip);
+      });
+      tc.parentNode.insertBefore(row, tc.nextSibling);
+    });
 
   } else {
     viewMode = 'text';
@@ -2739,6 +2878,20 @@ function iconFor(name, isDir) {
   return '📄';
 }
 
+// The lister's mtime strings (e.g. "2026-08-20T14:29:50") carry UTC wall-clock
+// values but no 'Z' suffix — the ECMA-262 date-time grammar treats an offset-less
+// string as *local* time, so parsing without appending 'Z' would silently shift
+// every displayed timestamp by the browser's UTC offset.
+function formatMtime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + 'Z');
+  if (isNaN(d.getTime())) return '';
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleString(undefined, sameYear
+    ? { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+    : { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 // ── Build a tree item element ─────────────────────────────────────────────────
 // ── Tree keyboard navigation (WAI-ARIA roving tabindex) ───────────────────────
 // The tree announces role=tree but every node used to carry tabindex=0, which is the
@@ -2810,15 +2963,25 @@ function buildItem(entry, apiBase, browseBase, depth) {
   item.setAttribute('aria-selected', 'false');
   item.tabIndex = -1;   // roving tabindex — treeSyncRoving() grants 0 to exactly one node
 
+  const mtimeSpan = entry.mtime
+    ? `<span class="tree-mtime" title="${esc(entry.mtime.replace('T', ' '))} UTC">${esc(formatMtime(entry.mtime))}</span>`
+    : '';
+
   if (isDir) {
-    item.dataset.api    = apiBase + name + '/';
+    // dataset.api is fetched verbatim by loadChildren() — encode just this one
+    // segment (never containing '/') so a folder name with &, #, %, spaces,
+    // etc. can't corrupt the query string once apiBase moved from a raw URL
+    // path (nginx-proxied to the old Python lister) to a ?path= query value.
+    // dataset.browse stays unencoded — it's a display/tab-identity string,
+    // encoded separately wherever it's actually fetched (e.g. openFile()).
+    item.dataset.api    = apiBase + encodeURIComponent(name) + '/';
     item.dataset.browse = browseBase + name + '/';
     item.dataset.type   = 'dir';
     item.setAttribute('aria-expanded', 'false');
     item.innerHTML =
       `<span class="arrow">▶</span>` +
       `<span class="icon">${iconFor(name, true)}</span>` +
-      `<span class="label">${name}</span>`;
+      `<span class="label">${name}</span>` + mtimeSpan;
   } else {
     item.dataset.href  = browseBase + name;
     item.dataset.type  = 'file';
@@ -2827,7 +2990,7 @@ function buildItem(entry, apiBase, browseBase, depth) {
     const badge = gs ? `<span class="tree-git" data-s="${gs}">●</span>` : '';
     item.innerHTML =
       `<span class="icon" style="margin-left:14px">${iconFor(name, false)}</span>` +
-      `<span class="label">${name}</span>` + badge;
+      `<span class="label">${name}</span>` + mtimeSpan + badge;
   }
 
   const children = document.createElement('div');
@@ -2868,9 +3031,9 @@ async function loadChildren(item, childrenEl, depth) {
     const apiBase    = item.dataset.api;
     const browseBase = item.dataset.browse;
 
-    const dirs     = entries.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
-    const viewable = entries.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
-    const rest     = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
+    const dirs     = entries.filter(e => e.type === 'directory').sort(sortEntriesCmp);
+    const viewable = entries.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort(sortEntriesCmp);
+    const rest     = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort(sortEntriesCmp);
 
     [...dirs, ...viewable, ...rest].forEach(entry => {
       if (!showHidden && entry.name.startsWith('.')) return;
@@ -2898,6 +3061,7 @@ function wireItem(item, childrenEl, depth) {
     const isOpen = item.classList.toggle('open');
     childrenEl.classList.toggle('collapsed', !isOpen);
     item.setAttribute('aria-expanded', String(isOpen));
+    persistTreeOpenState();
     if (isOpen) { logActivity('tree-expand', item.dataset.browse || item.dataset.href || '', { depth }); await loadChildren(item, childrenEl, depth); }
   });
   // Enter/Space activates a treeitem the same way a click does — treeitem
@@ -2947,11 +3111,61 @@ document.querySelectorAll('.section-header').forEach(hdr => {
   }
 });
 
+// ── Deployer-configured sidebar sections ────────────────────────────────────────
+// The "browse everything under one root" section and the "Staged" section's
+// subfolder list are both this deployment's own convention, not something every
+// customer has — values come from Config.command_root_label / staged_subfolders
+// in config.toml (window.WORKBENCH_SIDEBAR_CONFIG, injected server-side). Either
+// section hides itself entirely when its config value is absent/empty.
+(function initConfiguredSidebarSections() {
+  const cfg = window.WORKBENCH_SIDEBAR_CONFIG || {};
+
+  const commandHeader = document.getElementById('command-section-header');
+  const commandBody = document.getElementById('section-command');
+  if (cfg.commandRootLabel) {
+    const label = cfg.commandRootLabel;
+    document.getElementById('command-section-label').textContent = label;
+    commandHeader.setAttribute('aria-label', label);
+    commandBody.setAttribute('aria-label', label);
+    const childrenId = 'tc-' + (++treeGroupSeq);
+    const node = document.createElement('div');
+    node.className = 'tree-node';
+    node.setAttribute('role', 'none');
+    node.innerHTML =
+      `<div class="tree-item" data-api="/_api/edit/list?path=_command/" data-browse="/_command/" data-type="dir" style="padding-left:14px" role="treeitem" aria-label="${esc(label)}" aria-expanded="false" aria-selected="false" aria-owns="${childrenId}" tabindex="-1">` +
+        `<span class="arrow">▶</span><span class="icon">📁</span><span class="label">${esc(label)}</span>` +
+      `</div>` +
+      `<div id="${childrenId}" class="tree-children collapsed" style="padding-left:12px" role="group"></div>`;
+    commandBody.appendChild(node);
+    wireItem(node.querySelector('.tree-item'), node.querySelector('.tree-children'), 1);
+  } else {
+    commandHeader.style.display = 'none';
+    commandBody.style.display = 'none';
+  }
+
+  const stagedHeader = document.getElementById('staged-section-header');
+  const stagedBody = document.getElementById('section-staged');
+  const stagedSubfolders = cfg.stagedSubfolders || [];
+  if (stagedSubfolders.length) {
+    stagedSubfolders.forEach(name => {
+      const node = buildItem({ name, type: 'directory' }, '/_api/edit/list?path=_staged/', '/', 0);
+      stagedBody.appendChild(node);
+      wireItem(node.querySelector('.tree-item'), node.querySelector('.tree-children'), 1);
+    });
+  } else {
+    stagedHeader.style.display = 'none';
+    stagedBody.style.display = 'none';
+  }
+})();
+
 // ── Load cluster archive list ─────────────────────────────────────────────────
-(async () => {
+// Exposed as clonesReady (not fire-and-forget) so anything needing the
+// _clones/* top-level tree items to exist first — e.g. restoreTreeOpenState_boot
+// below — can await it instead of racing ahead of this fetch.
+const clonesReady = (async () => {
   const container = document.getElementById('section-clones');
   try {
-    const res = await fetch('/_api/clones/');
+    const res = await fetch('/_api/edit/list?path=_clones');
     if (!res.ok) throw new Error(res.status);
     const entries = await res.json();
     container.innerHTML = '';
@@ -2960,7 +3174,7 @@ document.querySelectorAll('.section-header').forEach(hdr => {
       .sort((a,b) => a.name.localeCompare(b.name))
       .forEach(entry => {
         const name = entry.name.replace(/\/$/, '');
-        const node = buildItem({ name, type: 'directory' }, '/_api/clones/', '/_clones/', 0);
+        const node = buildItem({ name, type: 'directory' }, '/_api/edit/list?path=_clones/', '/_clones/', 0);
         container.appendChild(node);
         wireItem(node.querySelector('.tree-item'), node.querySelector('.tree-children'), 1);
       });
@@ -3056,12 +3270,21 @@ const SKIP_DIRS = new Set([
   '.cargo','vendor-sel4-kernel','vendor-seL4','src'
 ]);
 
+// Encodes each '/'-separated segment independently, leaving the slashes
+// themselves as structural separators. Used only for the fetch URL — the
+// unencoded form of the same path is kept separately (e.g. subpath below,
+// or a tree item's dataset.browse) for display/tab-identity/persistence,
+// since those get their own encoding at whatever point they're later fetched.
+function encodeUrlPath(p) {
+  return p.split('/').map(encodeURIComponent).join('/');
+}
+
 async function scanDir(apiBase, browseBase, label, subpath, depth, maxDepth) {
   if (depth >= maxDepth) return;
   let entries;
   await scanSem.acquire();
   try {
-    const res = await fetch(apiBase + subpath);
+    const res = await fetch(apiBase + encodeUrlPath(subpath));
     if (!res.ok) return;
     entries = await res.json();
   } catch(e) { return; }
@@ -3076,7 +3299,7 @@ async function scanDir(apiBase, browseBase, label, subpath, depth, maxDepth) {
       subdirFns.push(() => scanDir(apiBase, browseBase, label, subpath + name + '/', depth + 1, maxDepth));
     } else if (INDEXABLE_RE.test(name)) {
       const folder = subpath ? label + ' / ' + subpath.replace(/\/$/, '') : label;
-      searchIndex.push({ name, path: browseBase + subpath + name, folder, key: (name + ' ' + folder).toLowerCase() });
+      searchIndex.push({ name, path: browseBase + subpath + name, folder, key: normalizeSearchText(name + ' ' + folder) });
     }
   }
   // Run subdirectory scans sequentially to stay within semaphore budget
@@ -3084,21 +3307,38 @@ async function scanDir(apiBase, browseBase, label, subpath, depth, maxDepth) {
 }
 
 async function buildSearchIndex() {
-  await scanDir('/_api/staged/',           '/',                   'Staged',   '', 0, 4);
+  await scanDir('/_api/edit/list?path=_staged/', '/', 'Staged', '', 0, 4);
 
   // Clones: only .agent/ subfolder + top-level files (skip source trees)
   try {
-    const res = await fetch('/_api/clones/');
+    const res = await fetch('/_api/edit/list?path=_clones');
     if (res.ok) {
       const archives = await res.json();
       for (const e of archives.filter(e => e.type === 'directory' && !e.name.startsWith('.'))) {
         const name = e.name.replace(/\/$/, '');
         // Top-level files only (depth 1), then .agent/ up to depth 3
-        await scanDir('/_api/clones/', '/_clones/', name, name + '/', 0, 1);
-        await scanDir('/_api/clones/', '/_clones/', name, name + '/.agent/', 0, 3);
+        await scanDir('/_api/edit/list?path=_clones/', '/_clones/', name, name + '/', 0, 1);
+        await scanDir('/_api/edit/list?path=_clones/', '/_clones/', name, name + '/.agent/', 0, 3);
+        await scanDir('/_api/edit/list?path=_clones/', '/_clones/', name, name + '/inputs/', 0, 3);
+        await scanDir('/_api/edit/list?path=_clones/', '/_clones/', name, name + '/outputs/', 0, 3);
       }
     }
   } catch(e) { /* ignore */ }
+
+  // Deployer-configured folder names (business_admin_dirs in config.toml) that
+  // live under _command/business-admin/* but aren't listed under _clones on
+  // this deployment's own folder convention — see the project-orgcharts
+  // divergence note in NEXT.md for why this specific deployment needs this.
+  // _command as a whole is deliberately never scanned (too large), so without
+  // this list, real working documents in these folders are never indexed
+  // regardless of match-quality fixes. Empty (the default) is a no-op.
+  const BUSINESS_ADMIN_DIRS = (window.WORKBENCH_SIDEBAR_CONFIG && window.WORKBENCH_SIDEBAR_CONFIG.businessAdminDirs) || [];
+  for (const name of BUSINESS_ADMIN_DIRS) {
+    const base = 'business-admin/' + name + '/';
+    await scanDir('/_api/edit/list?path=_command/', '/_command/', name, base, 0, 1);
+    await scanDir('/_api/edit/list?path=_command/', '/_command/', name, base + 'inputs/', 0, 4);
+    await scanDir('/_api/edit/list?path=_command/', '/_command/', name, base + 'outputs/', 0, 4);
+  }
 
   indexingDone = true;
   const status = document.getElementById('search-status');
@@ -3334,6 +3574,51 @@ window.addEventListener('beforeunload', e => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Persisted tree expansion (localStorage — a durable preference like wb-pins,
+// not session state like wb-tabs). She re-expands the same handful of folders
+// hundreds of times a month per the activity log; this replays them on load.
+// ─────────────────────────────────────────────────────────────────────────────
+const TREE_OPEN_MAX = 200;
+let treeReplayInFlight = false;
+
+function loadOpenTreePaths() {
+  try { return JSON.parse(localStorage.getItem('wb-tree-open') || '[]'); } catch(e) { return []; }
+}
+function persistTreeOpenState() {
+  try {
+    const open = Array.from(document.querySelectorAll('.tree-item[data-type="dir"].open'))
+      .map(el => el.dataset.browse).filter(Boolean).slice(-TREE_OPEN_MAX);
+    localStorage.setItem('wb-tree-open', JSON.stringify(open));
+  } catch(e) {}
+}
+
+// Replays saved open-folder paths from the tree roots downward, reconstructing
+// each entry's own ancestor chain by path segment — does not depend on
+// ancestor entries also being present in the saved list.
+async function restoreTreeOpenState(savedPaths) {
+  if (!savedPaths.length) return;
+  treeReplayInFlight = true;
+  try {
+    await clonesReady; // the _clones/* top-level items don't exist until this resolves
+    for (const fullPath of savedPaths) {
+      let parentEl = document, built = '/';
+      for (const seg of fullPath.replace(/^\/+|\/+$/g, '').split('/')) {
+        built += seg + '/';
+        const item = parentEl.querySelector(`.tree-item[data-type="dir"][data-browse="${CSS.escape(built)}"]`);
+        if (!item) break; // renamed/deleted since last visit — skip silently, don't error
+        if (!item.classList.contains('open')) { item.classList.add('open'); item.setAttribute('aria-expanded', 'true'); }
+        const kids = item.nextElementSibling;
+        if (!kids) break;
+        kids.classList.remove('collapsed');
+        const depth = Math.round((parseInt(item.style.paddingLeft) || 14) / 14);
+        await loadChildren(item, kids, depth); // idempotent — dataset.loaded guard
+        parentEl = kids;
+      }
+    }
+  } finally { treeReplayInFlight = false; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Pinned files
 // ─────────────────────────────────────────────────────────────────────────────
 function loadPins() {
@@ -3383,9 +3668,9 @@ function renderPinnedSection() {
             const entries = await res.json();
             children.innerHTML = '';
             if (!entries.length) { children.innerHTML = '<div class="empty">Empty</div>'; return; }
-            const dirs = entries.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
-            const vw   = entries.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
-            const rest = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
+            const dirs = entries.filter(e => e.type === 'directory').sort(sortEntriesCmp);
+            const vw   = entries.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort(sortEntriesCmp);
+            const rest = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort(sortEntriesCmp);
             [...dirs, ...vw, ...rest].forEach(entry => {
               if (!showHidden && entry.name.startsWith('.')) return;
               const childNode = buildItem(entry, pin.apiPath, pin.path, 1);
@@ -3515,8 +3800,9 @@ function attachContextMenu(item) {
         { label: '⎘ Copy path', action: () => copyToClipboard(path) },
         '-',
         { label: '📌 Pin to top', action: () => pinFile(path, name) },
-        { label: '✎ Rename',    action: () => renameByPath(path, name) },
-        { label: '⧉ Duplicate', action: () => duplicateByPath(path, name) },
+        { label: '✎ Rename',       action: () => renameByPath(path, name) },
+        { label: '⧉ Duplicate',    action: () => duplicateByPath(path, name) },
+        { label: '🆕 New version', action: () => newVersionByPath(path, name) },
         '-',
         { label: '🗑 Delete', action: () => deleteFileByPath(path, name, item) },
       ];
@@ -3783,6 +4069,60 @@ async function duplicateByPath(path, name) {
     if (!res.ok) { alert(data.error || 'Duplicate failed'); return; }
     openFile('/' + data.new_path, data.new_name);
   } catch(e) { alert('Duplicate failed: ' + e.message); }
+}
+
+// ── New version: duplicate then rename to a computed next-version name ────────
+// Tier 1: explicit version marker  "..._JW9.html"      -> "..._JW10.html"
+// Tier 2: existing copy marker     "Report-copy.html"   -> "Report-copy-2.html"
+//                                  "Report-copy-4.html" -> "Report-copy-5.html"
+// Returns null if neither pattern matches — caller then leaves the plain
+// "-copy" duplicate as-is, matching today's existing Duplicate behavior.
+function computeNextVersionName(name) {
+  const m = name.match(/^(.*)\.([^./]+)$/);
+  const stem = m ? m[1] : name, ext = m ? '.' + m[2] : '';
+  const jw = stem.match(/^(.*_JW)(\d+)$/);
+  if (jw) return jw[1] + (parseInt(jw[2], 10) + 1) + ext;
+  const cp = stem.match(/^(.*)-copy(?:-(\d+))?$/);
+  if (cp) return cp[1] + '-copy-' + (cp[2] ? parseInt(cp[2], 10) + 1 : 2) + ext;
+  return null;
+}
+
+// Two-request design (duplicate, then rename) deliberately reuses the
+// existing collision-safe /duplicate endpoint rather than adding a backend
+// target-name parameter — keeps this change frontend-only and DEV-iterable.
+async function newVersionOf(path, name) {
+  const apiPath = path.replace(/^\//, '');
+  const dupRes = await fetch('/_api/edit/duplicate?path=' + encodeURIComponent(apiPath), { method: 'POST' });
+  const dupData = await dupRes.json().catch(() => ({}));
+  if (!dupRes.ok) { alert(dupData.error || 'New version failed (duplicate step)'); return null; }
+
+  let target = computeNextVersionName(name);
+  if (!target) {
+    showWbToast('New version created: "' + dupData.new_name + '"');
+    return { path: '/' + dupData.new_path, name: dupData.new_name };
+  }
+
+  let renameFrom = dupData.new_path;
+  for (let attempt = 0; attempt < 5 && target; attempt++) {
+    const renRes = await fetch(
+      '/_api/edit/rename?from=' + encodeURIComponent(renameFrom) + '&to=' + encodeURIComponent(target),
+      { method: 'POST' },
+    );
+    const renData = await renRes.json().catch(() => ({}));
+    if (renRes.ok) {
+      showWbToast('New version created: "' + renData.new_name + '"');
+      return { path: '/' + renData.new_path, name: renData.new_name };
+    }
+    if (renRes.status !== 409) break; // real error, not a name collision — stop retrying
+    target = computeNextVersionName(target); // bump again and retry
+  }
+  showWbToast('New version: kept as "' + dupData.new_name + '" (target name already in use)');
+  return { path: '/' + dupData.new_path, name: dupData.new_name };
+}
+
+async function newVersionByPath(path, name) {
+  const r = await newVersionOf(path, name);
+  if (r) openFile(r.path, r.name);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -4114,6 +4454,11 @@ renderPinnedSection();
   logActivity('session-start', null, { tabs: tabs.length });
 })();
 
+(async function restoreTreeOpenState_boot() {
+  const saved = loadOpenTreePaths();
+  if (saved.length) await restoreTreeOpenState(saved);
+})();
+
 // ── iframe → editor click navigation ─────────────────────────────────────────
 window.addEventListener('message', e => {
   if (!e.data || e.data.type !== 'iframe-source-click') return;
@@ -4149,7 +4494,7 @@ window.addEventListener('message', async e => {
   try {
     const res = await fetch('/_api/edit/file?path=' + encodeURIComponent(editorPath), {
       method: 'PUT',
-      headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Foundry-Editor': '1' },
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-WB-Editor': '1' },
       body: e.data.content,
     });
     if (res.ok) {
@@ -4173,8 +4518,14 @@ const searchPanel   = document.getElementById('search-panel');
 const searchResults = document.getElementById('search-results');
 const treePanel     = document.getElementById('tree-panel');
 
+function searchMatches(rawQuery) {
+  const tokens = tokenizeQuery(rawQuery);
+  if (!tokens.length) return [];
+  return searchIndex.filter(f => matchesAllTokens(f.key, tokens)).slice(0, 80);
+}
+
 function renderSearch() {
-  const q = searchInput.value.trim().toLowerCase();
+  const q = searchInput.value.trim();
   if (!q) {
     searchPanel.classList.remove('visible');
     treePanel.classList.remove('hidden');
@@ -4187,7 +4538,7 @@ function renderSearch() {
     searchResults.innerHTML = '<div class="search-msg">Still indexing, try again in a moment…</div>';
     return;
   }
-  const matches = searchIndex.filter(f => f.key.includes(q)).slice(0, 80);
+  const matches = searchMatches(q);
   if (!matches.length) {
     searchResults.innerHTML = `<div class="search-msg">No files match "${esc(q)}"</div>`;
     return;
@@ -4215,7 +4566,7 @@ searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim();
   if (q) {
     searchLogTimer = setTimeout(() => {
-      const matches = searchIndex.filter(f => f.key.includes(q.toLowerCase())).slice(0, 80);
+      const matches = searchMatches(q);
       logActivity('search', null, { query: q.slice(0, 80), results: matches.length });
     }, 600);
   }
@@ -4245,6 +4596,13 @@ searchInput.addEventListener('keydown', e => {
     hiddenBtn.classList.toggle('active', showHidden);
     hiddenBtn.setAttribute('aria-pressed', String(showHidden));
     hiddenBtn.addEventListener('click', e => { e.stopPropagation(); toggleHiddenFiles(); });
+  }
+
+  // Sort button — show current mode on startup
+  const sortBtn = document.getElementById('sb-sort-btn');
+  if (sortBtn) {
+    sortBtn.textContent = SORT_MODE_LABELS[sortMode];
+    sortBtn.addEventListener('click', e => { e.stopPropagation(); cycleSortMode(); });
   }
 
   // Clicking anywhere on a collapsed sidebar expands it
@@ -4297,25 +4655,33 @@ searchInput.addEventListener('keydown', e => {
       try { data = JSON.parse(e.data); } catch(_) { return; }
       if (!data || data.event !== 'changed') return;
 
-      var changedPath = (data.path || '').replace(/^\/+/, '');
+      // The same file is reachable under more than one configured root — e.g.
+      // "_clones/project-x/a.md" and "_command/clones/project-x/a.md" — and the
+      // sidebar shows both. The server sends every alias in `paths`; `path` is
+      // just the most specific one, kept for older payloads.
+      var changedPaths = (Array.isArray(data.paths) && data.paths.length ? data.paths : [data.path])
+        .map(function(p) { return (p || '').replace(/^\/+/, ''); })
+        .filter(Boolean);
+      if (!changedPaths.length) return;
       var newMtime = data.mtime || 0;
 
-      // Walk open tabs and refresh any that match the changed path.
+      // Walk open tabs and refresh any that match one of the aliases.
       tabs.forEach(function(tab, idx) {
         var tabPath = (tab.path || '').replace(/^\/+/, '');
-        if (tabPath !== changedPath && changedPath !== '') return;
+        if (!tabPath || changedPaths.indexOf(tabPath) === -1) return;
 
         if (tab.dirty) {
-          showChangeNotice(idx, changedPath);
+          showChangeNotice(idx, tabPath);
         } else {
-          reloadTabContent(idx, changedPath, newMtime);
+          reloadTabContent(idx, tabPath, newMtime);
         }
       });
 
-      // Additionally, refresh the sidebar tree node for the changed path's
-      // parent directory (if it's currently expanded) — scoped + debounced.
-      var parent = changedPath.replace(/[^/]*$/, '');
-      queueTreeRefresh(parent);
+      // Additionally, refresh the sidebar tree node for each alias's parent
+      // directory (if it's currently expanded) — scoped + throttled.
+      changedPaths.forEach(function(p) {
+        queueTreeRefresh(p.replace(/[^/]*$/, ''));
+      });
     };
 
     es.onerror = function() {

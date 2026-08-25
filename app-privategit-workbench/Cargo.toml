@@ -19,3 +19,6 @@ tower-http = { version = "0.6", features = ["cors"] }
 notify = "6"
 tokio-stream = { version = "0.1", features = ["sync"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
+walkdir = "2"
+moonshot-docengine = { path = "../moonshot-docengine" }
+moonshot-bim-engine = { path = "../moonshot-bim-engine" }
