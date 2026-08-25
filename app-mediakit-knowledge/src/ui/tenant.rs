@@ -219,10 +219,16 @@ impl Tenant {
                 ("GitHub", "https://github.com/pointsav/pointsav-monorepo"),
                 ("Software", "https://software.pointsav.com/"),
                 ("Design System", "https://design.pointsav.com/"),
+                // Real bug fix, 2026-08-25: the Woodfine tenants' "Newsroom" link
+                // pointed at newsroom.woodfinegroup.com, a subdomain that doesn't
+                // resolve at all (confirmed dead, not just 404). Neither
+                // woodfinegroup.com nor pointsav.com has a dedicated /newsroom page
+                // yet — pointing at the real apex domain until one exists.
+                ("Newsroom", "https://pointsav.com/"),
             ],
             Tenant::Projects => vec![
                 ("Corporate", "https://corporate.woodfinegroup.com/"),
-                ("Newsroom", "https://newsroom.woodfinegroup.com/"),
+                ("Newsroom", "https://woodfinegroup.com/"),
                 (
                     "GitHub",
                     "https://github.com/woodfine/woodfine-fleet-deployment",
@@ -230,7 +236,7 @@ impl Tenant {
             ],
             Tenant::Corporate => vec![
                 ("Projects", "https://projects.woodfinegroup.com/"),
-                ("Newsroom", "https://newsroom.woodfinegroup.com/"),
+                ("Newsroom", "https://woodfinegroup.com/"),
                 (
                     "GitHub",
                     "https://github.com/woodfine/woodfine-fleet-deployment",
