@@ -38,7 +38,7 @@ fn test_state() -> AppState {
     write(
         root,
         "redirects.yaml",
-        "redirects:\n  - from: /moved-away\n    to: /wiki/zero-container-inference\n",
+        "redirects:\n  - from: /moved-away\n    to: /wiki/zero-container-inference\n  - from: /category/retired-category\n    to: /category/architecture\n",
     );
     write(
         root,
@@ -184,6 +184,45 @@ async fn redirects_yaml_entry_redirects_301() {
     assert_eq!(resp.status(), StatusCode::MOVED_PERMANENTLY);
     let location = resp.headers().get("location").unwrap().to_str().unwrap();
     assert_eq!(location, "/wiki/zero-container-inference");
+}
+
+/// Real gap found by Command/project-editorial 2026-08-26, ahead of the
+/// `industry` category retirement on the projects wiki: an unknown/retired
+/// category id had no redirect-recovery path at all (unlike articles),
+/// permanently 404ing. serve_category now consults the same redirects.yaml
+/// map as serve_article, keyed by `/category/<id>`.
+#[tokio::test]
+async fn retired_category_redirects_301() {
+    let app = router(test_state());
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .uri("/category/retired-category")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::MOVED_PERMANENTLY);
+    let location = resp.headers().get("location").unwrap().to_str().unwrap();
+    assert_eq!(location, "/category/architecture");
+}
+
+/// A category id with neither content nor a redirects.yaml entry still
+/// 404s cleanly — the redirect lookup must not swallow genuine 404s.
+#[tokio::test]
+async fn unknown_category_with_no_redirect_still_404s() {
+    let app = router(test_state());
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .uri("/category/does-not-exist-anywhere")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 }
 
 #[tokio::test]

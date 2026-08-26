@@ -515,6 +515,17 @@ async fn serve_category(state: AppState, name: String, params: CategoryQuery, la
         })
         .collect();
     if docs.is_empty() {
+        // Category redirect lookup — mirrors serve_article's redirects.yaml
+        // consultation on a miss (state.redirects, same map, same `to`-as-
+        // literal-path convention). Without this, a retired/renamed category
+        // id has no recovery path at all and permanently 404s (Command/
+        // project-editorial finding, 2026-08-26 — ahead of the `industry`
+        // category retirement on the projects wiki). Convention: redirects.yaml
+        // entries use `from: /category/<id>` for category-id redirects,
+        // distinguishing them from article entries' bare `/<slug>` keys.
+        if let Some(to) = state.redirects.get(&format!("/category/{name}")) {
+            return moved_301(to);
+        }
         return not_found(&state, &format!("No such area: \u{201c}{name}\u{201d}."));
     }
     // Avoid "Articles in the The Buildings area." when a category's display
