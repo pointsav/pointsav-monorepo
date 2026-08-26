@@ -333,8 +333,11 @@ pub fn footer(tenant: Tenant, legal: &LegalTokens, site_description: Option<&str
                 // falls back to Tenant::tagline() only when no index.md
                 // short_description exists.
                 div."k-footer__brand" {
-                    p."k-footer__brand-name" { (tenant.home_label()) }
-                    p."k-footer__brand-tagline" { (site_description.unwrap_or_else(|| tenant.tagline())) }
+                    div."k-footer__brand-mark" { (logo_mark()) }
+                    div."k-footer__brand-text" {
+                        p."k-footer__brand-name" { (tenant.home_label()) }
+                        p."k-footer__brand-tagline" { (site_description.unwrap_or_else(|| tenant.tagline())) }
+                    }
                 }
                 div."k-footer__grid" {
                     div."k-footer__col" {
@@ -375,16 +378,24 @@ pub fn footer(tenant: Tenant, legal: &LegalTokens, site_description: Option<&str
                         }
                     }
                 }
-                // Identity bar — 4 distinct stacked rows (site-footer recipe,
-                // pointsav-design-system), not one crowded row: locations+badge,
-                // then copyright, then disclaimer, then trademark each get their
-                // own row. Restructured 2026-07-15 — the prior single-row
-                // "locations+copyright left, badges right" layout is the
-                // recipe's own documented mobile-legibility bug (badges buried
-                // under legal text); this is a real fix, not restyling for its
-                // own sake.
+                // Identity bar — collapsed to 2 rows 2026-08-25/26 (Command/
+                // project-editorial UI-fix batch, exact diff per msg
+                // command-20260826-footer-redesign-exact-css-layout-rs-mark;
+                // real cross-model live measurement: the prior 4-row stack
+                // measured 113px tall, 58-67% as tall as the entire nav grid
+                // above it). Row 1 (.k-footer__baseline): 3 direct children
+                // (cities, badges, copyright) — justify-content:
+                // space-between spreads them without a manual trailing-
+                // margin hack. Row 2 (.k-footer__fineprint): one full-width
+                // paragraph (disclaimer + trademark merged, no 60ch cap —
+                // the cap was what forced the trademark text to wrap to 5
+                // lines on its own row). The real mobile-legibility fix
+                // from the 2026-07-15 restructure (badges no longer buried
+                // under legal text) is kept — mobile stacking is scoped to
+                // <=768px only, see the media query below, not undone by
+                // this collapse.
                 div."k-footer__identity" {
-                    div."k-footer__identity-row k-footer__identity-row--locations" {
+                    div."k-footer__baseline" {
                         div."k-footer__cities" {
                             // Middot separator, not pipe — site-footer recipe's
                             // content_conventions.separator: "the live sites'
@@ -426,25 +437,22 @@ pub fn footer(tenant: Tenant, legal: &LegalTokens, site_description: Option<&str
                                 }
                             }
                         }
-                    }
-                    div."k-footer__identity-row" {
                         p."k-footer__copyright" {
                             "\u{00a9} 2026 " (legal.copyright.holder)
                         }
                     }
-                    div."k-footer__identity-row k-footer__identity-row--muted" {
-                        // Persistent one-line disclaimer (always visible; the band expands it).
-                        p."k-footer__disclaimer" { (tenant.disclaimer_line()) }
-                    }
-                    div."k-footer__identity-row k-footer__identity-row--trademark" {
-                        // Trademark notice — sourced from the canonical
-                        // legal-tokens-{brand}.yaml (factory-release-engineering), not
-                        // hardcoded here. The marks are reserved independently of the
-                        // CC BY 4.0 content licence, so no blanket "all rights reserved"
-                        // (content is openly licensed).
-                        p."k-footer__trademark" {
-                            (legal.trademarks.statement)
-                        }
+                    // Fine-print paragraph — disclaimer + trademark notice merged
+                    // (was 2 separate rows, one capped at 60ch which forced the
+                    // trademark statement to wrap 5 lines). Trademark text is
+                    // sourced from the canonical legal-tokens-{brand}.yaml
+                    // (factory-release-engineering), not hardcoded here. The marks
+                    // are reserved independently of the CC BY 4.0 content licence,
+                    // so no blanket "all rights reserved" (content is openly
+                    // licensed).
+                    p."k-footer__fineprint" {
+                        (tenant.disclaimer_line())
+                        " \u{00b7} "
+                        (legal.trademarks.statement)
                     }
                 }
             }
@@ -542,6 +550,12 @@ pub fn article(
     // anywhere, forcing article -> back to category -> next article.
     prev: Option<(&str, &str)>,
     next: Option<(&str, &str)>,
+    // Display label for the category prev/next are drawn from. Labelled
+    // "More in <category>" rather than "Previous/Next" — the underlying
+    // order is alphabetical-by-title (Command/project-editorial finding,
+    // 2026-08-25), not an editorial sequence, so "Previous/Next" promised a
+    // reading order that doesn't exist.
+    pager_category: Option<&str>,
 ) -> Markup {
     html! {
         article."k-article" {
@@ -580,16 +594,19 @@ pub fn article(
             }
             div."k-prose" { (PreEscaped(body_html)) }
             @if prev.is_some() || next.is_some() {
-                nav."k-article-pager" aria-label="Article navigation" {
+                nav."k-article-pager" aria-label={ "More in " (pager_category.unwrap_or("this category")) } {
+                    @if let Some(cat) = pager_category {
+                        span."k-article-pager__label" { "More in " (cat) }
+                    }
                     @if let Some((p_slug, p_title)) = prev {
                         a."k-article-pager__link"."k-article-pager__link--prev" href={ "/wiki/" (p_slug) } {
-                            span."k-article-pager__dir" { "\u{2190} Previous" }
+                            span."k-article-pager__dir" { "\u{2190}" }
                             span."k-article-pager__title" { (p_title) }
                         }
                     }
                     @if let Some((n_slug, n_title)) = next {
                         a."k-article-pager__link"."k-article-pager__link--next" href={ "/wiki/" (n_slug) } {
-                            span."k-article-pager__dir" { "Next \u{2192}" }
+                            span."k-article-pager__dir" { "\u{2192}" }
                             span."k-article-pager__title" { (n_title) }
                         }
                     }
