@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "tool-typeset"
+version = "0.1.0"
+edition = "2021"
+description = "Zero-dependency document rendering engine: one internal Document model, rendered to HTML (review) and PDF (final deliverable) by two independent backends. Never HTML-to-PDF conversion. Domain-agnostic -- cells carry pre-formatted strings, never Money/f64 -- so this crate serves any project-*, not just accounting."
+license = "FSL-1.1-ALv2"
+publish = false
+
+# Deliberately zero dependencies -- the PDF backend writes the PDF format
+# directly (objects, xref, trailer, content streams) using the standard-14
+# fonts every PDF viewer/printer supports natively, so no font-embedding or
+# third-party layout engine is needed.
+[dependencies]
+
+[lib]
+name = "tool_typeset"
+path = "src/lib.rs"

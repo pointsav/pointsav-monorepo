@@ -7738,6 +7738,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "tool-typeset"
+version = "0.1.0"
+
+[[package]]
 name = "tool-wallet"
 version = "0.1.0"
 dependencies = [

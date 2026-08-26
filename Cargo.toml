@@ -31,6 +31,7 @@ members = [
     "app-privategit-source-2",
     "os-privategit",
     "tool-wallet",
+    "tool-typeset",
     "app-privategit-workbench",
     "app-orchestration-bim",
     "tool-keyplan",
