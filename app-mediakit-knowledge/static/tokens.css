@@ -44,7 +44,7 @@
   --k-surface-raised: #ffffff; /* drawer panel */
   --k-surface-sunken: #f8f9fa; /* sitenotice + footer institutional gray */
   --k-drawer-bg: var(--k-surface-raised);
-  --k-footer-bg: var(--k-surface-sunken);
+  --k-footer-bg: #eef1f5; /* distinct from surface-sunken 2026-08-25 (Command/project-editorial UI-fix batch) — was sharing a token with .k-compliance directly above it, blending into one undifferentiated gray mass. Cool navy-tinted gray, consistent with --k-accent's navy. */
   --k-header-bg: var(--k-surface);
   --k-search-bg: var(--k-surface-inset);
   --k-search-bg-hover: var(--k-surface-inset-hover);
@@ -180,7 +180,7 @@
 
   --k-header-bg:      var(--k-surface);
   --k-sitenotice-bg:  var(--k-surface-sunken);
-  --k-footer-bg:      var(--k-surface-sunken);
+  --k-footer-bg:      #1b2229; /* distinct from --k-surface-sunken (#171c22) — see design-tokens.json footer-bg $description */
   --k-drawer-bg:      var(--k-surface-raised);
   --k-search-bg:      var(--k-surface-inset);
   --k-search-bg-hover: var(--k-surface-inset-hover);
@@ -247,7 +247,7 @@
     --k-overlay-scrim:    rgba(0, 0, 0, 0.60);
     --k-header-bg:      var(--k-surface);
     --k-sitenotice-bg:  var(--k-surface-sunken);
-    --k-footer-bg:      var(--k-surface-sunken);
+    --k-footer-bg:      #1b2229; /* distinct from --k-surface-sunken (#171c22) — see design-tokens.json footer-bg $description */
     --k-drawer-bg:      var(--k-surface-raised);
     --k-search-bg:      var(--k-surface-inset);
     --k-search-bg-hover: var(--k-surface-inset-hover);

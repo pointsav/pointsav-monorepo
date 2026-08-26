@@ -45,7 +45,7 @@
 
   --k-header-bg:      var(--k-surface);
   --k-sitenotice-bg:  var(--k-surface-sunken);
-  --k-footer-bg:      var(--k-surface-sunken);
+  --k-footer-bg:      #1b2229; /* distinct from --k-surface-sunken (#171c22) — see design-tokens.json footer-bg $description */
   --k-drawer-bg:      var(--k-surface-raised);
   --k-search-bg:      var(--k-surface-inset);
   --k-search-bg-hover: var(--k-surface-inset-hover);
@@ -112,7 +112,7 @@
     --k-overlay-scrim:    rgba(0, 0, 0, 0.60);
     --k-header-bg:      var(--k-surface);
     --k-sitenotice-bg:  var(--k-surface-sunken);
-    --k-footer-bg:      var(--k-surface-sunken);
+    --k-footer-bg:      #1b2229; /* distinct from --k-surface-sunken (#171c22) — see design-tokens.json footer-bg $description */
     --k-drawer-bg:      var(--k-surface-raised);
     --k-search-bg:      var(--k-surface-inset);
     --k-search-bg-hover: var(--k-surface-inset-hover);

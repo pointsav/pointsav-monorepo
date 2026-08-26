@@ -1373,6 +1373,11 @@ async fn serve_article(
     let next = self_index
         .and_then(|i| category_docs.get(i + 1))
         .map(|(s, t)| (s.as_str(), t.as_str()));
+    // Pager label — "More in <category>", not "Previous/Next": the adjacency
+    // above is alphabetical-by-title, not an editorial sequence (Command/
+    // project-editorial finding, 2026-08-25).
+    let pager_category_label =
+        (prev.is_some() || next.is_some()).then(|| current_category.map(|c| category_label(&state, c))).flatten();
     let siblings: Vec<(String, String)> = category_docs
         .iter()
         .filter(|(s, _)| s != &doc.slug)
@@ -1397,7 +1402,7 @@ async fn serve_article(
         let badge = content_type_badge(parsed.frontmatter.index_type.as_deref(), doc.lang);
         // A historical snapshot doesn't get prev/next pager links — those
         // navigate the current article set, not this point-in-time view.
-        let body = ui::article(&title, &doc.slug, None, Some(&short), Some(&date), None, badge, &rendered.html, None, None);
+        let body = ui::article(&title, &doc.slug, None, Some(&short), Some(&date), None, badge, &rendered.html, None, None, None);
         // Canonical points at the CURRENT version, not this historical snapshot —
         // an as-of view shouldn't compete with the live article for indexing.
         let head = ui::doc_head(&format!("{title} (as of {date})"), "", tenant, &format!("{prefix}/wiki/{}", doc.slug), false);
@@ -1510,6 +1515,7 @@ async fn serve_article(
         &rendered.html,
         prev,
         next,
+        pager_category_label.as_deref(),
     );
     // Breadcrumb — a real finding: no page anywhere had one. Home -> Category
     // (when the article has one) -> current article (not a link).

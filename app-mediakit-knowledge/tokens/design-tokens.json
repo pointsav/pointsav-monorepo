@@ -66,7 +66,7 @@
   "component-surface": {
     "header-bg":       { "$type": "color", "$var": "header-bg",       "$value": "{color.surface}" },
     "sitenotice-bg":   { "$type": "color", "$var": "sitenotice-bg",   "$value": "{color.surface-sunken}" },
-    "footer-bg":       { "$type": "color", "$var": "footer-bg",       "$value": "{color.surface-sunken}" },
+    "footer-bg":       { "$type": "color", "$var": "footer-bg",       "$value": "#eef1f5", "$description": "distinct from surface-sunken 2026-08-25 (Command/project-editorial UI-fix batch) — was sharing a token with .k-compliance directly above it, blending into one undifferentiated gray mass. Cool navy-tinted gray, consistent with --k-accent's navy." },
     "drawer-bg":       { "$type": "color", "$var": "drawer-bg",       "$value": "{color.surface-raised}" },
     "search-bg":       { "$type": "color", "$var": "search-bg",       "$value": "{color.surface-inset}" },
     "search-bg-hover": { "$type": "color", "$var": "search-bg-hover", "$value": "{color.surface-inset-hover}" }
