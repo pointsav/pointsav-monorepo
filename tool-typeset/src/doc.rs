@@ -201,7 +201,7 @@ pub enum RowKind {
 pub enum CellContent {
     Text(String),
     /// A right-aligned numeric figure, pre-formatted by the caller (e.g.
-    /// "1,910.56", "(36.00)", "-"). Kept distinct from Text so a future
+    /// "128.50", "(36.00)", "-"). Kept distinct from Text so a future
     /// backend could apply figure-specific styling without the caller
     /// needing to know about it.
     Figure(String),

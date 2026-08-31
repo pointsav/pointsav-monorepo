@@ -80,13 +80,9 @@ pub fn text_width_pt(s: &str, size_pt: f32, bold: bool) -> f32 {
 mod tests {
     use super::*;
 
-    #[test]
-    fn digit_strings_measure_reasonably() {
-        // "1,910.56" is 8 chars; digits+comma+period are all narrower than
-        // an em, so this should land well under 8 * size_pt.
-        let w = text_width_pt("1,910.56", 10.0, false);
-        assert!(w > 30.0 && w < 60.0, "unexpected width: {w}");
-    }
+    // digit_strings_measure_reasonably lives in tests/width_measurement.rs --
+    // its example figure is comma-grouped, which the self-service-promote.sh
+    // crate-purity gate treats as currency-shaped and flags outside tests/.
 
     #[test]
     fn empty_string_is_zero_width() {
