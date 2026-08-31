@@ -92,6 +92,14 @@ struct SendMailboxMessageInput {
     priority: Option<String>,
     /// msg-id of the message this replies to
     in_reply_to: Option<String>,
+    /// Archive name of the CALLING Totebox session, e.g. "project-intelligence" — omit for
+    /// Command Session. mailbox-send.sh derives the `from:` identity (command@claude-code vs.
+    /// totebox@<archive>) from the invoking process's CWD; since this MCP server is a single
+    /// long-running process shared by every session, its own CWD never reflects who's actually
+    /// calling. Without this param every send is misattributed to command@claude-code
+    /// regardless of caller (found 2026-08-26, project-knowledge). Same pattern as
+    /// GetSessionBriefInput's `archive` field.
+    archive: Option<String>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -729,6 +737,14 @@ impl FoundryServer {
         }
 
         let priority = p.priority.as_deref().unwrap_or("normal");
+        // Spawn mailbox-send.sh from the CALLING session's own directory, not the server's
+        // fixed one — its sender auto-detection reads the invoking process's CWD
+        // (foundry_root -> command@claude-code, foundry_root/clones/<X> -> totebox@<X>).
+        // See SendMailboxMessageInput::archive for the full root-cause note.
+        let send_cwd = match p.archive.as_deref() {
+            Some(name) => self.foundry_root.join("clones").join(name),
+            None => self.foundry_root.clone(),
+        };
         let mut cmd = tokio::process::Command::new("bash");
         cmd.arg(script.as_os_str())
             .arg("--to")
@@ -738,7 +754,7 @@ impl FoundryServer {
             .arg("--priority")
             .arg(priority)
             .arg("--body-stdin")
-            .current_dir(&self.foundry_root)
+            .current_dir(&send_cwd)
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped());
