@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 # build-image.sh — Build the os-mediakit Ubuntu 24.04 QCOW2 guest image.

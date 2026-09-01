@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 [package]
@@ -7,7 +7,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.80"
 description = "Food-service platform engine for foodservice.woodfinegroup.com — server-rendered, agent-first. Composes typed sections (from app-mediakit-shell) into pages; AI authors via MCP, humans approve (F12). Follows the app-mediakit-marketing pattern."
-license = "FSL-1.1-ALv2"
+license = "Apache-2.0"
 publish = false
 
 [[bin]]

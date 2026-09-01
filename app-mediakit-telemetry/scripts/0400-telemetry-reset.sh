@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 TARGET_DIR="/opt/deployments/pointsav-fleet-deployment/media-marketing-landing"

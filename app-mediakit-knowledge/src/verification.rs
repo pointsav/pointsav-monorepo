@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 //! Continuous citation verification (Phase 3.4 of `KNOWLEDGE-PLATFORM-PLAN.md`).

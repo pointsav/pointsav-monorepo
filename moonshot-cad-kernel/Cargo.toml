@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 [package]
@@ -6,7 +6,7 @@ name = "moonshot-cad-kernel"
 version = "0.1.0"
 edition = "2021"
 description = "Sovereign 2D/3D CAD kernel — geometry primitives + git-like JSON-Lines document model"
-license = "AGPL-3.0-or-later"
+license = "Apache-2.0"
 
 # Standalone workspace: an independent moonshot crate, like moonshot-bim-engine.
 [workspace]
