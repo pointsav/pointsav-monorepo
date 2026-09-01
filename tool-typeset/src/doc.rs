@@ -60,6 +60,10 @@ pub enum Register {
 #[derive(Debug, Clone, Copy)]
 pub enum PageSize {
     Letter,
+    /// 11x17in -- landscape-usable for a wide task list plus a plotted
+    /// timeline that `Letter` is too narrow for.
+    Tabloid,
+    Legal,
 }
 
 impl PageSize {
@@ -67,6 +71,8 @@ impl PageSize {
     pub fn dims_pt(&self) -> (f32, f32) {
         match self {
             PageSize::Letter => (612.0, 792.0),
+            PageSize::Tabloid => (792.0, 1224.0),
+            PageSize::Legal => (612.0, 1008.0),
         }
     }
 }
@@ -138,6 +144,9 @@ pub enum Block {
         kind: String,
         caption: String,
     },
+    /// A Gantt-style bar/calendar-grid block: a leader panel beside a time
+    /// axis, one row of marks plotted per leader row. See `Timeline` below.
+    Timeline(Timeline),
 }
 
 /// Paragraph-level typography a real document *measures* rather than
@@ -344,5 +353,328 @@ impl Table {
     pub fn continued_as(mut self, label: impl Into<String>) -> Self {
         self.continuation_label = Some(label.into());
         self
+    }
+}
+
+/// A Gantt-style bar/calendar-grid block. The leader panel reuses the real
+/// `Table` type directly -- both backends render it through their existing
+/// table code paths, so the leader can never diverge from an ordinary
+/// table. `rows.len()` must equal the leader's own body row count;
+/// `with_leader` enforces this at construction rather than trusting the
+/// caller to keep two `Vec`s in lockstep -- the same "never silently
+/// dropped" posture `Placeholder` applies to content, here applied to row
+/// alignment.
+#[derive(Debug, Clone)]
+pub struct Timeline {
+    pub axis: TimeAxis,
+    pub leader: Option<Table>,
+    pub leader_width: ColWidth,
+    pub rows: Vec<TimelineRow>,
+    pub legend: Vec<LegendEntry>,
+    pub repeat_axis: bool,
+    pub continuation_label: Option<String>,
+    /// `None` takes the leader's own row height (the register's body
+    /// leading).
+    pub row_height_pt: Option<f32>,
+}
+
+/// The plotted panel's horizontal scale. Units are caller-supplied `f64`,
+/// never real dates -- matching "cells carry pre-formatted strings, never
+/// Money/f64" applied to time instead of currency; a caller converts its
+/// own calendar type to a day-offset (or any other linear unit) before
+/// handing it here.
+#[derive(Debug, Clone)]
+pub struct TimeAxis {
+    pub start: f64,
+    pub end: f64,
+    /// Hierarchical labelled header bands -- e.g. a year row (`level: 0`)
+    /// above a quarter row (`level: 1`).
+    pub bands: Vec<AxisBand>,
+    /// Plain vertical gridlines, unlabelled -- real positions, not a stride.
+    pub gridlines: Vec<f64>,
+    /// An optional emphasised vertical line with a label -- e.g. a status
+    /// date on a progress report.
+    pub marker: Option<AxisMarker>,
+}
+
+#[derive(Debug, Clone)]
+pub struct AxisBand {
+    pub label: String,
+    pub start: f64,
+    pub end: f64,
+    pub level: u8,
+}
+
+#[derive(Debug, Clone)]
+pub struct AxisMarker {
+    pub at: f64,
+    pub label: Option<String>,
+}
+
+/// The marks plotted for one leader row. Empty when a row has nothing to
+/// plot -- it still occupies its row slot, keeping every leader row aligned
+/// with its own line in the plotted panel.
+#[derive(Debug, Clone, Default)]
+pub struct TimelineRow {
+    pub marks: Vec<Mark>,
+}
+
+impl TimelineRow {
+    pub fn empty() -> Self {
+        TimelineRow { marks: Vec::new() }
+    }
+    pub fn one(mark: Mark) -> Self {
+        TimelineRow { marks: vec![mark] }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Mark {
+    Bar {
+        start: f64,
+        end: f64,
+        style: BarStyle,
+        /// `Some(0.0)` is a measured zero; `None` is no progress data at
+        /// all -- distinct states, not the same "nothing to show".
+        progress: Option<f32>,
+        label: Option<MarkLabel>,
+    },
+    Milestone {
+        at: f64,
+        shape: MilestoneShape,
+        label: Option<MarkLabel>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BarStyle {
+    Task,
+    Summary,
+    External,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MilestoneShape {
+    Diamond,
+    Triangle,
+    Bar,
+}
+
+#[derive(Debug, Clone)]
+pub struct MarkLabel {
+    pub text: String,
+    pub placement: LabelPlacement,
+    pub bold: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LabelPlacement {
+    Before,
+    After,
+    Inside,
+}
+
+#[derive(Debug, Clone)]
+pub struct LegendEntry {
+    pub sample: LegendSample,
+    pub caption: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum LegendSample {
+    Bar(BarStyle),
+    Milestone(MilestoneShape),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TimelineError {
+    RowCountMismatch {
+        leader_rows: usize,
+        plotted_rows: usize,
+    },
+    EmptyAxis,
+    InvertedBar {
+        row: usize,
+        mark: usize,
+    },
+}
+
+impl Timeline {
+    /// Refuses a leader/row count mismatch, an inverted axis, or an
+    /// inverted bar at construction rather than trusting the caller to get
+    /// it right -- a caller mistake becomes a construction-time refusal,
+    /// never a silent visual bug.
+    pub fn with_leader(
+        leader: Table,
+        leader_width: ColWidth,
+        axis: TimeAxis,
+        rows: Vec<TimelineRow>,
+    ) -> Result<Timeline, TimelineError> {
+        let body = leader.rows.len();
+        if body != rows.len() {
+            return Err(TimelineError::RowCountMismatch {
+                leader_rows: body,
+                plotted_rows: rows.len(),
+            });
+        }
+        if axis.end <= axis.start {
+            return Err(TimelineError::EmptyAxis);
+        }
+        for (row_idx, row) in rows.iter().enumerate() {
+            for (mark_idx, mark) in row.marks.iter().enumerate() {
+                if let Mark::Bar { start, end, .. } = mark {
+                    if end < start {
+                        return Err(TimelineError::InvertedBar {
+                            row: row_idx,
+                            mark: mark_idx,
+                        });
+                    }
+                }
+            }
+        }
+        Ok(Timeline {
+            axis,
+            leader: Some(leader),
+            leader_width,
+            rows,
+            legend: Vec::new(),
+            repeat_axis: true,
+            continuation_label: None,
+            row_height_pt: None,
+        })
+    }
+
+    pub fn with_legend(mut self, legend: Vec<LegendEntry>) -> Self {
+        self.legend = legend;
+        self
+    }
+
+    /// Unit -> fraction of the plotted panel, clamped to `[0, 1]`. The one
+    /// piece of geometry both backends share, so it lives on the type
+    /// rather than being written twice.
+    pub fn fraction(&self, unit: f64) -> Clamped {
+        let span = self.axis.end - self.axis.start;
+        let raw = (unit - self.axis.start) / span;
+        if raw < 0.0 {
+            Clamped {
+                value: 0.0,
+                clipped: Clipped::Before,
+            }
+        } else if raw > 1.0 {
+            Clamped {
+                value: 1.0,
+                clipped: Clipped::After,
+            }
+        } else {
+            Clamped {
+                value: raw,
+                clipped: Clipped::No,
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Clamped {
+    pub value: f64,
+    pub clipped: Clipped,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Clipped {
+    No,
+    Before,
+    After,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn leader(row_count: usize) -> Table {
+        let mut t = Table::new(vec![Column {
+            width: ColWidth::Pct(100.0),
+            align: Align::Left,
+        }]);
+        for i in 0..row_count {
+            t.rows.push(Row::data(vec![Cell::text(format!("row {i}"))]));
+        }
+        t
+    }
+
+    fn axis() -> TimeAxis {
+        TimeAxis {
+            start: 0.0,
+            end: 100.0,
+            bands: Vec::new(),
+            gridlines: Vec::new(),
+            marker: None,
+        }
+    }
+
+    #[test]
+    fn with_leader_refuses_a_row_count_mismatch() {
+        let rows = vec![TimelineRow::empty(), TimelineRow::empty()];
+        let err = Timeline::with_leader(leader(3), ColWidth::Pct(30.0), axis(), rows).unwrap_err();
+        assert_eq!(
+            err,
+            TimelineError::RowCountMismatch {
+                leader_rows: 3,
+                plotted_rows: 2
+            }
+        );
+    }
+
+    #[test]
+    fn with_leader_refuses_an_empty_or_inverted_axis() {
+        let mut bad_axis = axis();
+        bad_axis.end = bad_axis.start;
+        let err =
+            Timeline::with_leader(leader(0), ColWidth::Pct(30.0), bad_axis, vec![]).unwrap_err();
+        assert_eq!(err, TimelineError::EmptyAxis);
+    }
+
+    #[test]
+    fn with_leader_refuses_an_inverted_bar() {
+        let rows = vec![TimelineRow::one(Mark::Bar {
+            start: 50.0,
+            end: 10.0,
+            style: BarStyle::Task,
+            progress: None,
+            label: None,
+        })];
+        let err = Timeline::with_leader(leader(1), ColWidth::Pct(30.0), axis(), rows).unwrap_err();
+        assert_eq!(err, TimelineError::InvertedBar { row: 0, mark: 0 });
+    }
+
+    #[test]
+    fn with_leader_accepts_a_matched_row_count() {
+        let rows = vec![TimelineRow::empty(), TimelineRow::empty()];
+        let tl = Timeline::with_leader(leader(2), ColWidth::Pct(30.0), axis(), rows).unwrap();
+        assert_eq!(tl.rows.len(), 2);
+        assert!(tl.repeat_axis, "defaults to repeating on every page");
+    }
+
+    #[test]
+    fn fraction_clamps_outside_the_axis_span() {
+        let a = axis();
+        let tl = Timeline::with_leader(leader(0), ColWidth::Pct(30.0), a, vec![]).unwrap();
+        assert_eq!(
+            tl.fraction(-10.0),
+            Clamped {
+                value: 0.0,
+                clipped: Clipped::Before
+            }
+        );
+        assert_eq!(
+            tl.fraction(150.0),
+            Clamped {
+                value: 1.0,
+                clipped: Clipped::After
+            }
+        );
+        let mid = tl.fraction(25.0);
+        assert_eq!(mid.clipped, Clipped::No);
+        assert!((mid.value - 0.25).abs() < 1e-9);
     }
 }

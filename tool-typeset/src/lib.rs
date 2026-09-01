@@ -20,8 +20,10 @@ pub mod pdf;
 pub mod pdf_writer;
 
 pub use doc::{
-    Align, Block, Cell, CellContent, ColWidth, Column, Doc, PageSetup, PageSize, ParaStyle,
-    Register, Row, RowKind, Span, Table,
+    Align, AxisBand, AxisMarker, BarStyle, Block, Cell, CellContent, Clamped, Clipped, ColWidth,
+    Column, Doc, LabelPlacement, LegendEntry, LegendSample, Mark, MarkLabel, MilestoneShape,
+    PageSetup, PageSize, ParaStyle, Register, Row, RowKind, Span, Table, TimeAxis, Timeline,
+    TimelineError, TimelineRow,
 };
 pub use html::render_html;
 pub use pdf::render_pdf;

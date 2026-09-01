@@ -19,7 +19,8 @@
 
 use crate::afm::text_width_pt;
 use crate::doc::{
-    Align, Block, CellContent, ColWidth, Doc, ParaStyle, Register, RowKind, Span, Table,
+    Align, BarStyle, Block, CellContent, ColWidth, Doc, LabelPlacement, Mark, MilestoneShape,
+    ParaStyle, Register, RowKind, Span, Table, Timeline,
 };
 use crate::pdf_writer::{escape_pdf_string, PdfWriter};
 
@@ -51,6 +52,16 @@ const MAX_WORD_STRETCH: f32 = 3.0;
 const ACCENT_RGB: (f32, f32, f32) = (0.122, 0.227, 0.373);
 /// Section-banner fill -- one opaque light gray, not alternating/zebra.
 const BANNER_FILL: (f32, f32, f32) = (0.949, 0.957, 0.969);
+
+// ---- Timeline mark colors (register-independent -- a Gantt bar's color is
+// part of what BarStyle means, not a per-document accent choice). ----
+const TIMELINE_TASK_RGB: (f32, f32, f32) = ACCENT_RGB;
+const TIMELINE_SUMMARY_RGB: (f32, f32, f32) = (0.30, 0.30, 0.30);
+const TIMELINE_EXTERNAL_RGB: (f32, f32, f32) = (0.65, 0.65, 0.65);
+const TIMELINE_MILESTONE_RGB: (f32, f32, f32) = (0.80, 0.30, 0.05);
+const TIMELINE_PROGRESS_RGB: (f32, f32, f32) = (0.06, 0.11, 0.19);
+const TIMELINE_MARKER_RGB: (f32, f32, f32) = (0.80, 0.10, 0.10);
+const TIMELINE_GRIDLINE_GRAY: f32 = 0.85;
 
 /// Every value that differs between the two visual registers, in one place.
 /// Anything absent from this struct is deliberately shared: a difference
@@ -134,8 +145,10 @@ struct Style {
     /// leading.
     banner_lead_factor: f32,
 
-    /// Text-origin offset per `Cell::indent` level.
-    indent_pt: [f32; 3],
+    /// Text-origin offset per `Cell::indent` level. 5 entries (0..=4) --
+    /// levels beyond the array's length clamp onto its last entry, so this
+    /// must be as deep as any real document's indent hierarchy goes.
+    indent_pt: [f32; 5],
 }
 
 /// The working-document register: detail listings, working papers, event
@@ -184,7 +197,7 @@ const WORKING_DOCUMENT: Style = Style {
     banner_fill: Some(BANNER_FILL),
     banner_lead_factor: 0.4,
 
-    indent_pt: [0.0, 16.0, 28.0],
+    indent_pt: [0.0, 16.0, 28.0, 40.0, 52.0],
 };
 
 /// The formal filed-document register: pure black `#000`, zero fill, zero
@@ -238,7 +251,7 @@ const FORMAL_STATEMENT: Style = Style {
     banner_fill: None,
     banner_lead_factor: 0.9,
 
-    indent_pt: [0.0, 16.0, 28.0],
+    indent_pt: [0.0, 16.0, 28.0, 40.0, 52.0],
 };
 
 impl Style {
@@ -322,7 +335,10 @@ struct Layout {
 
 impl Layout {
     fn new(doc: &Doc) -> Self {
-        let (page_w, page_h) = doc.page.size.dims_pt();
+        let (mut page_w, mut page_h) = doc.page.size.dims_pt();
+        if doc.page.landscape {
+            std::mem::swap(&mut page_w, &mut page_h);
+        }
         let margin = doc.page.margin_pt;
         Layout {
             page_w,
@@ -435,6 +451,24 @@ impl Layout {
 
     fn advance(&mut self, pt: f32) {
         self.y -= pt;
+    }
+
+    /// Filled closed polygon: `q r g b rg  x0 y0 m  x1 y1 l  ...  h f Q`.
+    /// Needed for the milestone diamond/triangle and a Summary bar's
+    /// turned-down end caps -- the one shape neither `fill_rect` nor
+    /// `line_gray` can draw. Stays within this backend's frozen primitive
+    /// set (standard-14 text + simple vector ops).
+    fn fill_polygon(&mut self, points: &[(f32, f32)], rgb: (f32, f32, f32)) {
+        if points.len() < 3 {
+            return;
+        }
+        let mut ops = format!("q {:.3} {:.3} {:.3} rg ", rgb.0, rgb.1, rgb.2);
+        ops.push_str(&format!("{:.2} {:.2} m ", points[0].0, points[0].1));
+        for &(x, y) in &points[1..] {
+            ops.push_str(&format!("{x:.2} {y:.2} l "));
+        }
+        ops.push_str("h f Q\n");
+        self.current.push_str(&ops);
     }
 
     fn wrap(text: &str, max_width: f32, size: f32, bold: bool) -> Vec<String> {
@@ -676,12 +710,25 @@ impl Layout {
     }
 
     fn column_geometry(&self, table: &Table) -> Vec<(f32, f32)> {
+        self.column_geometry_in(&table.columns, self.margin, self.content_width)
+    }
+
+    /// `column_geometry` generalized to an arbitrary base position/width --
+    /// what `Timeline`'s leader panel needs, since its columns are
+    /// percentages of the *leader's* width, not the full page content
+    /// width an ordinary table's columns are.
+    fn column_geometry_in(
+        &self,
+        columns: &[crate::doc::Column],
+        base_x: f32,
+        base_width: f32,
+    ) -> Vec<(f32, f32)> {
         // Returns (left_x, width) per column.
-        let mut out = Vec::with_capacity(table.columns.len());
-        let mut x = self.margin;
-        for col in &table.columns {
+        let mut out = Vec::with_capacity(columns.len());
+        let mut x = base_x;
+        for col in columns {
             let w = match col.width {
-                ColWidth::Pct(p) => self.content_width * (p / 100.0),
+                ColWidth::Pct(p) => base_width * (p / 100.0),
                 ColWidth::Pt(pt) => pt,
             };
             out.push((x, w));
@@ -960,6 +1007,378 @@ impl Layout {
             self.advance(leading);
         }
     }
+
+    /// Renders a `Block::Timeline`: a leader panel (a real `Table`, drawn
+    /// through the same cell/geometry primitives `render_table` uses, but
+    /// not `render_table` itself -- the leader's header rule and row loop
+    /// both need to stop at the leader's own width rather than the full
+    /// page, which `render_table` doesn't parameterize) beside a plotted
+    /// panel of marks, one row of marks per leader row.
+    fn render_timeline(&mut self, timeline: &Timeline) {
+        let Some(leader) = timeline.leader.as_ref() else {
+            return;
+        };
+        let leader_w = match timeline.leader_width {
+            ColWidth::Pct(p) => self.content_width * (p / 100.0),
+            ColWidth::Pt(pt) => pt,
+        };
+        let axis_x = self.margin + leader_w;
+        let axis_w = (self.content_width - leader_w).max(1.0);
+        let row_h = timeline.row_height_pt.unwrap_or(self.body_leading());
+        let leader_geometry = self.column_geometry_in(&leader.columns, self.margin, leader_w);
+
+        self.render_timeline_header(timeline, leader, &leader_geometry, axis_x, axis_w);
+
+        let n = leader.rows.len().min(timeline.rows.len());
+        for i in 0..n {
+            let row = &leader.rows[i];
+            let plotted = &timeline.rows[i];
+
+            let y_before = self.y;
+            self.ensure_room(row_h);
+            let page_broke = self.y > y_before; // ensure_room reset y to the top of a new page
+            if page_broke {
+                if let Some(label) = &timeline.continuation_label {
+                    self.text(
+                        self.margin,
+                        CONTINUATION_SIZE,
+                        Face::Oblique,
+                        CONTINUATION_GRAY,
+                        &format!("{label} (continued)"),
+                    );
+                    self.advance(CONTINUATION_SIZE * self.style.leading_factor);
+                }
+                if timeline.repeat_axis {
+                    self.render_timeline_header(timeline, leader, &leader_geometry, axis_x, axis_w);
+                }
+            }
+
+            if row.kind == RowKind::SectionBanner {
+                if let Some(fill) = self.style.banner_fill {
+                    self.fill_rect(
+                        self.margin,
+                        self.y - row_h + row_h * 0.22,
+                        self.content_width,
+                        row_h,
+                        fill,
+                    );
+                }
+            }
+
+            let size = self.style.body_size;
+            let (gray, base_face) = match row.kind {
+                RowKind::Total => (0.0, Face::Bold),
+                RowKind::SectionBanner => (self.style.body_gray, Face::Bold),
+                _ => (self.style.body_gray, Face::Regular),
+            };
+            let mut col_idx = 0usize;
+            for cell in &row.cells {
+                if let Some(&(x, w)) = leader_geometry.get(col_idx) {
+                    let align = leader
+                        .columns
+                        .get(col_idx)
+                        .map(|c| c.align)
+                        .unwrap_or(Align::Left);
+                    let text = match &cell.content {
+                        CellContent::Text(s) | CellContent::Figure(s) => s.as_str(),
+                        CellContent::Blank => "",
+                    };
+                    let face = if cell.bold || base_face == Face::Bold {
+                        Face::Bold
+                    } else {
+                        Face::Regular
+                    };
+                    if !text.is_empty() {
+                        let indent = self.style.indent_of(cell.indent);
+                        self.place_cell_text(text, x, w, align, size, face, gray, indent);
+                    }
+                }
+                col_idx += cell.colspan as usize;
+            }
+
+            // Gridlines and the status marker are drawn per row rather than
+            // once as one long vertical -- this row's own draw call is
+            // already page-break-safe, so a tick drawn inside it is too,
+            // with no need to know the table's total height in advance.
+            // Consecutive rows' ticks read as one continuous line.
+            let slot_bottom = self.y - row_h + row_h * 0.22;
+            self.render_timeline_row_axis(timeline, axis_x, axis_w, slot_bottom, row_h);
+
+            for mark in &plotted.marks {
+                self.render_mark(timeline, mark, axis_x, axis_w, self.y, row_h);
+            }
+
+            self.advance(row_h);
+        }
+
+        if !timeline.legend.is_empty() {
+            self.render_timeline_legend(&timeline.legend, axis_x, axis_w);
+        }
+    }
+
+    /// Draws the leader's column headings plus the axis's labelled bands,
+    /// then one header rule spanning the full leader+axis width.
+    fn render_timeline_header(
+        &mut self,
+        timeline: &Timeline,
+        leader: &Table,
+        leader_geometry: &[(f32, f32)],
+        axis_x: f32,
+        axis_w: f32,
+    ) {
+        let size = self.style.table_header_size;
+        let leading = size * self.style.leading_factor;
+
+        let head = leader.header.as_ref().map(|h| {
+            Self::plan_header_line(
+                h,
+                &leader.columns,
+                leader_geometry,
+                size,
+                self.style.header_face_from_cell,
+            )
+        });
+        let head_h = head
+            .as_ref()
+            .map(|p| p.iter().map(|c| c.lines.len()).max().unwrap_or(1) as f32 * leading)
+            .unwrap_or(leading);
+
+        let band_levels = timeline
+            .axis
+            .bands
+            .iter()
+            .map(|b| b.level)
+            .max()
+            .map(|m| m as f32 + 1.0)
+            .unwrap_or(0.0);
+        let axis_h = band_levels * leading;
+        let block_h = head_h.max(axis_h);
+
+        self.ensure_room(block_h + self.style.header_rule_drop + self.style.header_rule_gap);
+
+        let top = self.y;
+        if let Some(plan) = &head {
+            self.draw_header_line(plan, size, self.style.table_header_gray);
+        }
+        for band in &timeline.axis.bands {
+            let x1 = axis_x + timeline.fraction(band.start).value as f32 * axis_w;
+            let x2 = axis_x + timeline.fraction(band.end).value as f32 * axis_w;
+            self.y = top - band.level as f32 * leading;
+            self.text_centered(
+                (x1 + x2) / 2.0,
+                size,
+                Face::Bold,
+                self.style.table_header_gray,
+                &band.label,
+            );
+        }
+
+        self.y = top - block_h;
+        let rule_y = self.y - self.style.header_rule_drop;
+        let (rw, rg) = self.style.rule_header;
+        self.line_gray(self.margin, axis_x + axis_w, rule_y, rw, rg);
+        self.y = rule_y - self.style.header_rule_gap;
+    }
+
+    /// The gridline ticks and the status marker's tick for one row's slot --
+    /// factored out of `render_timeline` because both are "a thin vertical
+    /// spanning the row slot", differing only in which color/weight.
+    fn render_timeline_row_axis(
+        &mut self,
+        timeline: &Timeline,
+        axis_x: f32,
+        axis_w: f32,
+        slot_bottom: f32,
+        row_h: f32,
+    ) {
+        for &g in &timeline.axis.gridlines {
+            let gx = axis_x + timeline.fraction(g).value as f32 * axis_w;
+            self.current.push_str(&format!(
+                "q {TIMELINE_GRIDLINE_GRAY:.3} G 0.4 w {gx:.2} {slot_bottom:.2} m {gx:.2} {:.2} l S Q\n",
+                slot_bottom + row_h
+            ));
+        }
+        if let Some(marker) = &timeline.axis.marker {
+            let mx = axis_x + timeline.fraction(marker.at).value as f32 * axis_w;
+            self.current.push_str(&format!(
+                "q {:.3} {:.3} {:.3} RG [2 2] 0 d 0.75 w {mx:.2} {slot_bottom:.2} m {mx:.2} {:.2} l S Q\n",
+                TIMELINE_MARKER_RGB.0,
+                TIMELINE_MARKER_RGB.1,
+                TIMELINE_MARKER_RGB.2,
+                slot_bottom + row_h
+            ));
+        }
+    }
+
+    /// Draws one row's plotted marks within `[axis_x, axis_x+axis_w]`,
+    /// vertically centered on the row slot ending at baseline `y` with
+    /// height `row_h` -- the same slot convention `render_table`'s
+    /// section-banner fill uses (`y - row_h + row_h*0.22` .. `+row_h*0.22`).
+    fn render_mark(
+        &mut self,
+        timeline: &Timeline,
+        mark: &Mark,
+        axis_x: f32,
+        axis_w: f32,
+        y: f32,
+        row_h: f32,
+    ) {
+        let px = |u: f64| -> f32 { axis_x + timeline.fraction(u).value as f32 * axis_w };
+        let slot_bottom = y - row_h + row_h * 0.22;
+        match mark {
+            Mark::Bar {
+                start,
+                end,
+                style,
+                progress,
+                label,
+            } => {
+                let x1 = px(*start);
+                let x2 = px(*end).max(x1 + 1.0);
+                let bar_h = row_h * 0.5;
+                let bar_bottom = slot_bottom + (row_h - bar_h) / 2.0;
+                let rgb = match style {
+                    BarStyle::Task => TIMELINE_TASK_RGB,
+                    BarStyle::Summary => TIMELINE_SUMMARY_RGB,
+                    BarStyle::External => TIMELINE_EXTERNAL_RGB,
+                };
+                if *style == BarStyle::Summary {
+                    // A summary bar draws as a thin bracket, not a solid
+                    // fill: a spine plus turned-down end caps via
+                    // `fill_polygon` -- the one shape `fill_rect` can't draw.
+                    let cap_w = 3.0f32.min((x2 - x1) / 4.0).max(0.5);
+                    let spine_h = bar_h * 0.3;
+                    self.fill_rect(x1, bar_bottom + bar_h - spine_h, x2 - x1, spine_h, rgb);
+                    self.fill_polygon(
+                        &[
+                            (x1, bar_bottom + bar_h),
+                            (x1, bar_bottom),
+                            (x1 + cap_w, bar_bottom),
+                        ],
+                        rgb,
+                    );
+                    self.fill_polygon(
+                        &[
+                            (x2, bar_bottom + bar_h),
+                            (x2, bar_bottom),
+                            (x2 - cap_w, bar_bottom),
+                        ],
+                        rgb,
+                    );
+                } else {
+                    self.fill_rect(x1, bar_bottom, x2 - x1, bar_h, rgb);
+                    if let Some(p) = progress {
+                        let pw = (x2 - x1) * p.clamp(0.0, 1.0);
+                        if pw > 0.0 {
+                            self.fill_rect(x1, bar_bottom, pw, bar_h, TIMELINE_PROGRESS_RGB);
+                        }
+                    }
+                }
+                self.render_mark_label(label, x1, x2, slot_bottom, row_h);
+            }
+            Mark::Milestone { at, shape, label } => {
+                let cx = px(*at);
+                let cy = slot_bottom + row_h * 0.5;
+                let r = (row_h * 0.35).min(6.0);
+                match shape {
+                    MilestoneShape::Diamond => self.fill_polygon(
+                        &[(cx, cy + r), (cx + r, cy), (cx, cy - r), (cx - r, cy)],
+                        TIMELINE_MILESTONE_RGB,
+                    ),
+                    MilestoneShape::Triangle => self.fill_polygon(
+                        &[(cx, cy + r), (cx + r, cy - r), (cx - r, cy - r)],
+                        TIMELINE_MILESTONE_RGB,
+                    ),
+                    MilestoneShape::Bar => {
+                        self.fill_rect(cx - 1.0, cy - r, 2.0, r * 2.0, TIMELINE_MILESTONE_RGB)
+                    }
+                }
+                self.render_mark_label(label, cx - r, cx + r, slot_bottom, row_h);
+            }
+        }
+    }
+
+    fn render_mark_label(
+        &mut self,
+        label: &Option<crate::doc::MarkLabel>,
+        x1: f32,
+        x2: f32,
+        slot_bottom: f32,
+        row_h: f32,
+    ) {
+        let Some(lbl) = label else { return };
+        let size = self.style.note_size;
+        let gray = self.style.body_gray;
+        let face = if lbl.bold { Face::Bold } else { Face::Regular };
+        let ty = slot_bottom + row_h * 0.36;
+        let saved_y = self.y;
+        self.y = ty;
+        match lbl.placement {
+            LabelPlacement::Before => {
+                self.text_right_aligned(x1 - 3.0, size, face, gray, &lbl.text)
+            }
+            LabelPlacement::After => self.text(x2 + 3.0, size, face, gray, &lbl.text),
+            LabelPlacement::Inside => {
+                self.text_centered((x1 + x2) / 2.0, size, face, gray, &lbl.text)
+            }
+        }
+        self.y = saved_y;
+    }
+
+    /// One legend line under the plotted panel: a small sample swatch per
+    /// entry (a short bar or a milestone glyph) followed by its caption.
+    fn render_timeline_legend(
+        &mut self,
+        legend: &[crate::doc::LegendEntry],
+        axis_x: f32,
+        axis_w: f32,
+    ) {
+        let size = self.style.note_size;
+        let leading = size * self.style.leading_factor;
+        self.ensure_room(leading + 4.0);
+        self.advance(4.0);
+        let mut x = axis_x;
+        let saved_y = self.y;
+        for entry in legend {
+            let swatch_w = 18.0;
+            match &entry.sample {
+                crate::doc::LegendSample::Bar(style) => {
+                    let rgb = match style {
+                        BarStyle::Task => TIMELINE_TASK_RGB,
+                        BarStyle::Summary => TIMELINE_SUMMARY_RGB,
+                        BarStyle::External => TIMELINE_EXTERNAL_RGB,
+                    };
+                    self.fill_rect(x, self.y - size * 0.35, swatch_w, size * 0.7, rgb);
+                }
+                crate::doc::LegendSample::Milestone(shape) => {
+                    let cx = x + swatch_w / 2.0;
+                    let cy = self.y;
+                    let r = size * 0.4;
+                    match shape {
+                        MilestoneShape::Diamond => self.fill_polygon(
+                            &[(cx, cy + r), (cx + r, cy), (cx, cy - r), (cx - r, cy)],
+                            TIMELINE_MILESTONE_RGB,
+                        ),
+                        MilestoneShape::Triangle => self.fill_polygon(
+                            &[(cx, cy + r), (cx + r, cy - r), (cx - r, cy - r)],
+                            TIMELINE_MILESTONE_RGB,
+                        ),
+                        MilestoneShape::Bar => {
+                            self.fill_rect(cx - 0.75, cy - r, 1.5, r * 2.0, TIMELINE_MILESTONE_RGB)
+                        }
+                    }
+                }
+            }
+            x += swatch_w + 4.0;
+            self.text(x, size, Face::Regular, self.style.body_gray, &entry.caption);
+            x += text_width_pt(&entry.caption, size, false) + 16.0;
+            if x > axis_x + axis_w {
+                break; // legend overflow: v1 doesn't wrap to a second line
+            }
+        }
+        self.y = saved_y;
+        self.advance(leading);
+    }
 }
 
 pub fn render_pdf(doc: &Doc) -> Vec<u8> {
@@ -1135,6 +1554,7 @@ pub fn render_pdf(doc: &Doc) -> Vec<u8> {
                 layout.advance(pad - leading + lines.len() as f32 * 0.0);
                 layout.y = y_top - box_h - leading * 0.5;
             }
+            Block::Timeline(timeline) => layout.render_timeline(timeline),
         }
     }
     layout.pages.push(std::mem::take(&mut layout.current));
@@ -1412,6 +1832,82 @@ mod tests {
             FORMAL_STATEMENT.indent_pt[1],
             cash.0 - total.0
         );
+    }
+
+    #[test]
+    fn indent_levels_3_and_4_no_longer_collapse_onto_level_2() {
+        // Regression test: the array used to be 3 entries, so level 3+
+        // clamped onto index 2's 28pt offset in the PDF output, not just
+        // the HTML review copy.
+        let mut table = Table::new(vec![Column {
+            width: ColWidth::Pct(100.0),
+            align: Align::Left,
+        }]);
+        table.rows = vec![
+            Row::data(vec![Cell::text("L2").indent(2)]),
+            Row::data(vec![Cell::text("L3").indent(3)]),
+            Row::data(vec![Cell::text("L4").indent(4)]),
+        ];
+        let doc = Doc {
+            page: PageSetup {
+                register: Register::FormalStatement,
+                ..Default::default()
+            },
+            blocks: vec![Block::Table(table)],
+        };
+        let pdf = stream(&doc);
+        let places = placements(&pdf);
+        let l2 = places.iter().find(|(_, t)| t == "L2").expect("L2").0;
+        let l3 = places.iter().find(|(_, t)| t == "L3").expect("L3").0;
+        let l4 = places.iter().find(|(_, t)| t == "L4").expect("L4").0;
+        assert_eq!(FORMAL_STATEMENT.indent_pt.len(), 5);
+        assert!(
+            (l3 - l2 - (FORMAL_STATEMENT.indent_pt[3] - FORMAL_STATEMENT.indent_pt[2])).abs()
+                < 0.01,
+            "level 3 must sit at its own offset, not collapse onto level 2: l2={l2} l3={l3}"
+        );
+        assert!(
+            (l4 - l3 - (FORMAL_STATEMENT.indent_pt[4] - FORMAL_STATEMENT.indent_pt[3])).abs()
+                < 0.01,
+            "level 4 must sit at its own offset, not collapse onto level 2 or 3: l3={l3} l4={l4}"
+        );
+    }
+
+    #[test]
+    fn landscape_swaps_page_dimensions() {
+        let portrait = Doc {
+            page: PageSetup::default(),
+            blocks: vec![],
+        };
+        let landscape = Doc {
+            page: PageSetup {
+                landscape: true,
+                ..Default::default()
+            },
+            blocks: vec![],
+        };
+        let p = Layout::new(&portrait);
+        let l = Layout::new(&landscape);
+        assert_eq!(
+            (p.page_w, p.page_h),
+            (612.0, 792.0),
+            "portrait Letter, unchanged"
+        );
+        assert_eq!(
+            (l.page_w, l.page_h),
+            (792.0, 612.0),
+            "landscape swaps width/height rather than doing nothing"
+        );
+        assert!(
+            stream(&landscape).contains("/MediaBox [0 0 792 612]"),
+            "the swapped dims must reach the actual PDF MediaBox, not just Layout's fields"
+        );
+    }
+
+    #[test]
+    fn page_size_tabloid_and_legal_are_landscape_usable_for_a_wide_report() {
+        assert_eq!(crate::doc::PageSize::Tabloid.dims_pt(), (792.0, 1224.0));
+        assert_eq!(crate::doc::PageSize::Legal.dims_pt(), (612.0, 1008.0));
     }
 
     #[test]
@@ -1809,5 +2305,101 @@ mod tests {
             (gap - space).abs() < 0.02,
             "the run gap should be one stretched space, got {gap}"
         );
+    }
+
+    fn timeline_doc(marks: Vec<crate::doc::TimelineRow>) -> Doc {
+        let mut leader = Table::new(vec![Column {
+            width: ColWidth::Pct(100.0),
+            align: Align::Left,
+        }]);
+        for i in 0..marks.len() {
+            leader
+                .rows
+                .push(Row::data(vec![Cell::text(format!("Task {i}"))]));
+        }
+        let axis = crate::doc::TimeAxis {
+            start: 0.0,
+            end: 100.0,
+            bands: vec![crate::doc::AxisBand {
+                label: "Q1".into(),
+                start: 0.0,
+                end: 100.0,
+                level: 0,
+            }],
+            gridlines: vec![25.0, 50.0, 75.0],
+            marker: Some(crate::doc::AxisMarker {
+                at: 40.0,
+                label: Some("Status date".into()),
+            }),
+        };
+        let timeline = crate::doc::Timeline::with_leader(leader, ColWidth::Pct(30.0), axis, marks)
+            .expect("valid timeline");
+        Doc {
+            page: PageSetup {
+                landscape: true,
+                ..Default::default()
+            },
+            blocks: vec![Block::Timeline(timeline)],
+        }
+    }
+
+    #[test]
+    fn a_bar_mark_reaches_the_stream_as_a_filled_rect() {
+        let doc = timeline_doc(vec![crate::doc::TimelineRow::one(Mark::Bar {
+            start: 10.0,
+            end: 60.0,
+            style: BarStyle::Task,
+            progress: None,
+            label: None,
+        })]);
+        let pdf = stream(&doc);
+        assert!(
+            pdf.contains(" re f Q"),
+            "expected at least one filled rect for the bar"
+        );
+    }
+
+    #[test]
+    fn a_milestone_diamond_reaches_the_stream_as_a_filled_polygon() {
+        let doc = timeline_doc(vec![crate::doc::TimelineRow::one(Mark::Milestone {
+            at: 50.0,
+            shape: MilestoneShape::Diamond,
+            label: Some(crate::doc::MarkLabel {
+                text: "Approval".into(),
+                placement: LabelPlacement::After,
+                bold: false,
+            }),
+        })]);
+        let pdf = stream(&doc);
+        assert!(
+            pdf.contains(" m ") && pdf.contains(" h f Q"),
+            "expected a closed filled polygon (m ... l ... h f Q) for the milestone"
+        );
+        assert!(
+            pdf.contains("Approval"),
+            "the mark's label must reach the stream"
+        );
+    }
+
+    #[test]
+    fn an_empty_row_still_occupies_its_slot_keeping_leader_and_plot_aligned() {
+        // Two leader rows, only the second has a mark -- the first row must
+        // still advance the plot by one full row_h, or the second mark
+        // would land beside the wrong leader label.
+        let doc = timeline_doc(vec![
+            crate::doc::TimelineRow::empty(),
+            crate::doc::TimelineRow::one(Mark::Milestone {
+                at: 50.0,
+                shape: MilestoneShape::Bar,
+                label: None,
+            }),
+        ]);
+        let pdf = stream(&doc);
+        let places = placements(&pdf);
+        assert!(
+            places.iter().any(|(_, t)| t == "Task 0"),
+            "leader row 0 must still render even though it has no marks"
+        );
+        assert!(places.iter().any(|(_, t)| t == "Task 1"));
     }
 }
