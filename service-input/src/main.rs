@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 mod eval;
+mod registry;
+mod taxonomy;
 
 use axum::{
     extract::{Json, Path, State},
@@ -12,6 +14,7 @@ use axum::{
 };
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
 use eval::{compute_f1, normalize_reference_yaml, structural_health_check, CanonicalEntity};
+use registry::{resolve_code, CodeRegistry};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
@@ -19,6 +22,10 @@ use std::io::Write;
 use std::path::Path as FsPath;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
+use taxonomy::{
+    generate_filename, validate_filename_fields, FilenameFieldsRequest, GenerateFilenameRequest,
+    GenerateFilenameResult, Taxonomy,
+};
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -51,6 +58,15 @@ struct Config {
     // Optional domain hint included in CORPUS envelope as "domain_id".
     // service-content taxonomy.rs reads this for domain-aware extraction prompt.
     domain_id: Option<String>,
+    // Cross-archive short-code namespace registry (code-namespaces.csv),
+    // loaded once at startup. Advisory only — see registry.rs. Never a
+    // hard runtime dependency: a missing/invalid file yields an empty
+    // registry with warnings, not a startup failure.
+    code_registry: CodeRegistry,
+    // Document-naming controlled vocabulary (document-naming-taxonomy.csv),
+    // loaded once at startup. Advisory only — see taxonomy.rs. Same
+    // never-a-hard-dependency posture as code_registry.
+    taxonomy: Taxonomy,
 }
 
 // ---------------------------------------------------------------------------
@@ -394,6 +410,76 @@ async fn healthz(State((_, state)): State<(Arc<Config>, SharedState)>) -> impl I
         status: "ok".into(),
         queued: s.queued,
         done_count: s.done_count,
+    })
+}
+
+// Read-only view of the loaded code-namespaces.csv registry — namespace-
+// level metadata only, never per-code data (see registry.rs). Returns the
+// registry as loaded once at startup; a missing/invalid file at startup
+// still returns 200 with an empty namespaces list and its warnings, since
+// this is advisory infrastructure, never a hard dependency for any caller.
+async fn code_namespaces(State((cfg, _)): State<(Arc<Config>, SharedState)>) -> impl IntoResponse {
+    Json(cfg.code_registry.clone())
+}
+
+// Resolve one code within one namespace by reading that namespace's real
+// canonical_file live, at request time — the "resolver, not replica"
+// pattern: this never stores or duplicates a namespace's real data, only
+// ever looks it up fresh. See registry.rs::resolve_code. Read-only,
+// advisory — a namespace/code that can't be resolved returns 200 with
+// found:false and any warnings, never a 4xx/5xx, since "not found" or
+// "not yet materialized" are normal outcomes here, not caller errors.
+async fn resolve_code_handler(
+    State((cfg, _)): State<(Arc<Config>, SharedState)>,
+    Path((namespace, code)): Path<(String, String)>,
+) -> impl IntoResponse {
+    Json(resolve_code(&cfg.code_registry, &namespace, &code))
+}
+
+// Validate proposed filename fields (desk/people/minutebook, type,
+// status-suffix) against document-naming-taxonomy.csv. Validation only —
+// this does not generate a filename or write anything; it answers whether
+// each field is a recognized vocabulary member. The Company axis is out of
+// scope here (see code-namespaces.csv / GET /v1/code-namespaces instead).
+async fn validate_filename_fields_handler(
+    State((cfg, _)): State<(Arc<Config>, SharedState)>,
+    Json(req): Json<FilenameFieldsRequest>,
+) -> impl IntoResponse {
+    Json(validate_filename_fields(&cfg.taxonomy, &req))
+}
+
+// Assemble a filename from the document-naming template. Does not write
+// anything or check for a real file — pure string assembly plus the same
+// advisory validation as /v1/validate-filename-fields, so a caller gets
+// both the filename and a report on which fields didn't validate in one
+// call. The Company axis is caller-supplied, not resolved against
+// code-namespaces.csv here — that resolution is still an open design
+// question (see BRIEF-service-input-file-naming-taxonomy.md).
+#[derive(Serialize)]
+struct GenerateFilenameResponse {
+    #[serde(flatten)]
+    result: GenerateFilenameResult,
+    // Populated only if `company` happens to match a real entity_code in
+    // the "entity" namespace (resolved live, never stored — see
+    // registry.rs::resolve_code). This is informational only: it does
+    // NOT change what's used in the assembled filename. Whether
+    // service-input's Company axis should require/prefer a real
+    // entity_code going forward is still an open design decision (see
+    // BRIEF-service-input-file-naming-taxonomy.md) — this field exists
+    // so a caller can see both the raw value used and, if it happens to
+    // resolve, the real entity behind it.
+    company_resolution: registry::ResolveResult,
+}
+
+async fn generate_filename_handler(
+    State((cfg, _)): State<(Arc<Config>, SharedState)>,
+    Json(req): Json<GenerateFilenameRequest>,
+) -> impl IntoResponse {
+    let result = generate_filename(&cfg.taxonomy, &req);
+    let company_resolution = resolve_code(&cfg.code_registry, "entity", &req.company);
+    Json(GenerateFilenameResponse {
+        result,
+        company_resolution,
     })
 }
 
@@ -967,6 +1053,48 @@ async fn main() {
         .unwrap_or_else(|_| "http://127.0.0.1:9080".into());
     let emit_corpus_dir = std::env::var("SERVICE_INPUT_EMIT_CORPUS_DIR").ok();
     let domain_id = std::env::var("SERVICE_INPUT_DOMAIN_ID").ok();
+    // Default points at the git-tracked source location (DARP: plain text,
+    // readable with cat/grep, self-describing). A deployed instance should
+    // override via env var to wherever its deploy step ships the file.
+    let code_namespaces_path =
+        std::env::var("SERVICE_INPUT_CODE_NAMESPACES").unwrap_or_else(|_| {
+            "/srv/foundry/clones/project-input/service-input/data/code-namespaces.csv".into()
+        });
+    let code_registry = registry::load_code_namespaces(&code_namespaces_path);
+    if code_registry.warnings.is_empty() {
+        println!(
+            "[service-input] code-namespaces.csv loaded: {} namespaces, no warnings",
+            code_registry.namespaces.len()
+        );
+    } else {
+        eprintln!(
+            "[service-input] code-namespaces.csv loaded: {} namespaces, {} warning(s):",
+            code_registry.namespaces.len(),
+            code_registry.warnings.len()
+        );
+        for w in &code_registry.warnings {
+            eprintln!("[service-input]   - {w}");
+        }
+    }
+    let taxonomy_path = std::env::var("SERVICE_INPUT_TAXONOMY").unwrap_or_else(|_| {
+        "/srv/foundry/clones/project-input/service-input/data/document-naming-taxonomy.csv".into()
+    });
+    let taxonomy = taxonomy::load_document_naming_taxonomy(&taxonomy_path);
+    if taxonomy.warnings.is_empty() {
+        println!(
+            "[service-input] document-naming-taxonomy.csv loaded: {} entries, no warnings",
+            taxonomy.entries.len()
+        );
+    } else {
+        eprintln!(
+            "[service-input] document-naming-taxonomy.csv loaded: {} entries, {} warning(s):",
+            taxonomy.entries.len(),
+            taxonomy.warnings.len()
+        );
+        for w in &taxonomy.warnings {
+            eprintln!("[service-input]   - {w}");
+        }
+    }
 
     let http_client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -991,12 +1119,21 @@ async fn main() {
         http_client,
         emit_corpus_dir,
         domain_id,
+        code_registry,
+        taxonomy,
     });
     let shared: SharedState = Arc::new(Mutex::new(AppState::default()));
 
     let app = Router::new()
         .route("/healthz", get(healthz))
         .route("/v1/status", get(status))
+        .route("/v1/code-namespaces", get(code_namespaces))
+        .route("/v1/resolve/:namespace/:code", get(resolve_code_handler))
+        .route(
+            "/v1/validate-filename-fields",
+            post(validate_filename_fields_handler),
+        )
+        .route("/v1/generate-filename", post(generate_filename_handler))
         .route("/v1/append", post(append))
         .route("/v1/migrate", post(migrate))
         .route("/v1/eval/:stem", get(eval_stem))

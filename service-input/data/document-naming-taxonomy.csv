@@ -1,0 +1,120 @@
+# document-naming-taxonomy.csv — base controlled vocabulary for
+# service-input's file-naming/classification taxonomy.
+#
+# Source: real document-naming convention analysis of
+# "IT SUPPORT_PointSav_2026_01_06_Database_Chart of Accounts_FIN.xlsx"
+# ("File names" tab, Jennifer Woodfine, V3, 2026-01-06). Full analysis in
+# BRIEF-service-input-file-naming-taxonomy.md.
+#
+# Filename template this vocabulary feeds:
+#   <desk-or-people-value>_<company>_<YYYY_MM_DD>_<type>_<description>_<initials>[_<status-suffix>].<ext>
+# The company axis is NOT in this file — it's handled by the separate
+# cross-archive registry, code-namespaces.csv (namespaces: entity,
+# company-legacy). Initials are per-user, not a fixed vocabulary — no
+# rows for them here.
+#
+# Categories/structure ship as-is (operator decision, 2026-08-31) — this
+# is the base for customers to start with and append to, IN PLACE
+# (not a separate overlay file — operator decision, 2026-08-31).
+#
+# Cleanup applied vs. the raw source (logged, not silent):
+#   - "IT SUPPORT" had a trailing-space inconsistency in the source
+#     vocabulary list (clean in the usage example, ' IT SUPPORT ' in the
+#     list) — fixed here, both rows now read "IT SUPPORT".
+#   - "Memo" and "Letter" appeared twice, verbatim, in the source Type
+#     list — deduplicated to one row each.
+#   - Two near-duplicate Type values from the source's finance/legal list
+#     ("Annual returns" row 65, "Annual Return" row 85) are preserved
+#     separately, NOT merged — they may denote different real filing
+#     types (e.g. a corporate registry filing vs. a financial return);
+#     flagged in notes for human review rather than decided here.
+#
+# Columns:
+#   axis                controlled vocabulary: desk | people | minutebook
+#                        | type | status-suffix
+#   code                 the value itself (this taxonomy has no separate
+#                        numeric code layer — desk/type/status values ARE
+#                        the code)
+#   label                human-display form (identical to code for this
+#                        taxonomy; kept as a separate column for
+#                        consistency with code-namespaces.csv's shape and
+#                        in case a customer wants a display override)
+#   description_example  a real-world example Description value paired
+#                        with this Type in the source (finance/legal
+#                        Type rows only); blank elsewhere
+#   observed_in_practice  yes | no | unknown — whether real filenames
+#                        using this value were actually found in a
+#                        workspace-wide grep (status-suffix rows only;
+#                        blank elsewhere, not yet checked)
+#   notes
+#
+axis,code,label,description_example,observed_in_practice,notes
+desk,COMPLIANCE,COMPLIANCE,,,
+desk,REAL ESTATE,REAL ESTATE,,,
+desk,CONSTRUCTION,CONSTRUCTION,,,
+desk,INVESTOR RELATIONS,INVESTOR RELATIONS,,,
+desk,IT SUPPORT,IT SUPPORT,,,"source had a trailing-space inconsistency between the vocabulary list and the usage example -- fixed"
+desk,CORPORATE,CORPORATE,,,
+desk,PROJECTS,PROJECTS,,,
+desk,DOCUMENTATIONS,DOCUMENTATIONS,,,
+desk,DISCOVERY,DISCOVERY,,,
+minutebook,MINUTEBOOK,MINUTEBOOK,,,"third option for the same template field as desk/people -- not a list, a single fixed value"
+people,SUPERVISORY BOARD,SUPERVISORY BOARD,,,
+people,MANAGEMENT BOARD,MANAGEMENT BOARD,,,
+people,GENERAL STAFF,GENERAL STAFF,,,
+people,SECRETARY POOL,SECRETARY POOL,,,
+people,SHAREHOLDER,SHAREHOLDER,,,
+people,CONTRIBUTOR,CONTRIBUTOR,,,
+people,COLLABORATOR,COLLABORATOR,,,
+people,SERVICE PROVIDER,SERVICE PROVIDER,,,
+type,Letter,Letter,,,"deduplicated -- appeared twice in the source list"
+type,Agreement,Agreement,,,
+type,Memo,Memo,,,"deduplicated -- appeared twice in the source list"
+type,Form,Form,,,
+type,Email,Email,,,
+type,Report,Report,,,
+type,Prospectus,Prospectus,,,
+type,Transaction Summary,Transaction Summary,,,
+type,Design Slides,Design Slides,,,
+type,Forecast,Forecast,,,
+type,Media Release,Media Release,,,
+type,Regulatory Release,Regulatory Release,,,
+type,Biography,Biography,,,
+type,Presentation,Presentation,,,
+type,Tear Sheet,Tear Sheet,,,
+type,Chart,Chart,,,
+type,Chart of Accounts,Chart of Accounts,File names,,"added 2026-09-02 -- present in the source xlsx's own clean template-usage example (header row + example row, distinct from the general Types-section list rows 60-91 this taxonomy's other Type rows were extracted from), missed in the original extraction; caught via end-to-end testing against the real source filename"
+type,Whitepaper,Whitepaper,,,
+type,Key Note Slide,Key Note Slide,,,
+type,Site Selection,Site Selection,,,
+type,Wireframe,Wireframe,,,
+type,Media Assets,Media Assets,,,
+type,Database,Database,,,
+type,Key Plans,Key Plans,,,
+type,Floor Plates,Floor Plates,,,
+type,Share Capital,Share Capital,Unit capital,,
+type,Articles of incorporation,Articles of incorporation,Certificate of Limited Partnership,,
+type,Shareholders Agreement,Shareholders Agreement,Limited Partnership Agreement,,
+type,Annual returns,Annual returns,CRA T5013,,"possible near-duplicate of 'Annual Return' below -- preserved separately, not merged; may denote a different real filing type, flag for human review"
+type,FS Quarterly,FS Quarterly,FS Quarterly,,
+type,FS YR End,FS YR End,FS YR End,,
+type,Resolutions,Resolutions,Resolution,,
+type,Invoices,Invoices,,,
+type,Bank statements,Bank statements,,,
+type,Directors and officers,Directors and officers,,,
+type,Engagements,Engagements,,,
+type,Agreements,Agreements,,,"possible near-duplicate of 'Agreement' above (singular) -- preserved separately, not merged"
+type,Employment,Employment,,,
+type,Warrants,Warrants,,,
+type,Tax Opinion,Tax Opinion,,,
+type,Bank Account,Bank Account,,,
+type,Annual Return,Annual Return,,,"possible near-duplicate of 'Annual returns' above -- preserved separately, not merged; may denote a different real filing type, flag for human review"
+type,Office Lease,Office Lease,,,
+type,Consolidated,Consolidated,,,
+type,MD&A,MD&A,,,
+type,Compilation,Compilation,,,
+type,Audit Report,Audit Report,,,
+type,Disbursement,Disbursement,,,
+status-suffix,PUB,Public,,yes,"real usage: 14 occurrences found workspace-wide (grep, 2026-08-31)"
+status-suffix,EXE,Executed,,no,"documented in source but zero real occurrences found workspace-wide (grep, 2026-08-31) -- kept as a category anyway, may simply not have been needed yet"
+status-suffix,FIN,Final draft,,yes,"real usage: 77 occurrences found workspace-wide (grep, 2026-08-31) -- most common status tag by far"
