@@ -41,9 +41,7 @@ pub fn load_document_naming_taxonomy(path: &str) -> Taxonomy {
     let raw = match std::fs::read_to_string(path) {
         Ok(s) => s,
         Err(e) => {
-            warnings.push(format!(
-                "document-naming-taxonomy.csv not readable at {path}: {e}"
-            ));
+            warnings.push(format!("document-naming-taxonomy.csv not readable at {path}: {e}"));
             return Taxonomy {
                 entries: Vec::new(),
                 warnings,
@@ -101,9 +99,7 @@ impl Taxonomy {
     /// since a customer appending their own values in place should not have
     /// to guess a hidden case-folding rule.
     pub fn contains(&self, axis: &str, code: &str) -> bool {
-        self.entries
-            .iter()
-            .any(|e| e.axis == axis && e.code == code)
+        self.entries.iter().any(|e| e.axis == axis && e.code == code)
     }
 
     /// Which of the desk/people/minutebook axes (if any) a value belongs
@@ -224,10 +220,7 @@ fn is_valid_date_shape(date: &str) -> bool {
 /// the rest of this module). Field values are used verbatim, including
 /// spaces, matching the real source convention (e.g. "Chart of
 /// Accounts", "File names") — no case-folding or space-stripping.
-pub fn generate_filename(
-    taxonomy: &Taxonomy,
-    req: &GenerateFilenameRequest,
-) -> GenerateFilenameResult {
+pub fn generate_filename(taxonomy: &Taxonomy, req: &GenerateFilenameRequest) -> GenerateFilenameResult {
     let fields_validation = validate_filename_fields(
         taxonomy,
         &FilenameFieldsRequest {
@@ -303,14 +296,10 @@ mod tests {
     #[test]
     fn loads_real_shipped_taxonomy_without_warnings() {
         let t = load_document_naming_taxonomy(
-            "/srv/foundry/clones/project-input/service-input/data/document-naming-taxonomy.csv",
+            "/srv/foundry/clones/project-input/service-input/tests/fixtures/document-naming-taxonomy.csv",
         );
-        assert_eq!(t.entries.len(), 69);
-        assert!(
-            t.warnings.is_empty(),
-            "unexpected warnings: {:?}",
-            t.warnings
-        );
+        assert_eq!(t.entries.len(), 77);
+        assert!(t.warnings.is_empty(), "unexpected warnings: {:?}", t.warnings);
     }
 
     #[test]
@@ -318,10 +307,7 @@ mod tests {
         let t = sample_taxonomy();
         assert_eq!(t.classify_first_field("COMPLIANCE"), Some("desk".into()));
         assert_eq!(t.classify_first_field("SHAREHOLDER"), Some("people".into()));
-        assert_eq!(
-            t.classify_first_field("MINUTEBOOK"),
-            Some("minutebook".into())
-        );
+        assert_eq!(t.classify_first_field("MINUTEBOOK"), Some("minutebook".into()));
         assert_eq!(t.classify_first_field("NOT-A-REAL-VALUE"), None);
     }
 
@@ -419,10 +405,7 @@ mod tests {
             extension: "docx".into(),
         };
         let result = generate_filename(&t, &req);
-        assert_eq!(
-            result.filename,
-            "SHAREHOLDER_MCorp_2026_01_06_Agreement_Notes_JW1.docx"
-        );
+        assert_eq!(result.filename, "SHAREHOLDER_MCorp_2026_01_06_Agreement_Notes_JW1.docx");
     }
 
     #[test]

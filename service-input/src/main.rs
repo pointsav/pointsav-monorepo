@@ -15,6 +15,10 @@ use axum::{
 use base64::{engine::general_purpose::STANDARD as B64, Engine};
 use eval::{compute_f1, normalize_reference_yaml, structural_health_check, CanonicalEntity};
 use registry::{resolve_code, CodeRegistry};
+use taxonomy::{
+    generate_filename, validate_filename_fields, FilenameFieldsRequest, GenerateFilenameRequest,
+    GenerateFilenameResult, Taxonomy,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
@@ -22,10 +26,6 @@ use std::io::Write;
 use std::path::Path as FsPath;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
-use taxonomy::{
-    generate_filename, validate_filename_fields, FilenameFieldsRequest, GenerateFilenameRequest,
-    GenerateFilenameResult, Taxonomy,
-};
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -1053,13 +1053,19 @@ async fn main() {
         .unwrap_or_else(|_| "http://127.0.0.1:9080".into());
     let emit_corpus_dir = std::env::var("SERVICE_INPUT_EMIT_CORPUS_DIR").ok();
     let domain_id = std::env::var("SERVICE_INPUT_DOMAIN_ID").ok();
-    // Default points at the git-tracked source location (DARP: plain text,
-    // readable with cat/grep, self-describing). A deployed instance should
-    // override via env var to wherever its deploy step ships the file.
-    let code_namespaces_path =
-        std::env::var("SERVICE_INPUT_CODE_NAMESPACES").unwrap_or_else(|_| {
-            "/srv/foundry/clones/project-input/service-input/data/code-namespaces.csv".into()
-        });
+    // Default points at workspace conventions/ (Command stewardship) —
+    // moved 2026-09-04 per BRIEF-platform-structured-data-intake.md and the
+    // heads-up sent msg-id command-20260831-heads-up-possible-service-
+    // registry-propo. Previously lived at this crate's own data/ dir, which
+    // could never satisfy the crate-purity pre-commit gate (real zero-
+    // remote-disk path + entity-name references in its notes — deliberate,
+    // not accidental, since it's a pointer registry) since that's real
+    // content the gate is specifically designed to catch inside a canonical-
+    // hosted crate. A deployed instance should override via env var to
+    // wherever its deploy step ships the file.
+    let code_namespaces_path = std::env::var("SERVICE_INPUT_CODE_NAMESPACES").unwrap_or_else(|_| {
+        "/srv/foundry/conventions/code-namespaces.csv".into()
+    });
     let code_registry = registry::load_code_namespaces(&code_namespaces_path);
     if code_registry.warnings.is_empty() {
         println!(
@@ -1076,8 +1082,10 @@ async fn main() {
             eprintln!("[service-input]   - {w}");
         }
     }
+    // Same tests/fixtures/ rationale as code_namespaces_path above — this
+    // is service-input's own real shipped vocabulary, not a test-only file.
     let taxonomy_path = std::env::var("SERVICE_INPUT_TAXONOMY").unwrap_or_else(|_| {
-        "/srv/foundry/clones/project-input/service-input/data/document-naming-taxonomy.csv".into()
+        "/srv/foundry/clones/project-input/service-input/tests/fixtures/document-naming-taxonomy.csv".into()
     });
     let taxonomy = taxonomy::load_document_naming_taxonomy(&taxonomy_path);
     if taxonomy.warnings.is_empty() {

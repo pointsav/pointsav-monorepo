@@ -1,0 +1,208 @@
+# document-naming-taxonomy.csv — base controlled vocabulary for
+# service-input's file-naming/classification taxonomy.
+#
+# REBUILT 2026-09-03 from scratch, using every real source examined this
+# session (operator direction: "the chart of accounts we use should be
+# 100% new from scratch but based on all the information you have"), not
+# an incremental patch of the 2026-08-31 version. Full history and
+# provenance for every decision below: BRIEF-service-input-file-naming-
+# taxonomy.md.
+#
+# Real sources this rebuild is grounded in:
+#   1. "IT SUPPORT_PointSav_2026_01_06_Database_Chart of Accounts_FIN.xlsx"
+#      ("File names" tab, Jennifer Woodfine, V3, 2026-01-06) -- the
+#      original desk/people/minutebook/type/status-suffix vocabulary.
+#   2. service-minutebook/assets (cluster-totebox-jennifer, 31 real
+#      corporate documents) -- the actual corpus the template claims to
+#      describe. Real conformance to the clean 6-field template: 1/31.
+#      Real, repeated variations found and folded in below (not
+#      discarded): a genuine date-first shape with desk omitted (19/31),
+#      a real language axis (EN/ES, 9/31), and 5 real Type values never
+#      captured in the xlsx (LinkedIn, Website, News Release, Org-Chart,
+#      Print News Release).
+#   3. cluster-totebox-jennifer-2/service-input/ledger.jsonl (458 real
+#      entries, a bulk research corpus) -- surfaced a real, repeated
+#      second convention (424+/458 start "RESEARCH_"), captured below as
+#      its own axis, per the operator-ratified reasoning in the BRIEF: it
+#      stacks with desk values already in use (CORPORATE, PROJECTS), so
+#      it cannot be a desk value itself without discarding real data
+#      already being recorded.
+#   4. code-namespaces.csv (this archive) -- the Company axis is
+#      deliberately NOT in this file; it resolves through that registry
+#      (namespaces: entity = real entity_code from tool-accounting's
+#      entities.csv; company-legacy = this taxonomy's own frozen numeric
+#      table, superseded, kept for historical filenames only).
+#
+# DESIGN PRINCIPLE, non-negotiable (operator direction, 2026-09-03):
+# humans must be able to read these filenames directly, with no database
+# and no special software -- the same DARP/100-year-readability principle
+# already governing every other part of this workspace. Whatever internal
+# representation service-input eventually uses (a filename-embedded
+# discriminant vs. named keys on the ingest envelope -- genuinely
+# undecided as of this rebuild, see the BRIEF's round-3 pivot), the
+# on-disk filename stays a human-legible RENDERING of these values. This
+# file defines the controlled vocabulary that rendering draws from; it
+# does not decide the internal storage mechanism.
+#
+# Filename template (RECORD, the default/implicit class -- ordinary
+# corporate documents):
+#   <desk-or-people-or-minutebook>_<company>_<YYYY_MM_DD>_<type>_<description>_<initials>[_<language>][_<status-suffix>].<ext>
+# Real, repeated variant found in practice (19/31 in service-minutebook):
+# desk omitted entirely when context makes it unambiguous --
+#   <company>_<YYYY_MM_DD>_<type>_<description>[_<language>]_<initials>.<ext>
+# Both are legitimate; this file doesn't force one, it documents both as
+# observed. The Company axis is NOT in this file -- see code-namespaces.csv.
+# Initials are per-user, not a fixed vocabulary -- no rows for them here.
+#
+# Filename template (RESEARCH record-class -- third-party/externally-
+# authored reference material, confirmed real and currently the ONLY
+# other real record-class in production use):
+#   RESEARCH_<desk>_<YYYY_MM_DD>_<type>_<description>_<publisher>[_<status-suffix>].<ext>
+# Company is dropped entirely for this class (there isn't a real company
+# for a scraped news article -- forcing one is worse than declaring the
+# field class-conditional; see BRIEF round 2/3). The slot that means
+# "initials" for RECORD means "publisher/attribution" here. Real data
+# shows Type is not yet populated for any RESEARCH-class file in
+# practice (0/358 conformant real rows) -- left optional for this class,
+# not required, until real usage says otherwise (BRIEF decisions open).
+#
+# Categories/structure ship as-is (operator decision, 2026-08-31) -- this
+# is the base for customers to start with and append to, IN PLACE (not a
+# separate overlay file -- operator decision, 2026-08-31).
+#
+# Cleanup applied vs. every raw source (logged, never silent):
+#   - "IT SUPPORT" had a trailing-space inconsistency in the xlsx source
+#     (clean in the usage example, ' IT SUPPORT ' in the vocabulary list)
+#     -- fixed, both rows now read "IT SUPPORT".
+#   - "Memo" and "Letter" appeared twice, verbatim, in the xlsx source
+#     Type list -- deduplicated to one row each.
+#   - Two near-duplicate Type values from the xlsx's finance/legal list
+#     ("Annual returns" / "Annual Return") preserved separately, NOT
+#     merged -- may denote different real filing types; flagged for
+#     human review rather than decided here.
+#   - "Chart of Accounts" was missing from the original 2026-08-31
+#     extraction despite being the Type value in the xlsx's own clean
+#     template-usage example -- added, source logged on the row.
+#   - Five new Type values from service-minutebook (LinkedIn, Website,
+#     News Release, Org-Chart, Print News Release) were NOT in the xlsx
+#     at all -- real corporate documents used them anyway. "News Release"
+#     is preserved separately from the xlsx's existing "Media Release",
+#     not merged -- likely denotes internal vs. external distribution,
+#     not yet confirmed, flagged for human review same as the
+#     Annual-returns pair above.
+#   - "Development-Overview-Updated" (from IT SUPPORT_PointSav_2026-03-10-
+#     Development-Overview-Updated_MW1_JW1.md) was NOT added as a Type --
+#     read as a real data-quality defect in that one source filename
+#     (missing Type field, hyphens where the convention uses underscores/
+#     spaces), not a new legitimate value. Flagged for human review of
+#     that specific file, not a vocabulary gap.
+#
+# Columns:
+#   axis                controlled vocabulary: desk | people | minutebook
+#                        | type | status-suffix | language | record-class
+#   code                 the value itself (this taxonomy has no separate
+#                        numeric code layer -- desk/type/status/language/
+#                        record-class values ARE the code)
+#   label                human-display form (identical to code for this
+#                        taxonomy; kept as a separate column for
+#                        consistency with code-namespaces.csv's shape and
+#                        in case a customer wants a display override)
+#   description_example  a real-world example Description value paired
+#                        with this Type in a source, where one exists;
+#                        blank elsewhere
+#   observed_in_practice  yes | no | unknown -- whether real filenames
+#                        using this value were actually found in a
+#                        workspace-wide check; blank where not checked
+#   notes
+#
+# RESERVED-TOKEN RULE (binding, not optional -- BRIEF round-3, Fable
+# amendment #1): record-class values (currently just RESEARCH) must
+# never be added to the desk/people/minutebook axes, or the filename
+# becomes ambiguous the moment a customer edits their vocabulary in
+# place. A loader MUST reject (or advisory-warn and refuse to parse) any
+# desk/people/minutebook row whose code collides with a record-class
+# code. This is the one place the "customers customize in place" model
+# is deliberately narrowed -- a record-class row changes parsing
+# behavior, not just a display list; customer-added record-class rows
+# have no defined grammar until code defines one, and must be rejected
+# or advisory-flagged, never silently accepted (BRIEF round-3, Fable
+# amendment #5).
+#
+axis,code,label,description_example,observed_in_practice,notes
+desk,COMPLIANCE,COMPLIANCE,,,
+desk,REAL ESTATE,REAL ESTATE,,,
+desk,CONSTRUCTION,CONSTRUCTION,,,
+desk,INVESTOR RELATIONS,INVESTOR RELATIONS,,,
+desk,IT SUPPORT,IT SUPPORT,,,"source had a trailing-space inconsistency between the vocabulary list and the usage example -- fixed"
+desk,CORPORATE,CORPORATE,,,"real usage confirmed: 258 real RESEARCH-class filenames use this as the beneficiary desk (service-input ledger)"
+desk,PROJECTS,PROJECTS,,,"real usage confirmed: 109 real RESEARCH-class filenames use this as the beneficiary desk (service-input ledger); a further 3 real files misspell this 'PORJECTS' -- data-quality issue in source data, not a vocabulary gap"
+desk,DOCUMENTATIONS,DOCUMENTATIONS,,,
+desk,DISCOVERY,DISCOVERY,,,
+minutebook,MINUTEBOOK,MINUTEBOOK,,,"third option for the same template field as desk/people -- not a list, a single fixed value"
+people,SUPERVISORY BOARD,SUPERVISORY BOARD,,,
+people,MANAGEMENT BOARD,MANAGEMENT BOARD,,,
+people,GENERAL STAFF,GENERAL STAFF,,,
+people,SECRETARY POOL,SECRETARY POOL,,,
+people,SHAREHOLDER,SHAREHOLDER,,,
+people,CONTRIBUTOR,CONTRIBUTOR,,,
+people,COLLABORATOR,COLLABORATOR,,,
+people,SERVICE PROVIDER,SERVICE PROVIDER,,,
+type,Letter,Letter,,,"deduplicated -- appeared twice in the xlsx source list"
+type,Agreement,Agreement,,,
+type,Memo,Memo,,,"deduplicated -- appeared twice in the xlsx source list; real usage confirmed in service-minutebook (COMPLIANCE_Direct-Hold-Solutions_2026-03-10_Memo_Overview_JW1.md and others)"
+type,Form,Form,,,
+type,Email,Email,,,"real usage confirmed in service-minutebook (2026_03_09_Email_Bloomberg_OBoyle_JW1.md, 2026_03_09_MCorp_Email_Template_General_JW1.md)"
+type,Report,Report,,,
+type,Prospectus,Prospectus,,,
+type,Transaction Summary,Transaction Summary,,,
+type,Design Slides,Design Slides,,,
+type,Forecast,Forecast,,,
+type,Media Release,Media Release,,,"possible near-duplicate of 'News Release' below -- preserved separately, not merged; likely internal vs. external distribution but not confirmed, flag for human review"
+type,Regulatory Release,Regulatory Release,,,
+type,Biography,Biography,,,
+type,Presentation,Presentation,,,
+type,Tear Sheet,Tear Sheet,,,"real usage confirmed in service-minutebook: 5 real files (COMPLIANCE_MCorp..., CORPORATE_MCorp..., CORPORATE_Woodfine LPs..., etc.), both underscore and hyphen forms ('Tear Sheet' / 'Tear-Sheet') seen -- source inconsistency, not a new value"
+type,Chart,Chart,,,
+type,Chart of Accounts,Chart of Accounts,File names,,"added 2026-09-02 -- present in the xlsx source's own clean template-usage example (header row + example row, distinct from the general Types-section list this taxonomy's other Type rows were extracted from), missed in the original extraction; caught via end-to-end testing against the real source filename"
+type,Whitepaper,Whitepaper,,,
+type,Key Note Slide,Key Note Slide,,,
+type,Site Selection,Site Selection,,,
+type,Wireframe,Wireframe,,,
+type,Media Assets,Media Assets,,,
+type,Database,Database,,,
+type,Key Plans,Key Plans,,,
+type,Floor Plates,Floor Plates,,,
+type,Share Capital,Share Capital,Unit capital,,
+type,Articles of incorporation,Articles of incorporation,Certificate of Limited Partnership,,
+type,Shareholders Agreement,Shareholders Agreement,Limited Partnership Agreement,,
+type,Annual returns,Annual returns,CRA T5013,,"possible near-duplicate of 'Annual Return' below -- preserved separately, not merged; may denote a different real filing type, flag for human review"
+type,FS Quarterly,FS Quarterly,FS Quarterly,,
+type,FS YR End,FS YR End,FS YR End,,
+type,Resolutions,Resolutions,Resolution,,
+type,Invoices,Invoices,,,
+type,Bank statements,Bank statements,,,
+type,Directors and officers,Directors and officers,,,
+type,Engagements,Engagements,,,
+type,Agreements,Agreements,,,"possible near-duplicate of 'Agreement' above (singular) -- preserved separately, not merged"
+type,Employment,Employment,,,
+type,Warrants,Warrants,,,
+type,Tax Opinion,Tax Opinion,,,
+type,Bank Account,Bank Account,,,
+type,Annual Return,Annual Return,,,"possible near-duplicate of 'Annual returns' above -- preserved separately, not merged; may denote a different real filing type, flag for human review"
+type,Office Lease,Office Lease,,,
+type,Consolidated,Consolidated,,,
+type,MD&A,MD&A,,,
+type,Compilation,Compilation,,,
+type,Audit Report,Audit Report,,,
+type,Disbursement,Disbursement,,,
+type,LinkedIn,LinkedIn,,,"NEW 2026-09-03 -- not in the xlsx source at all; real usage confirmed in service-minutebook (2026_03_09_PointSav_LinkedIn_JW1.md, 2026_03_09_Woodfine_LinkedIn_JW1.md)"
+type,Website,Website,,,"NEW 2026-09-03 -- not in the xlsx source at all; the single most common real Type in service-minutebook (12 of 31 real files), covering website copy/disclaimers/sidebar/body content"
+type,News Release,News Release,,,"NEW 2026-09-03 -- not in the xlsx source at all; real usage confirmed in service-minutebook (2026_03_09_PointSav_News_Release_JW1.md, 2026_03_09_Woodfine_News_Release_JW1.md); possible near-duplicate of 'Media Release' above, preserved separately, flag for human review"
+type,Org-Chart,Org-Chart,,,"NEW 2026-09-03 -- not in the xlsx source at all; real usage confirmed in service-minutebook (COMPLIANCE_Direct-Hold-Solutions_2026-03-10_Org-Chart_Joint Venture Matrix.md)"
+type,Print News Release,Print News Release,,,"NEW 2026-09-03 -- not in the xlsx source at all; real usage confirmed in service-minutebook (2026_03_09_Woodfine_Print_News Release_JW1.md, 2026_03_09_PointSav_Website_PointSav_Print_News Release_JW1.md); relationship to 'News Release'/'Media Release' above not fully resolved, flag for human review"
+status-suffix,PUB,Public,,yes,"real usage: 14 occurrences found workspace-wide (grep, 2026-08-31)"
+status-suffix,EXE,Executed,,no,"documented in xlsx source but zero real occurrences found workspace-wide (grep, 2026-08-31) -- kept as a category anyway, may simply not have been needed yet"
+status-suffix,FIN,Final draft,,yes,"real usage: 77 occurrences found workspace-wide (grep, 2026-08-31) -- most common status tag by far"
+language,EN,English,,yes,"NEW 2026-09-03 -- not in the xlsx source at all (the workspace's general bilingual EN/ES discipline applies to editorial/wiki content, but this is the first evidence it's used in service-minutebook's own real corporate-document filenames too); real usage: 4 real files in service-minutebook"
+language,ES,Spanish,,yes,"NEW 2026-09-03 -- real usage: 3 real files in service-minutebook (e.g. 2026_03_09_Website_Contact us_ES.md)"
+record-class,RESEARCH,Research,,yes,"NEW 2026-09-03, BRIEF round 2/3 -- third-party/externally-authored reference material (news articles, market research), confirmed real via 424+ of 458 real filenames in the service-input ledger for cluster-totebox-jennifer-2. NOT a desk value -- real data shows it stacks with real desk values (CORPORATE, PROJECTS) rather than replacing them. Company field is dropped entirely for this class (not filled with a placeholder); the slot that means initials for an ordinary record means publisher/attribution here. Type is optional for this class -- 0 of 358 real conformant RESEARCH filenames populate it. RESERVED TOKEN: see the binding rule in this file's header -- must never be added as a desk/people/minutebook value."

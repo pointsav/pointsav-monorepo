@@ -147,11 +147,7 @@ pub struct ResolveResult {
 pub fn resolve_code(registry: &CodeRegistry, namespace: &str, code: &str) -> ResolveResult {
     let mut warnings = Vec::new();
 
-    let Some(ns) = registry
-        .namespaces
-        .iter()
-        .find(|n| n.namespace == namespace)
-    else {
+    let Some(ns) = registry.namespaces.iter().find(|n| n.namespace == namespace) else {
         warnings.push(format!("unknown namespace: '{namespace}'"));
         return ResolveResult {
             namespace: namespace.to_string(),
@@ -215,9 +211,7 @@ pub fn resolve_code(registry: &CodeRegistry, namespace: &str, code: &str) -> Res
     let headers: Vec<String> = match reader.headers() {
         Ok(h) => h.iter().map(|s| s.to_string()).collect(),
         Err(e) => {
-            warnings.push(format!(
-                "canonical_file for namespace '{namespace}': header parse error: {e}"
-            ));
+            warnings.push(format!("canonical_file for namespace '{namespace}': header parse error: {e}"));
             return ResolveResult {
                 namespace: namespace.to_string(),
                 code: code.to_string(),
@@ -342,10 +336,7 @@ mod tests {
         let result = resolve_code(&registry, "entity", "PRO-CA-01-AST");
         assert!(result.found);
         let row = result.row.expect("row present");
-        assert_eq!(
-            row.get("legal_name").unwrap(),
-            "Woodfine Professional Centres LP"
-        );
+        assert_eq!(row.get("legal_name").unwrap(), "Woodfine Professional Centres LP");
         assert!(result.warnings.is_empty());
     }
 
@@ -362,10 +353,7 @@ mod tests {
         let result = resolve_code(&registry, "entity", "NOT-A-REAL-CODE");
         assert!(!result.found);
         assert!(result.row.is_none());
-        assert!(
-            result.warnings.is_empty(),
-            "not-found is not a warning-worthy condition"
-        );
+        assert!(result.warnings.is_empty(), "not-found is not a warning-worthy condition");
     }
 
     #[test]
