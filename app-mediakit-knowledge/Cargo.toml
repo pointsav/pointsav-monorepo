@@ -42,7 +42,12 @@ toml = "0.8"
 anyhow = "1"
 thiserror = "2"
 tantivy = "0.24"
-git2 = "0.20"
+git2 = { version = "0.20", default-features = false }
+# default-features off: only local repo history/diff (src/history.rs — Repository,
+# DiffOptions, Sort, Commit) is used, never clone/fetch/push, so the "https"/"ssh"
+# defaults (openssl-sys/libssh2-sys) are pure dead weight. They also break the
+# os-mediakit aarch64 cross-compile (openssl-sys has no cross pkg-config sysroot on
+# this host) — found and fixed 2026-08-26.
 # P9 (claim layer): embedded claim-graph store, content hashing, citation
 # re-verification HTTP client, and the MCP query surface.
 redb = "4"

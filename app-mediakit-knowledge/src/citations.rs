@@ -327,8 +327,14 @@ citations:
         let in_text = vec!["a".to_string(), "orphan".to_string()];
         let cites = vec!["a".to_string(), "unused".to_string()];
         let violations = registry.check_citation_gate(&in_text, &cites);
-        assert!(violations.iter().any(|v| v.contains("[orphan]") && v.contains("not listed in frontmatter cites")));
-        assert!(violations.iter().any(|v| v.contains("`unused`") && v.contains("never used in-text")));
-        assert!(violations.iter().any(|v| v.contains("`unused`") && v.contains("does not resolve")));
+        assert!(violations
+            .iter()
+            .any(|v| v.contains("[orphan]") && v.contains("not listed in frontmatter cites")));
+        assert!(violations
+            .iter()
+            .any(|v| v.contains("`unused`") && v.contains("never used in-text")));
+        assert!(violations
+            .iter()
+            .any(|v| v.contains("`unused`") && v.contains("does not resolve")));
     }
 }

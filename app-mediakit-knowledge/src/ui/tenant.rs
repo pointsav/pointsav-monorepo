@@ -272,10 +272,22 @@ mod tests {
     #[test]
     fn organization_id_matches_is_woodfine_split() {
         for t in [Tenant::Documentation, Tenant::Projects, Tenant::Corporate] {
-            assert_eq!(t.is_woodfine(), t.organization_id().contains("woodfinegroup.com"));
+            assert_eq!(
+                t.is_woodfine(),
+                t.organization_id().contains("woodfinegroup.com")
+            );
         }
-        assert_eq!(Tenant::Documentation.organization_id(), "https://pointsav.com/#organization");
-        assert_eq!(Tenant::Projects.organization_id(), "https://woodfinegroup.com/#organization");
-        assert_eq!(Tenant::Corporate.organization_id(), "https://woodfinegroup.com/#organization");
+        assert_eq!(
+            Tenant::Documentation.organization_id(),
+            "https://pointsav.com/#organization"
+        );
+        assert_eq!(
+            Tenant::Projects.organization_id(),
+            "https://woodfinegroup.com/#organization"
+        );
+        assert_eq!(
+            Tenant::Corporate.organization_id(),
+            "https://woodfinegroup.com/#organization"
+        );
     }
 }

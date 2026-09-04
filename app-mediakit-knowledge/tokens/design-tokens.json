@@ -66,7 +66,7 @@
   "component-surface": {
     "header-bg":       { "$type": "color", "$var": "header-bg",       "$value": "{color.surface}" },
     "sitenotice-bg":   { "$type": "color", "$var": "sitenotice-bg",   "$value": "{color.surface-sunken}" },
-    "footer-bg":       { "$type": "color", "$var": "footer-bg",       "$value": "#eef1f5", "$description": "distinct from surface-sunken 2026-08-25 (Command/project-editorial UI-fix batch) — was sharing a token with .k-compliance directly above it, blending into one undifferentiated gray mass. Cool navy-tinted gray, consistent with --k-accent's navy." },
+    "footer-bg":       { "$type": "color", "$var": "footer-bg",       "$value": "#f4f7fb", "$description": "distinct from surface-sunken 2026-08-25 (Command/project-editorial UI-fix batch) — was sharing a token with .k-compliance directly above it, blending into one undifferentiated gray mass. Cool navy-tinted gray, consistent with --k-accent's navy. Lightened 2026-09-01 (Fable+Opus consult, operator-directed 'closer to bim.woodfinegroup.com's near-white footer'): NOT bim's literal #ffffff — that would risk re-merging with .k-compliance above (the exact regression this token split fixed), and this site's white content canvas sits right below the footer too. #f4f7fb keeps this token's distinct-from-compliance purpose intact while reading much closer to white than #eef1f5 did." },
     "drawer-bg":       { "$type": "color", "$var": "drawer-bg",       "$value": "{color.surface-raised}" },
     "search-bg":       { "$type": "color", "$var": "search-bg",       "$value": "{color.surface-inset}" },
     "search-bg-hover": { "$type": "color", "$var": "search-bg-hover", "$value": "{color.surface-inset-hover}" }

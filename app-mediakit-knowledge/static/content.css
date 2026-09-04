@@ -141,51 +141,6 @@
 .k-article__sha { font-family: var(--k-font-mono, monospace); font-size: 0.9em; }
 .k-article__lang { font-family: var(--k-font-sans); }
 
-/* Prev/next article pager (same category, title-sorted) — a real UX-review
-   finding: reading flow was strictly article -> back to category -> next
-   article, with no direct link between adjacent articles.
-   Streamlined 2026-08-25 (Command/project-editorial, Fable+Opus live
-   verification): was two full-width bordered cards (88.8px tall) — a
-   single thin text row reads better and matches the one real precedent
-   (AWS docs) that has any pager at all. Also fixes a real bug: the old
-   `flex: 1 1 0` + `margin-left: auto` on a next-only box (no prev) stretched
-   an empty bordered rectangle across the full content width. */
-.k-article-pager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--k-space-2) var(--k-space-5);
-  margin: var(--k-space-6) 0 0;
-  padding-top: var(--k-space-3);
-  border-top: 1px solid var(--k-border-subtle, var(--k-border));
-  font-family: var(--k-font-sans);
-  font-size: var(--k-text-sm);
-}
-.k-article-pager__label {
-  flex-basis: 100%;
-  color: var(--k-ink-muted);
-}
-.k-article-pager__link {
-  flex: 0 1 auto;
-  display: block;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  color: inherit;
-}
-.k-article-pager__link:hover .k-article-pager__title { color: var(--k-accent); text-decoration: underline; }
-.k-article-pager__link--next { margin-left: auto; text-align: right; }
-.k-article-pager__dir {
-  display: inline;
-  font-size: inherit;
-  color: var(--k-ink-muted);
-}
-.k-article-pager__title {
-  display: inline;
-  font-weight: var(--k-weight-regular, 400);
-  color: var(--k-accent);
-}
-
 /* Point-in-time "as-of" banner (historical revision) */
 .k-asof {
   margin: 0 0 var(--k-space-5);

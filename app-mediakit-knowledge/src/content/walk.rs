@@ -282,8 +282,39 @@ fn first_body_summary(body: &str) -> Option<String> {
     })?;
     // Light markdown strip: emphasis, code ticks, and wikilink brackets.
     let mut s = line.trim().replace("**", "").replace('`', "");
-    s = s.replace("[[", "").replace("]]", "");
+    s = strip_wikilink_brackets(&s);
     Some(truncate_words(&s, 150))
+}
+
+/// Strip `[[slug]]`/`[[slug|Label]]` wikilink syntax down to plain text for
+/// auto-generated summaries (search snippets, card blurbs) — unlike
+/// `render::resolve_wikilinks`, no `ContentIndex` is available here (this
+/// runs during the initial content walk, before the index it would need
+/// exists yet), so a piped link keeps its label and a bare link keeps its
+/// raw slug, same as before. Real bug fixed here 2026-08-26: the previous
+/// naive `.replace("[[", "").replace("]]", "")` only stripped the brackets,
+/// leaving `slug|Label` (pipe included) in the summary text — e.g. live:
+/// "Limited partners in professional-centres-canada-lp-structure|Professional
+/// Centres Canada LP can force...".
+fn strip_wikilink_brackets(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(open) = rest.find("[[") {
+        out.push_str(&rest[..open]);
+        let Some(close) = rest[open + 2..].find("]]") else {
+            // Unterminated `[[` (shouldn't happen in real content) — leave
+            // the rest of the line untouched rather than lose text.
+            out.push_str(&rest[open..]);
+            rest = "";
+            break;
+        };
+        let inner = &rest[open + 2..open + 2 + close];
+        let text = inner.split_once('|').map_or(inner, |(_, label)| label);
+        out.push_str(text.trim());
+        rest = &rest[open + 2 + close + 2..];
+    }
+    out.push_str(rest);
+    out
 }
 
 /// Truncate to at most `max_chars`, cutting on a word boundary, adding an ellipsis.
@@ -337,6 +368,32 @@ mod tests {
         std::fs::create_dir_all(p.parent().unwrap()).unwrap();
         let mut f = std::fs::File::create(p).unwrap();
         f.write_all(body.as_bytes()).unwrap();
+    }
+
+    #[test]
+    fn strip_wikilink_brackets_keeps_the_label_of_a_piped_link() {
+        // Real bug, Command/project-editorial finding (2026-08-26): the
+        // naive bracket-only strip left "slug|Label" (pipe included) in
+        // auto-generated summaries — live example: "Limited partners in
+        // professional-centres-canada-lp-structure|Professional Centres
+        // Canada LP can force...".
+        assert_eq!(
+            strip_wikilink_brackets("Limited partners in [[lp-structure|Professional Centres LP]] can force."),
+            "Limited partners in Professional Centres LP can force."
+        );
+    }
+
+    #[test]
+    fn strip_wikilink_brackets_keeps_the_raw_slug_of_a_bare_link() {
+        // No ContentIndex is available at this point in the content walk
+        // (this runs while the index is still being built), so a bare
+        // (unpiped) link keeps its raw slug text here — real title
+        // resolution for bare links happens later, in render::render(),
+        // where ContentIndex is available.
+        assert_eq!(
+            strip_wikilink_brackets("See [[zero-container-inference]] for background."),
+            "See zero-container-inference for background."
+        );
     }
 
     #[test]

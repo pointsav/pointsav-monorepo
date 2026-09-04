@@ -22,7 +22,15 @@
 # Environment variables:
 #   BINARY_PATH      Path to the app-mediakit-knowledge binary (required if not
 #                    at the default /usr/local/bin/app-mediakit-knowledge)
-#   IMAGE_SIZE       Target disk size (default: "2G")
+#   IMAGE_SIZE       Target disk size. Default: auto-detected from the downloaded
+#                    base cloud image's own virtual size (see step 2b) — the base
+#                    image grows over time as Canonical updates it, and a stale
+#                    hardcoded default smaller than that virtual size corrupts the
+#                    GPT backup header on the resulting overlay (found 2026-08-25:
+#                    the base image is now 3.5 GiB; a prior hardcoded "2G" default
+#                    silently produced an unmountable/unparseable partition table).
+#                    Set explicitly to override; must be >= the base image's own
+#                    virtual size.
 #   UBUNTU_IMG_URL   Override Ubuntu minimal cloud image download URL
 #   SKIP_DOWNLOAD    Set to "1" to reuse a cached cloud image in build/
 #   NBD_DEV          Override NBD device (default: /dev/nbd0)
@@ -31,7 +39,7 @@ set -euo pipefail
 
 UBUNTU_IMG_URL="${UBUNTU_IMG_URL:-https://cloud-images.ubuntu.com/minimal/releases/noble/release/ubuntu-24.04-minimal-cloudimg-amd64.img}"
 BINARY_PATH="${BINARY_PATH:-/usr/local/bin/app-mediakit-knowledge}"
-IMAGE_SIZE="${IMAGE_SIZE:-2G}"
+IMAGE_SIZE="${IMAGE_SIZE:-}"
 NBD_DEV="${NBD_DEV:-/dev/nbd0}"
 
 BUILD_DIR="build"
@@ -68,6 +76,13 @@ if [ "${SKIP_DOWNLOAD:-0}" = "1" ] && [ -f "${CACHED_BASE}" ]; then
 else
     echo "  fetching: $(basename "${CACHED_BASE}")"
     curl -fSL --output "${CACHED_BASE}" "${UBUNTU_IMG_URL}"
+fi
+
+# ── 2b. Auto-detect IMAGE_SIZE from the base image's own virtual size ────────
+if [ -z "${IMAGE_SIZE}" ]; then
+    IMAGE_SIZE=$(qemu-img info "${CACHED_BASE}" \
+        | grep '^virtual size:' | grep -oE '[0-9]+ bytes' | grep -oE '[0-9]+')
+    echo "  IMAGE_SIZE auto-detected from base image: ${IMAGE_SIZE} bytes"
 fi
 
 # ── 3. Create a standalone working copy sized to IMAGE_SIZE ──────────────────
@@ -268,11 +283,18 @@ role          = "primary"
 blueprint_set = ["TOPIC"]
 TOML
 
-# Lock down config directory permissions.
-sudo chmod 0750 "${MOUNT_POINT}/etc/wiki"
+# Lock down config directory permissions. File-level chmod/chown BEFORE the
+# directory lockdown below — the *.toml glob expands in the invoking shell,
+# not inside sudo's privileged one; only harmless here because this whole
+# script is normally run via `sudo bash build-image.sh` (root shell can
+# always read the directory regardless of its mode), but fragile against
+# any other invocation style. Found and fixed for real in
+# build-guest-rootfs.sh (2026-08-26) when run without a whole-script sudo
+# wrapper — applying the same defensive ordering here.
 sudo chown "root:${WIKI_GID}" "${MOUNT_POINT}/etc/wiki"
 sudo chmod 0640 "${MOUNT_POINT}/etc/wiki/"*.toml
 sudo chown "root:${WIKI_GID}" "${MOUNT_POINT}/etc/wiki/"*.toml
+sudo chmod 0750 "${MOUNT_POINT}/etc/wiki"
 
 # ── 5e. Install systemd service units ────────────────────────────────────────
 echo "[systemd units]"
@@ -289,8 +311,15 @@ for INSTANCE in documentation projects corporate; do
 [Unit]
 Description=PointSav Knowledge Wiki — ${INSTANCE} (port ${PORT})
 Documentation=https://software.pointsav.com/products/app-mediakit-knowledge
-After=network-online.target
-Wants=network-online.target
+# network.target (not network-online.target): this service binds 0.0.0.0
+# locally and doesn't need DHCP/DNS resolved before starting. Found
+# 2026-08-25: network-online.target never completes under this appliance's
+# QEMU/slirp test networking (systemd-networkd-wait-online.service hangs
+# with no timeout), which silently prevented the wiki units from ever
+# starting at all — a second, previously-masked defect uncovered only after
+# the emergency-mode/device-timeout fix let boot proceed far enough to reach
+# it.
+After=network.target
 
 [Service]
 Type=simple
@@ -342,6 +371,61 @@ HOSTS
 # ── 5h. Disable cloud-init (pre-configured image, no metadata server needed) ──
 echo "[disable cloud-init]"
 sudo touch "${MOUNT_POINT}/etc/cloud/cloud-init.disabled"
+
+# ── 5i. Harden GRUB against slow by-label device enumeration ─────────────────
+# Fix for the 2026-08-10 boot defect: under QEMU/TCG software emulation (no
+# /dev/kvm), udev can take longer than systemd's default 90s device-timeout to
+# populate /dev/disk/by-label/{BOOT,UEFI}, so local-fs.target fails and the
+# guest drops into emergency mode before the wiki services ever start.
+# Root-caused 2026-08-25: the shipped partition table/labels/fstab are correct
+# (confirmed via read-only qemu-nbd inspection — not a real image defect); this
+# is a TCG/udev timing artifact. Confirmed fixed 2026-08-25 by test-booting a
+# copy with this flag added: boot reached the login prompt with the by-label
+# devices found immediately, no emergency mode, no local-fs.target failure.
+# grub.cfg lives on the separate BOOT-labelled partition, not under the root
+# partition's /boot (that's an empty mountpoint here) — the ESP's grub.cfg is
+# just a stub that chains to it via `configfile ($root)/grub/grub.cfg`.
+echo "[grub: systemd.device-timeout hardening]"
+BOOT_PART=""
+# -r (raw, no tree-drawing glyphs like "├─") so NAME is a bare device name.
+for CAND in $(lsblk -rno NAME,TYPE "${NBD_DEV}" | awk '$2 == "part" {print $1}'); do
+    CAND_DEV="/dev/${CAND}"
+    if [ "$(sudo blkid -s LABEL -o value "${CAND_DEV}" 2>/dev/null || true)" = "BOOT" ]; then
+        BOOT_PART="${CAND_DEV}"
+        break
+    fi
+done
+if [ -z "${BOOT_PART}" ]; then
+    echo "  warning: no partition labelled BOOT found on ${NBD_DEV} — device-timeout hardening skipped"
+else
+    BOOT_MOUNT="${BUILD_DIR}/boot-mount"
+    mkdir -p "${BOOT_MOUNT}"
+    sudo mount "${BOOT_PART}" "${BOOT_MOUNT}"
+    GRUB_CFG="${BOOT_MOUNT}/grub/grub.cfg"
+    if [ -f "${GRUB_CFG}" ]; then
+        if sudo grep -q "systemd.device-timeout=300" "${GRUB_CFG}"; then
+            echo "  already patched: ${GRUB_CFG}"
+        else
+            sudo sed -i -E 's#^(\s*linux[[:space:]]+/vmlinuz\S*[[:space:]].*)$#\1 systemd.device-timeout=300#' "${GRUB_CFG}"
+            PATCHED_COUNT=$(sudo grep -c "systemd.device-timeout=300" "${GRUB_CFG}")
+            echo "  patched: ${GRUB_CFG} (${PATCHED_COUNT} boot entries)"
+        fi
+    else
+        echo "  warning: grub.cfg not found at ${GRUB_CFG} — device-timeout hardening skipped"
+    fi
+    sudo sync
+    # A bare umount here has been observed to intermittently report "target is
+    # busy" immediately after sudo grep/sed touched the mount (transient — no
+    # real holder found via fuser/lsof when this happened 2026-08-25). Retry
+    # before falling back to a lazy unmount so the mountpoint is always clear
+    # before this device is reused later in the script.
+    for _ in 1 2 3; do
+        sudo umount "${BOOT_MOUNT}" 2>/dev/null && break
+        sleep 1
+    done
+    mountpoint -q "${BOOT_MOUNT}" && sudo umount -l "${BOOT_MOUNT}"
+    rmdir "${BOOT_MOUNT}" 2>/dev/null || true
+fi
 
 # ── 6. Unmount and disconnect ─────────────────────────────────────────────────
 echo "[unmount]"

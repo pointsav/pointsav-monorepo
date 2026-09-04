@@ -44,7 +44,7 @@
   --k-surface-raised: #ffffff; /* drawer panel */
   --k-surface-sunken: #f8f9fa; /* sitenotice + footer institutional gray */
   --k-drawer-bg: var(--k-surface-raised);
-  --k-footer-bg: #eef1f5; /* distinct from surface-sunken 2026-08-25 (Command/project-editorial UI-fix batch) — was sharing a token with .k-compliance directly above it, blending into one undifferentiated gray mass. Cool navy-tinted gray, consistent with --k-accent's navy. */
+  --k-footer-bg: #f4f7fb; /* distinct from surface-sunken 2026-08-25 (Command/project-editorial UI-fix batch) — was sharing a token with .k-compliance directly above it, blending into one undifferentiated gray mass. Cool navy-tinted gray, consistent with --k-accent's navy. Lightened 2026-09-01 (Fable+Opus consult, operator-directed 'closer to bim.woodfinegroup.com's near-white footer'): NOT bim's literal #ffffff — that would risk re-merging with .k-compliance above (the exact regression this token split fixed), and this site's white content canvas sits right below the footer too. #f4f7fb keeps this token's distinct-from-compliance purpose intact while reading much closer to white than #eef1f5 did. */
   --k-header-bg: var(--k-surface);
   --k-search-bg: var(--k-surface-inset);
   --k-search-bg-hover: var(--k-surface-inset-hover);

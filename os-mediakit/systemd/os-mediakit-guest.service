@@ -1,0 +1,86 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+#
+# os-mediakit-guest.service — runs the real os-mediakit appliance image
+# (seL4/Microkit/libvmm guest, built by vendor-libvmm/examples/virtio) as a
+# managed systemd service. Ported from project-totebox's
+# os-totebox-guest.service (2026-08-27) — same shared vendor-libvmm example,
+# same qemu-system-aarch64 invocation shape, adapted for this appliance's 3
+# wiki tenants (documentation:9090, projects:9093, corporate:9095) instead of
+# a single API port. Deliberately named `os-mediakit-guest`, not reusing or
+# abbreviating any other product's unit name — BRIEF-os-mediakit-product-
+# family.md's own Phase Deploy section flags precedent's
+# `os-orchestration-guest.service` naming collision (claimed by a narrower-
+# scope product than its name implied, causing real downstream storefront-
+# naming confusion) as a mistake not to repeat here.
+#
+# Install target: any dedicated appliance VM running a pre-built loader.img
+# only (runtime-only, no build toolchain on the host — same convention as
+# precedent). Deployed + enabled by os-mediakit/scripts/deploy-loader-img.sh,
+# not installed by hand. NOT YET DEPLOYED ANYWHERE as of this writing — no
+# target VM exists yet (BRIEF Decisions-open #10, "Phase T2A": production VM
+# provisioning is deliberately deferred until multi-product validation is
+# done). This unit + the deploy script are the Phase Deploy deliverable;
+# actually running them against a real instance is Phase T2A's job, later.
+#
+# Plain HTTP, temporary: the 3 hostfwd ports below are forwarded directly,
+# unencrypted — matches this appliance's current state (G-TLS not built yet,
+# BRIEF's own G-TLS section). Once G-TLS lands (nginx + certbot inside the
+# guest, terminating 80/443), these 3 ports become loopback-only backends
+# behind it and this unit's ExecStart/hostfwd list changes accordingly — do
+# not treat this as the final production exposure shape.
+#
+# Graceful shutdown — KNOWN NOT TO WORK, do not trust the QMP call below to
+# protect data. Inherited from project-totebox's identical, live-tested
+# finding (same shared guest DTS, same missing ACPI/power-button device) —
+# not re-tested independently here, but there is no reason to expect this
+# guest's DTS to behave differently. `ExecStop`'s `qmp-shutdown.py` will
+# likely report `system_powerdown accepted` at the QMP protocol level while
+# the guest itself never receives it, and systemd's own TimeoutStopSec
+# SIGTERM/SIGKILL fallback against the emulator process is what actually end
+# the guest — a hard kill, no drain guarantee. Real fix, not done here: a
+# virtio-console-based or GPIO-based shutdown request the guest's own /init
+# listens for and forwards as SIGTERM to all 3 wiki processes, the same way
+# the in-guest SIGTERM-TEST smoke-test path already proves that signal
+# delivery works when sent directly to the guest's own processes. Until that
+# exists, avoid `systemctl stop`/redeploy against a guest with real in-flight
+# `/data` edits if avoidable.
+
+[Unit]
+Description=os-mediakit appliance (seL4/libvmm guest, real loader.img — documentation/projects/corporate wikis)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+[Service]
+Type=simple
+WorkingDirectory=/var/lib/os-mediakit
+RuntimeDirectory=os-mediakit
+RuntimeDirectoryMode=0750
+
+ExecStart=/usr/bin/qemu-system-aarch64 \
+    -machine virt,virtualization=on,secure=off \
+    -cpu cortex-a53 \
+    -serial mon:stdio \
+    -device loader,file=/var/lib/os-mediakit/loader.img,addr=0x70000000,cpu-num=0 \
+    -m size=2G \
+    -nographic \
+    -global virtio-mmio.force-legacy=false \
+    -drive file=/var/lib/os-mediakit/blk_storage,format=raw,if=none,id=hd \
+    -device virtio-blk-device,drive=hd,bus=virtio-mmio-bus.1 \
+    -device virtio-net-device,netdev=netdev0,bus=virtio-mmio-bus.0 \
+    -netdev user,id=netdev0,hostfwd=tcp::9090-:9090,hostfwd=tcp::9093-:9093,hostfwd=tcp::9095-:9095 \
+    -qmp unix:/run/os-mediakit/qmp.sock,server,nowait
+
+# See the file header — this does NOT achieve graceful shutdown today.
+# Left in place (not removed) as the documented, honest starting point for
+# the real fix, same reasoning as precedent's identical comment.
+ExecStop=/usr/bin/python3 /var/lib/os-mediakit/qmp-shutdown.py /run/os-mediakit/qmp.sock 5
+TimeoutStopSec=30
+
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

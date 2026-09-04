@@ -627,14 +627,17 @@ html[data-nav="open"] .k-sidebar--reading .k-sidenav__browse { display: block; }
 /* ========================================================================== */
 .k-footer {
   flex: 0 0 auto;
-  /* Elevation — soft upward shadow (now a named token, --k-shadow-footer)
-     + faint top-edge gradient wash (still a literal — no gradient $type
-     precedent in tokens/design-tokens.json yet), giving the footer a
-     distinct plane instead of a flat slab. Values proven on
-     bim.woodfinegroup.com's `.bim-footer` (Playwright-verified 2026-07-16). */
-  background:
-    linear-gradient(180deg, rgba(22, 70, 121, 0.035), transparent 46%),
-    var(--k-footer-bg);
+  /* Elevation — soft upward shadow (named token, --k-shadow-footer),
+     proven on bim.woodfinegroup.com's `.bim-footer` (Playwright-verified
+     2026-07-16). The light-mode gradient wash this rule used to layer on
+     top was dropped 2026-09-01 when --k-footer-bg moved lighter
+     (#eef1f5 -> #f4f7fb, "closer to bim's near-white" per operator/Fable+
+     Opus consult) — a 0.035-alpha navy wash is essentially invisible
+     against a background that light, and bim's own footer has no such
+     wash either, so dropping it (not doubling its opacity) is the simpler
+     match. Dark mode keeps its own gradient below — untouched, not part
+     of this pass. */
+  background: var(--k-footer-bg);
   box-shadow: var(--k-shadow-footer);
   border-top: 1px solid var(--k-border);
   color: var(--k-ink-secondary);
@@ -694,28 +697,41 @@ html[data-nav="open"] .k-sidebar--reading .k-sidenav__browse { display: block; }
 }
 .k-footer__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--k-gutter-lg);
+}
+@media (max-width: 1024px) {
+  .k-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--k-space-6) var(--k-gutter-lg);
+  }
 }
 .k-footer__col { min-width: 0; }
 .k-footer__col-title {
-  /* Restored 2026-08-25/26 (Command/project-editorial UI-fix batch) —
-     git-verified regression, commit c406f6a70 (2026-07-15): this went
-     from an 11px muted uppercase tracked micro-label to 17px/700/full-ink
-     — 4px LARGER and one weight heavier than the site's own brand name 4
-     lines above it. Values are the exact reconciled Fable+Opus diff (msg
-     command-20260826-footer-redesign-exact-css-layout-rs-mark) — letter-
-     spacing is a literal 0.09em (KKR measured 1.392px on 14px ≈ 0.1em),
-     not --k-tracking-caps (that token is shared with the sitenotice
-     entity label and wasn't meant to move together with this).
-     --k-text-footer-heading (17px) is now unused by this rule; left
-     defined in tokens.css in case another surface wants it. */
+  /* 2026-08-25/26 (Command/project-editorial UI-fix batch) restored this
+     from a git-verified regression (commit c406f6a70, 2026-07-15: 11px
+     micro-label -> 17px/700/full-ink, 4px LARGER and one weight heavier
+     than the brand name above it) to a small tracked micro-label, verified
+     live against KKR/Brookfield/MS Learn/Azure.
+     2026-09-01 (Fable+Opus cross-model consult, mirroring that same
+     verification methodology): re-confirmed the small-label grammar is
+     correct — bim.woodfinegroup.com's OWN non-footer label-role headings
+     use this same small/tracked/uppercase/muted idiom, and this site
+     (unlike bim's footer) has a separate brand block above these columns,
+     so a heavier weight here would compete with it rather than bim's
+     footer, which has no separate identity block to compete with. Only
+     the legibility complaint was real — fixed via ink color + 1px, not by
+     switching grammars: font-size 12px->13px (literal value, not
+     var(--k-text-sm) — that token is the nav-link size and must not move
+     with this, same reasoning already applied below to letter-spacing not
+     reusing --k-tracking-caps), letter-spacing 0.09em->0.08em (eases
+     slightly at the larger size), color --k-ink-secondary->--k-ink. */
   margin: 0 0 var(--k-space-4);
-  font-size: var(--k-text-xs);
+  font-size: 0.8125rem;
   font-weight: var(--k-weight-bold);
   text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--k-ink-secondary);
+  letter-spacing: 0.08em;
+  color: var(--k-ink);
 }
 .k-footer__col-fact {
   margin: 0 0 var(--k-space-3);
@@ -728,14 +744,21 @@ html[data-nav="open"] .k-sidebar--reading .k-sidenav__browse { display: block; }
   font-size: var(--k-text-sm);
   line-height: var(--k-leading-relaxed);
 }
-.k-footer__list li { margin-bottom: 0.375rem; }
+.k-footer__list li { margin-bottom: 0; }
 .k-footer__list li:last-child { margin-bottom: 0; }
 .k-footer__link {
   /* Near-ink, not saturated link-blue — real institutional-footer
      comparison (KKR, Brookfield, MS Learn) found links use near-ink or
      brand-dark color, accent only on hover; the body-text --k-link blue
      reads as web-1.0 in a footer. Exact values per msg
-     command-20260826-footer-redesign-exact-css-layout-rs-mark. */
+     command-20260826-footer-redesign-exact-css-layout-rs-mark.
+     display:block + padding (2026-09-01, borrowed from design.pointsav.com's
+     own WCAG 2.5.8 fix, found live 2026-07-22 mobile audit there): the
+     bare inline link was ~21px tall, under the 24px minimum tap target.
+     padding replaces the old li margin-bottom for list rhythm — don't
+     double-space by keeping both. */
+  display: block;
+  padding: 0.375rem 0;
   color: var(--k-ink);
   text-decoration: none;
   font-size: var(--k-text-sm);
@@ -893,13 +916,6 @@ html[data-nav="open"] .k-sidebar--reading .k-sidenav__browse { display: block; }
   color: inherit;
 }
 .k-badge--license .k-badge__name { letter-spacing: 0.01em; }
-
-.k-footer__copyline {
-  flex-basis: 100%;
-  margin: var(--k-space-3) 0 0;
-  font-size: var(--k-text-xs);
-  color: var(--k-ink-muted);
-}
 
 /* ========================================================================== */
 /* Responsive ≤768px                                                          */

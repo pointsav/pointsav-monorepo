@@ -16,6 +16,7 @@ use comrak::{markdown_to_html_with_plugins, Options};
 use syntect::highlighting::ThemeSet;
 use syntect::html::{css_for_theme_with_class_style, ClassStyle};
 
+use super::walk::{ContentIndex, Lang};
 use crate::citations::CitationRegistry;
 
 /// Syntax highlighter, built once. Class-based output (no inline colours) so the
@@ -104,8 +105,13 @@ pub struct Heading {
 }
 
 /// Render a Markdown body to HTML, resolving wikilinks and collecting headings.
-pub fn render(body_md: &str) -> Rendered {
-    let with_links = resolve_wikilinks(body_md);
+///
+/// `index`/`lang` let unlabeled `[[slug]]` wikilinks resolve to the target's
+/// real title (see `resolve_wikilinks`) — every call site already has both
+/// on hand (`ContentIndex` is built at startup, before any request-time
+/// rendering happens).
+pub fn render(body_md: &str, index: &ContentIndex, lang: Lang) -> Rendered {
+    let with_links = resolve_wikilinks(body_md, index, lang);
     // Strip Kramdown/Hugo-style `{#id}` heading attributes before either comrak
     // or `extract_headings` sees the text — this engine has no extension that
     // understands that syntax, so left alone it renders as literal text (real
@@ -144,9 +150,9 @@ pub fn render(body_md: &str) -> Rendered {
 /// Render a full document. When the frontmatter carries a `references:` list, it
 /// appends synthesized footnote definitions (`[^id]: text <url>`) so the body's
 /// `[^id]` markers resolve into a rendered reference list instead of dead text.
-pub fn render_doc(doc: &super::frontmatter::ParsedDoc) -> Rendered {
+pub fn render_doc(doc: &super::frontmatter::ParsedDoc, index: &ContentIndex, lang: Lang) -> Rendered {
     if doc.frontmatter.references.is_empty() {
-        return render(&doc.body_md);
+        return render(&doc.body_md, index, lang);
     }
     let mut body = doc.body_md.clone();
     body.push_str("\n\n");
@@ -157,7 +163,7 @@ pub fn render_doc(doc: &super::frontmatter::ParsedDoc) -> Rendered {
         }
         body.push('\n');
     }
-    render(&body)
+    render(&body, index, lang)
 }
 
 /// Render a JOURNAL document (SPEC-journal-wiki-render-contract.md §1):
@@ -171,6 +177,8 @@ pub fn render_doc(doc: &super::frontmatter::ParsedDoc) -> Rendered {
 pub fn render_journal_doc(
     doc: &super::frontmatter::ParsedDoc,
     registry: &CitationRegistry,
+    index: &ContentIndex,
+    lang: Lang,
 ) -> Rendered {
     let (resolved_body, order, unresolved) = resolve_citations(&doc.body_md, registry);
     for id in &unresolved {
@@ -190,7 +198,7 @@ pub fn render_journal_doc(
             body.push_str(&format!("{n}. <a id=\"ref-{n}\"></a>{line}\n"));
         }
     }
-    render(&body)
+    render(&body, index, lang)
 }
 
 /// Replace bracket-ID citation tokens per SPEC-journal-wiki-render-contract.md
@@ -207,7 +215,10 @@ pub fn render_journal_doc(
 /// so the golden-fixture suite (`tests/journal_golden.rs`, SPEC §0.5) can
 /// build its normalized comparison summary directly from the same id-order
 /// data `render_journal_doc` uses, without re-parsing rendered HTML.
-pub fn resolve_citations(md: &str, registry: &CitationRegistry) -> (String, Vec<String>, Vec<String>) {
+pub fn resolve_citations(
+    md: &str,
+    registry: &CitationRegistry,
+) -> (String, Vec<String>, Vec<String>) {
     let mut order: Vec<String> = Vec::new();
     let mut numbers: HashMap<String, usize> = HashMap::new();
     let mut unresolved: Vec<String> = Vec::new();
@@ -224,7 +235,14 @@ pub fn resolve_citations(md: &str, registry: &CitationRegistry) -> (String, Vec<
             out.push_str(line);
             continue;
         }
-        resolve_citations_in_line(line, registry, &mut order, &mut numbers, &mut unresolved, &mut out);
+        resolve_citations_in_line(
+            line,
+            registry,
+            &mut order,
+            &mut numbers,
+            &mut unresolved,
+            &mut out,
+        );
     }
     (out, order, unresolved)
 }
@@ -256,8 +274,7 @@ fn resolve_citations_in_line(
             let escaped = i > 0 && bytes[i - 1] == b'\\';
             // A `[[...` (wikilink) or `[^...` (footnote marker) is never a
             // citation bracket — leave both for their own resolvers.
-            let other_bracket_form =
-                i + 1 < bytes.len() && matches!(bytes[i + 1], b'[' | b'^');
+            let other_bracket_form = i + 1 < bytes.len() && matches!(bytes[i + 1], b'[' | b'^');
             if !escaped && !other_bracket_form {
                 if let Some(close_rel) = line[i + 1..].find(']') {
                     let close_abs = i + 1 + close_rel;
@@ -321,20 +338,67 @@ fn citation_link_markdown(number: usize, locator: Option<&str>) -> String {
 /// Replace `[[slug]]` / `[[slug|label]]` with Markdown links to `/wiki/slug`.
 /// A leading `#` in the target (e.g. `[[#section]]`) is treated as a same-page
 /// anchor. Escaped `\[[` is left untouched.
-fn resolve_wikilinks(md: &str) -> String {
-    let bytes = md.as_bytes();
+/// Resolve `[[slug]]`/`[[slug|Label]]` wikilinks to real `/wiki/{slug}` links.
+///
+/// Code-fence- and inline-code-span-aware (Command/project-editorial finding,
+/// 2026-08-26): runs before comrak sees the body, so without this a
+/// `` `[[wikilink]]` `` written as a literal syntax example got corrupted
+/// into a real (broken) link. Same per-line fence tracking + per-character
+/// code-span tracking as `resolve_citations`/`resolve_citations_in_line`.
+///
+/// An unlabeled `[[slug]]` resolves its label to the target's real title via
+/// `index` — previously the raw slug itself was used as the label (e.g.
+/// `[[us-tx-plano]]` rendered literally as "us-tx-plano" instead of "Plano,
+/// Texas"), the one place in the engine this asymmetry existed vs. routes
+/// that already had `ContentIndex` access. Falls back to the raw slug text
+/// when the target doesn't resolve (unknown/removed slug) — same
+/// degrade-not-break behavior as before this fix, not a new failure mode.
+fn resolve_wikilinks(md: &str, index: &ContentIndex, lang: Lang) -> String {
     let mut out = String::with_capacity(md.len());
+    let mut in_fence = false;
+    for line in md.split_inclusive('\n') {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") || trimmed.starts_with("~~~") {
+            in_fence = !in_fence;
+            out.push_str(line);
+            continue;
+        }
+        if in_fence {
+            out.push_str(line);
+            continue;
+        }
+        resolve_wikilinks_in_line(line, index, lang, &mut out);
+    }
+    out
+}
+
+fn resolve_wikilinks_in_line(line: &str, index: &ContentIndex, lang: Lang, out: &mut String) {
+    let bytes = line.as_bytes();
     let mut i = 0;
+    let mut in_code_span = false;
     while i < bytes.len() {
-        if bytes[i] == b'[' && i + 1 < bytes.len() && bytes[i + 1] == b'[' {
+        let b = bytes[i];
+        if b == b'`' {
+            in_code_span = !in_code_span;
+            out.push('`');
+            i += 1;
+            continue;
+        }
+        if !in_code_span && b == b'[' && i + 1 < bytes.len() && bytes[i + 1] == b'[' {
             // Guard against escaped `\[[`.
             let escaped = i > 0 && bytes[i - 1] == b'\\';
             if !escaped {
-                if let Some(close) = md[i + 2..].find("]]") {
-                    let inner = &md[i + 2..i + 2 + close];
-                    let (target, label) = match inner.split_once('|') {
-                        Some((t, l)) => (t.trim(), l.trim()),
-                        None => (inner.trim(), inner.trim()),
+                if let Some(close) = line[i + 2..].find("]]") {
+                    let inner = &line[i + 2..i + 2 + close];
+                    let (target, label): (&str, String) = match inner.split_once('|') {
+                        Some((t, l)) => (t.trim(), l.trim().to_string()),
+                        None => {
+                            let t = inner.trim();
+                            let resolved = index
+                                .resolve(&slugify(t), lang)
+                                .map(|d| d.title.clone());
+                            (t, resolved.unwrap_or_else(|| t.to_string()))
+                        }
                     };
                     let href = if let Some(anchor) = target.strip_prefix('#') {
                         // A throwaway Anchorizer, not the shared one `extract_headings`
@@ -352,7 +416,7 @@ fn resolve_wikilinks(md: &str) -> String {
                         format!("/wiki/{}", slugify(target))
                     };
                     out.push('[');
-                    out.push_str(label);
+                    out.push_str(&label);
                     out.push_str("](");
                     // CommonMark link destinations may not contain an
                     // unescaped space unless wrapped in angle brackets — a
@@ -374,10 +438,9 @@ fn resolve_wikilinks(md: &str) -> String {
         }
         // Default: copy this byte through, respecting UTF-8 boundaries.
         let ch_len = utf8_len(bytes[i]);
-        out.push_str(&md[i..i + ch_len]);
+        out.push_str(&line[i..i + ch_len]);
         i += ch_len;
     }
-    out
 }
 
 fn utf8_len(b: u8) -> usize {
@@ -547,7 +610,11 @@ mod tests {
 
     #[test]
     fn renders_basic_markdown() {
-        let r = render("# Title\n\nSome **bold** text.\n");
+        let r = render(
+            "# Title\n\nSome **bold** text.\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert!(r.html.contains("<strong>bold</strong>"));
     }
 
@@ -565,7 +632,7 @@ mod tests {
             },
             body_md: "This cites a source[^1].\n".into(),
         };
-        let r = render_doc(&doc);
+        let r = render_doc(&doc, &ContentIndex::default(), Lang::En);
         assert!(
             r.html.contains("footnotes"),
             "footnotes section: {}",
@@ -578,9 +645,46 @@ mod tests {
         );
     }
 
+    fn write(dir: &std::path::Path, rel: &str, body: &str) {
+        let p = dir.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, body).unwrap();
+    }
+
+    /// A real, populated `ContentIndex` (one English article) for tests that
+    /// need bare-`[[slug]]` title resolution to actually resolve to
+    /// something — matches `walk.rs`'s own test convention (`ContentIndex`
+    /// has no in-memory constructor other than a real filesystem walk).
+    fn test_index() -> ContentIndex {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().to_path_buf();
+        write(
+            &root,
+            "architecture/zci.md",
+            "---\ntitle: Zero-Container Inference\nslug: zero-container-inference\ncategory: architecture\n---\nBody\n",
+        );
+        let mounts = super::super::mount::MountSet {
+            mounts: vec![super::super::mount::Mount {
+                path: root,
+                role: "primary".into(),
+                blueprint_set: vec![],
+            }],
+        };
+        // Leak the tempdir so its files outlive this function — the index
+        // only stores paths/metadata, not open handles, so this is safe and
+        // matches `tests/handlers.rs`'s own established leak-for-test-
+        // duration convention.
+        std::mem::forget(tmp);
+        ContentIndex::build(&mounts)
+    }
+
     #[test]
     fn resolves_wikilinks_with_and_without_label() {
-        let r = render("See [[zero-container-inference]] and [[yoyo-compute|GPU compute]].\n");
+        let r = render(
+            "See [[zero-container-inference]] and [[yoyo-compute|GPU compute]].\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert!(r.html.contains(r#"href="/wiki/zero-container-inference""#));
         assert!(r.html.contains(r#"href="/wiki/yoyo-compute""#));
         assert!(r.html.contains(">GPU compute</a>"));
@@ -594,19 +698,84 @@ mod tests {
         // (`/wiki/Zero%20Container%20Inference`, a dead link). Real UX-review
         // finding, 2026-08-23: the target must be slugified like any other
         // slug, so the link actually resolves.
-        let r = render("See [[Zero Container Inference]].\n");
+        let r = render(
+            "See [[Zero Container Inference]].\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert!(
             r.html
                 .contains("<a href=\"/wiki/zero-container-inference\""),
             "got: {}",
             r.html
         );
+        // No index entry matches this target — falls back to the raw
+        // bracket text as the label, same degrade-not-break behavior as
+        // before the title-resolution fix below.
         assert!(r.html.contains(">Zero Container Inference</a>"));
     }
 
     #[test]
+    fn bare_wikilink_resolves_label_to_the_real_title_not_the_raw_slug() {
+        // Real bug, Command/project-editorial cross-model finding
+        // (2026-08-26): a bare `[[slug]]` (no `|label`) rendered the raw
+        // slug text itself as the visible label — e.g. `[[us-tx-plano]]`
+        // showed literally "us-tx-plano" instead of "Plano, Texas" — on
+        // every route except the one (`render_index_topic_category`) that
+        // happened to already have `ContentIndex` access. 2,136 live
+        // instances across 64% of pages on the 3 production wikis.
+        let idx = test_index();
+        let r = render("See [[zero-container-inference]] for background.\n", &idx, Lang::En);
+        assert!(
+            r.html.contains(">Zero-Container Inference</a>"),
+            "expected the real title as the label, got: {}",
+            r.html
+        );
+        assert!(
+            !r.html.contains(">zero-container-inference</a>"),
+            "raw slug must not leak through as the label, got: {}",
+            r.html
+        );
+    }
+
+    #[test]
+    fn bare_wikilink_with_unresolvable_slug_falls_back_to_raw_text() {
+        // Same degrade-not-break contract as the pre-fix behavior: an
+        // unknown/removed slug must not panic or blank out, just fall back
+        // to showing the raw bracket text as before.
+        let r = render(
+            "See [[this-slug-does-not-exist]] please.\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
+        assert!(r.html.contains(">this-slug-does-not-exist</a>"));
+    }
+
+    #[test]
+    fn wikilink_inside_inline_code_or_fence_is_left_as_literal_text_not_a_link() {
+        // Second bug in the same finding: resolve_wikilinks ran before
+        // comrak, with no code-span/fence awareness, so a documentation
+        // page using `[[wikilink]]` as a literal syntax example inside
+        // backticks or a fenced block got corrupted into a real (broken)
+        // link. Live example: documentation.pointsav.com/wiki/
+        // substrate-native-compatibility — 151 instances across 77 files.
+        let idx = test_index();
+        let r = render(
+            "Use `[[zero-container-inference]]` syntax like so:\n\n```\n[[zero-container-inference]]\n```\n",
+            &idx,
+            Lang::En,
+        );
+        assert!(
+            !r.html.contains(r#"href="/wiki/zero-container-inference""#),
+            "a wikilink inside code span/fence must not become a real link, got: {}",
+            r.html
+        );
+        assert!(r.html.contains("[[zero-container-inference]]"));
+    }
+
+    #[test]
     fn extracts_h2_h3_headings_only() {
-        let r = render("# H1\n\n## Why no containers\n\n### Detail\n\n#### Too deep\n");
+        let r = render("# H1\n\n## Why no containers\n\n### Detail\n\n#### Too deep\n", &ContentIndex::default(), Lang::En);
         let ids: Vec<_> = r.headings.iter().map(|h| h.id.as_str()).collect();
         assert_eq!(ids, vec!["why-no-containers", "detail"]);
         assert_eq!(r.headings[0].level, 2);
@@ -615,7 +784,7 @@ mod tests {
 
     #[test]
     fn headings_inside_code_fence_are_ignored() {
-        let r = render("## Real\n\n```\n## Not a heading\n```\n");
+        let r = render("## Real\n\n```\n## Not a heading\n```\n", &ContentIndex::default(), Lang::En);
         assert_eq!(r.headings.len(), 1);
         assert_eq!(r.headings[0].id, "real");
     }
@@ -628,7 +797,7 @@ mod tests {
         // comrak's own output picks up its Anchorizer's real -1 suffix, so
         // the TOC ids the article() template renders always match what's
         // actually clickable in the body.
-        let r = render("## Overview\n\ntext\n\n## Overview\n\nmore\n");
+        let r = render("## Overview\n\ntext\n\n## Overview\n\nmore\n", &ContentIndex::default(), Lang::En);
         assert_eq!(r.headings.len(), 2);
         assert_ne!(
             r.headings[0].id, r.headings[1].id,
@@ -643,7 +812,7 @@ mod tests {
         // A naive slugify over the raw markdown line would see the literal
         // `[...](...)`  syntax; the real id must come from the *rendered*
         // text, and the TOC's display text should be plain (no markup).
-        let r = render("## See [the spec](/x)\n");
+        let r = render("## See [the spec](/x)\n", &ContentIndex::default(), Lang::En);
         assert_eq!(r.headings.len(), 1);
         assert_eq!(r.headings[0].text, "See the spec");
         assert!(
@@ -654,7 +823,7 @@ mod tests {
 
     #[test]
     fn anchor_wikilink_stays_same_page() {
-        let r = render("Jump to [[#Cold start|cold start]].\n");
+        let r = render("Jump to [[#Cold start|cold start]].\n", &ContentIndex::default(), Lang::En);
         assert!(r.html.contains(r##"href="#cold-start""##));
     }
 
@@ -673,7 +842,8 @@ mod tests {
         let registry = test_registry(
             "citations:\n  rfc-9162:\n    type: technical-specification\n    title: RFC 9162\n    url: https://x\n",
         );
-        let (body, order, unresolved) = resolve_citations("Certificate Transparency [rfc-9162] is a log.\n", &registry);
+        let (body, order, unresolved) =
+            resolve_citations("Certificate Transparency [rfc-9162] is a log.\n", &registry);
         assert_eq!(order, vec!["rfc-9162".to_string()]);
         assert!(unresolved.is_empty());
         assert!(body.contains(r"\[[1](#ref-1)\]"));
@@ -684,7 +854,8 @@ mod tests {
         let registry = test_registry(
             "citations:\n  a:\n    type: vendor-doc\n    title: A\n    url: https://x/a\n  b:\n    type: vendor-doc\n    title: B\n    url: https://x/b\n",
         );
-        let (body, order, _) = resolve_citations("Supported by the literature [a][b].\n", &registry);
+        let (body, order, _) =
+            resolve_citations("Supported by the literature [a][b].\n", &registry);
         assert_eq!(order, vec!["a".to_string(), "b".to_string()]);
         assert!(body.contains(r"\[[1](#ref-1)\]\[[2](#ref-2)\]"));
     }
@@ -704,7 +875,8 @@ mod tests {
         let registry = test_registry(
             "citations:\n  a:\n    type: vendor-doc\n    title: A\n    url: https://x/a\n  b:\n    type: vendor-doc\n    title: B\n    url: https://x/b\n",
         );
-        let (body, order, _) = resolve_citations("First [b], then [a], then [b] again.\n", &registry);
+        let (body, order, _) =
+            resolve_citations("First [b], then [a], then [b] again.\n", &registry);
         assert_eq!(order, vec!["b".to_string(), "a".to_string()]);
         assert!(body.contains(r"\[[1](#ref-1)\]"), "first [b] is ref 1");
         assert!(body.contains(r"\[[2](#ref-2)\]"), "[a] is ref 2");
@@ -718,16 +890,21 @@ mod tests {
     #[test]
     fn citation_inside_code_fence_is_left_untouched() {
         let registry = test_registry("citations: {}\n");
-        let (body, order, _) = resolve_citations("```\nlet x: [u8; 32] = [rfc-9162];\n```\n", &registry);
+        let (body, order, _) =
+            resolve_citations("```\nlet x: [u8; 32] = [rfc-9162];\n```\n", &registry);
         assert!(order.is_empty());
-        assert!(body.contains("[rfc-9162]"), "literal bracket text must survive: {body}");
+        assert!(
+            body.contains("[rfc-9162]"),
+            "literal bracket text must survive: {body}"
+        );
         assert!(!body.contains("#ref-1"));
     }
 
     #[test]
     fn citation_inside_inline_code_span_is_left_untouched() {
         let registry = test_registry("citations: {}\n");
-        let (body, order, _) = resolve_citations("The type is `[u8; 32]`, not a citation.\n", &registry);
+        let (body, order, _) =
+            resolve_citations("The type is `[u8; 32]`, not a citation.\n", &registry);
         assert!(order.is_empty());
         assert!(body.contains("`[u8; 32]`"));
     }
@@ -735,7 +912,8 @@ mod tests {
     #[test]
     fn ordinary_bracket_text_that_is_not_id_shaped_is_untouched() {
         let registry = test_registry("citations: {}\n");
-        let (body, order, _) = resolve_citations("See [Note] below, and [Some Text] here.\n", &registry);
+        let (body, order, _) =
+            resolve_citations("See [Note] below, and [Some Text] here.\n", &registry);
         assert!(order.is_empty());
         assert!(body.contains("[Note]"));
         assert!(body.contains("[Some Text]"));
@@ -746,8 +924,12 @@ mod tests {
         let registry = test_registry(
             "citations:\n  rfc-9162:\n    type: technical-specification\n    title: RFC 9162\n    url: https://x\n",
         );
-        let (body, order, _) = resolve_citations("See [rfc-9162](https://example.com) directly.\n", &registry);
-        assert!(order.is_empty(), "a real markdown link must not be treated as a citation");
+        let (body, order, _) =
+            resolve_citations("See [rfc-9162](https://example.com) directly.\n", &registry);
+        assert!(
+            order.is_empty(),
+            "a real markdown link must not be treated as a citation"
+        );
         assert!(body.contains("[rfc-9162](https://example.com)"));
     }
 
@@ -770,7 +952,7 @@ mod tests {
             frontmatter: Frontmatter::default(),
             body_md: "## 1. Introduction\n\nSee [rfc-9162] for details.\n".to_string(),
         };
-        let r = render_journal_doc(&doc, &registry);
+        let r = render_journal_doc(&doc, &registry, &ContentIndex::default(), Lang::En);
         assert!(r.html.contains("References"));
         assert!(r.html.contains(r#"id="ref-1""#));
         assert!(r.html.contains("IETF"));
@@ -785,7 +967,7 @@ mod tests {
             frontmatter: Frontmatter::default(),
             body_md: "## 1. Introduction\n\nNo citations here.\n".to_string(),
         };
-        let r = render_journal_doc(&doc, &registry);
+        let r = render_journal_doc(&doc, &registry, &ContentIndex::default(), Lang::En);
         assert!(!r.html.contains("References"));
     }
 
@@ -797,7 +979,7 @@ mod tests {
         // on the rendered `<h2>` — every Spanish-language heading was a dead
         // anchor. `Anchorizer` keeps Unicode letters, so `<h2 id=...>` (comrak's
         // own output, via `header_ids`) and our TOC `Heading.id` must now agree.
-        let r = render("## Estándares editoriales\n");
+        let r = render("## Estándares editoriales\n", &ContentIndex::default(), Lang::En);
         assert_eq!(r.headings[0].id, "estándares-editoriales");
         assert!(
             r.html.contains(r#"id="estándares-editoriales""#),
@@ -808,7 +990,7 @@ mod tests {
 
     #[test]
     fn strips_group_count_heading_attribute() {
-        let r = render("## Identity and permissions {#group-count-5}\n\nBody.\n");
+        let r = render("## Identity and permissions {#group-count-5}\n\nBody.\n", &ContentIndex::default(), Lang::En);
         assert_eq!(r.headings[0].text, "Identity and permissions");
         assert!(!r.html.contains("group-count-5"));
         assert!(r.html.contains("Identity and permissions"));
@@ -816,7 +998,7 @@ mod tests {
 
     #[test]
     fn heading_attr_strip_ignores_fenced_examples() {
-        let r = render("## Real {#real}\n\n```\n## Not a heading {#fake}\n```\n");
+        let r = render("## Real {#real}\n\n```\n## Not a heading {#fake}\n```\n", &ContentIndex::default(), Lang::En);
         assert_eq!(r.headings.len(), 1);
         assert_eq!(r.headings[0].text, "Real");
         assert!(r.html.contains("Not a heading {#fake}"));
@@ -839,7 +1021,7 @@ mod tests {
         // other inline formatting (bold, links) would. That's the correct,
         // visible-rendered-text behavior, not a regression of the guard this
         // test protects.
-        let r = render("## The heading-attribute syntax `{#id}` explained\n");
+        let r = render("## The heading-attribute syntax `{#id}` explained\n", &ContentIndex::default(), Lang::En);
         assert_eq!(
             r.headings[0].text,
             "The heading-attribute syntax {#id} explained"

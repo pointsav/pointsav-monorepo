@@ -18,8 +18,7 @@ use std::path::Path;
 use serde::Deserialize;
 
 /// Default location of the canonical token files on the workspace VM.
-pub const DEFAULT_LEGAL_TOKENS_DIR: &str =
-    "/srv/foundry/vendor/factory-release-engineering/tokens";
+pub const DEFAULT_LEGAL_TOKENS_DIR: &str = "/srv/foundry/vendor/factory-release-engineering/tokens";
 
 /// Parsed `legal-tokens-{brand}.yaml` (schema `foundry-legal-tokens-v1`).
 #[derive(Debug, Clone, Deserialize)]
@@ -77,7 +76,10 @@ mod tests {
     fn default_matches_known_correct_trademark_text() {
         let d = LegalTokens::default();
         assert!(d.trademarks.statement.contains("MCorp\u{2122}"));
-        assert!(d.trademarks.statement.contains("Capability Geometry\u{2122}"));
+        assert!(d
+            .trademarks
+            .statement
+            .contains("Capability Geometry\u{2122}"));
         assert_eq!(d.copyright.holder, "Woodfine Capital Projects Inc.");
     }
 
@@ -103,7 +105,11 @@ mod tests {
     #[test]
     fn malformed_yaml_returns_none() {
         let dir = tempfile::tempdir().unwrap();
-        std::fs::write(dir.path().join("legal-tokens-woodfine.yaml"), ":::not valid:::").unwrap();
+        std::fs::write(
+            dir.path().join("legal-tokens-woodfine.yaml"),
+            ":::not valid:::",
+        )
+        .unwrap();
         assert!(load(dir.path(), "woodfine").is_none());
     }
 }

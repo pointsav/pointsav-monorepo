@@ -29,6 +29,7 @@
 //! `None` and the page renders as a plain article instead of mis-rendering.
 
 use super::render::{render, slugify, strip_trailing_heading_attr};
+use super::walk::{ContentIndex, Lang};
 
 const START_HERE_OPEN: &str = "START-HERE-HIGHLIGHT";
 const START_HERE_CLOSE: &str = "END-START-HERE-HIGHLIGHT";
@@ -95,7 +96,7 @@ pub struct IndexTopic {
 /// shape, including a body with neither a start-here block nor any
 /// recognizable group (nothing structured found — most likely a stub
 /// `_index.md` that got `index_type` set without real content yet).
-pub fn parse_index_topic(raw_body_md: &str) -> Option<IndexTopic> {
+pub fn parse_index_topic(raw_body_md: &str, index: &ContentIndex, lang: Lang) -> Option<IndexTopic> {
     let text = raw_body_md;
     let mut intro_end = text.len();
     let mut cursor = 0usize;
@@ -113,7 +114,7 @@ pub fn parse_index_topic(raw_body_md: &str) -> Option<IndexTopic> {
         start_here = Some(StartHere {
             href: format!("/wiki/{slug}"),
             label,
-            prose_html: render(block_md).html,
+            prose_html: render(block_md, index, lang).html,
             slug,
             explicit_label,
         });
@@ -127,7 +128,9 @@ pub fn parse_index_topic(raw_body_md: &str) -> Option<IndexTopic> {
             intro_end = h_start;
             intro_end_set = true;
         }
-        let next_bound = next_h2(text, h_after).map(|(s, _, _)| s).unwrap_or(text.len());
+        let next_bound = next_h2(text, h_after)
+            .map(|(s, _, _)| s)
+            .unwrap_or(text.len());
         let Some((group_marker_pos, group_content_start)) =
             marker_end(text, h_after, next_bound, GROUP_OPEN)
         else {
@@ -140,10 +143,12 @@ pub fn parse_index_topic(raw_body_md: &str) -> Option<IndexTopic> {
         let (group_close_pos, group_close_end) =
             marker_end(text, group_content_start, next_bound, GROUP_CLOSE)?;
         let members_md = &text[group_content_start..group_close_pos];
-        let members = parse_members(members_md)?;
+        let members = parse_members(members_md, index, lang)?;
         groups.push(Group {
-            title: strip_trailing_heading_attr(raw_title.trim()).trim().to_string(),
-            intro_html: (!group_intro.is_empty()).then(|| render(group_intro).html),
+            title: strip_trailing_heading_attr(raw_title.trim())
+                .trim()
+                .to_string(),
+            intro_html: (!group_intro.is_empty()).then(|| render(group_intro, index, lang).html),
             members,
         });
         cursor = group_close_end;
@@ -155,10 +160,10 @@ pub fn parse_index_topic(raw_body_md: &str) -> Option<IndexTopic> {
 
     let tail_md = &text[cursor.min(text.len())..];
     Some(IndexTopic {
-        intro_html: render(&text[..intro_end.min(text.len())]).html,
+        intro_html: render(&text[..intro_end.min(text.len())], index, lang).html,
         start_here,
         groups,
-        tail_html: render(tail_md).html,
+        tail_html: render(tail_md, index, lang).html,
     })
 }
 
@@ -225,7 +230,7 @@ fn first_wikilink(text: &str) -> Option<(String, String, bool)> {
 /// (`?` inside the loop) — that's a real authoring defect, not noise to
 /// silently drop. Returns `None` (not `Some(vec![])`) if no members were
 /// found at all — an empty group is itself a malformed shape.
-fn parse_members(text: &str) -> Option<Vec<Member>> {
+fn parse_members(text: &str, index: &ContentIndex, lang: Lang) -> Option<Vec<Member>> {
     let mut members = Vec::new();
     for line in text.lines() {
         let t = line.trim();
@@ -239,11 +244,14 @@ fn parse_members(text: &str) -> Option<Vec<Member>> {
         let slug = slugify(&target);
         let link_end = rest.find("]]").map(|i| i + 2).unwrap_or(0);
         let after_link = rest[link_end..].trim();
-        let annotation_md = after_link.strip_prefix('\u{2014}').unwrap_or(after_link).trim();
+        let annotation_md = after_link
+            .strip_prefix('\u{2014}')
+            .unwrap_or(after_link)
+            .trim();
         members.push(Member {
             href: format!("/wiki/{slug}"),
             label,
-            annotation_html: render(annotation_md).html,
+            annotation_html: render(annotation_md, index, lang).html,
             slug,
             explicit_label,
         });
@@ -348,7 +356,7 @@ mod tests {
 
     #[test]
     fn parses_the_real_security_index_end_to_end() {
-        let topic = parse_index_topic(REAL_SECURITY_INDEX_BODY).expect("should parse");
+        let topic = parse_index_topic(REAL_SECURITY_INDEX_BODY, &ContentIndex::default(), Lang::En).expect("should parse");
 
         assert!(topic.intro_html.contains("indexes the 13 articles"));
 
@@ -357,8 +365,16 @@ mod tests {
         assert_eq!(sh.label, "Capability-based security");
         assert!(sh.prose_html.contains("access-control"));
         assert!(!sh.prose_html.contains("START-HERE"));
-        assert!(!sh.prose_html.contains("<!--"), "leaked comment marker: {}", sh.prose_html);
-        assert!(!topic.intro_html.contains("<!--"), "leaked comment marker: {}", topic.intro_html);
+        assert!(
+            !sh.prose_html.contains("<!--"),
+            "leaked comment marker: {}",
+            sh.prose_html
+        );
+        assert!(
+            !topic.intro_html.contains("<!--"),
+            "leaked comment marker: {}",
+            topic.intro_html
+        );
 
         assert_eq!(topic.groups.len(), 5);
 
@@ -368,10 +384,16 @@ mod tests {
         assert_eq!(g0.count(), 5);
         let g0_intro = g0.intro_html.as_deref().unwrap();
         assert!(g0_intro.contains("Who is known"));
-        assert!(!g0_intro.contains("<!--"), "leaked comment marker: {}", g0_intro);
+        assert!(
+            !g0_intro.contains("<!--"),
+            "leaked comment marker: {}",
+            g0_intro
+        );
         assert_eq!(g0.members[0].href, "/wiki/capability-based-security");
         assert_eq!(g0.members[0].label, "Capability-based security");
-        assert!(g0.members[0].annotation_html.contains("access-control model"));
+        assert!(g0.members[0]
+            .annotation_html
+            .contains("access-control model"));
         assert!(!g0.members[0].annotation_html.starts_with('\u{2014}'));
         assert!(
             !g0.members[4].annotation_html.contains("<!--"),
@@ -392,13 +414,13 @@ mod tests {
 
     #[test]
     fn returns_none_for_body_with_no_structure_at_all() {
-        assert!(parse_index_topic("Just a plain paragraph, no markers at all.\n").is_none());
+        assert!(parse_index_topic("Just a plain paragraph, no markers at all.\n", &ContentIndex::default(), Lang::En).is_none());
     }
 
     #[test]
     fn returns_none_for_unterminated_start_here() {
         let body = "<!-- START-HERE-HIGHLIGHT -->\n**Start here:** [[foo|Foo]] — text\n";
-        assert!(parse_index_topic(body).is_none());
+        assert!(parse_index_topic(body, &ContentIndex::default(), Lang::En).is_none());
     }
 
     #[test]
@@ -408,7 +430,7 @@ mod tests {
             "<!-- AUTO-GENERATED MEMBERSHIP: DO NOT EDIT BELOW -->\n",
             "- [[foo|Foo]] — text\n",
         );
-        assert!(parse_index_topic(body).is_none());
+        assert!(parse_index_topic(body, &ContentIndex::default(), Lang::En).is_none());
     }
 
     #[test]
@@ -423,7 +445,7 @@ mod tests {
             "<!-- END AUTO-GENERATED -->\n\n",
             "## Not a group\n\nJust prose, no membership block.\n",
         );
-        let topic = parse_index_topic(body).expect("should parse (start-here + 1 group)");
+        let topic = parse_index_topic(body, &ContentIndex::default(), Lang::En).expect("should parse (start-here + 1 group)");
         assert_eq!(topic.groups.len(), 1);
         assert!(topic.tail_html.contains("Not a group"));
         assert!(topic.tail_html.contains("Just prose"));
@@ -432,7 +454,7 @@ mod tests {
     #[test]
     fn start_here_block_with_no_wikilink_is_malformed() {
         let body = "<!-- START-HERE-HIGHLIGHT -->\n**Start here:** no link here.\n<!-- END-START-HERE-HIGHLIGHT -->\n";
-        assert!(parse_index_topic(body).is_none());
+        assert!(parse_index_topic(body, &ContentIndex::default(), Lang::En).is_none());
     }
 
     #[test]
@@ -442,6 +464,6 @@ mod tests {
             "<!-- AUTO-GENERATED MEMBERSHIP: DO NOT EDIT BELOW -->\n",
             "<!-- END AUTO-GENERATED -->\n",
         );
-        assert!(parse_index_topic(body).is_none());
+        assert!(parse_index_topic(body, &ContentIndex::default(), Lang::En).is_none());
     }
 }

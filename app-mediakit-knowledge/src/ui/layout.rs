@@ -49,7 +49,13 @@ fn count_word(n: usize) -> &'static str {
 /// emits `<meta name="robots" content="noindex">` — for surfaces with an
 /// unbounded/query-driven URL space (search) that shouldn't be crawled even
 /// though they're reachable and carry a canonical URL.
-pub fn doc_head(title: &str, description: &str, tenant: Tenant, path: &str, noindex: bool) -> Markup {
+pub fn doc_head(
+    title: &str,
+    description: &str,
+    tenant: Tenant,
+    path: &str,
+    noindex: bool,
+) -> Markup {
     // Don't double-brand when the page title already is the site name (home).
     let full_title = if title == tenant.home_label() {
         title.to_string()
@@ -321,7 +327,12 @@ pub fn mobile_nav(tenant: Tenant, query: &str, cats: &[(String, String, String)]
 /// link columns. Disclaimer and Contact live here only. Copyright holder and
 /// trademark notice come from `legal` (loaded from the canonical
 /// `legal-tokens-{brand}.yaml`, falling back to `LegalTokens::default()`).
-pub fn footer(tenant: Tenant, legal: &LegalTokens, site_description: Option<&str>, article_count: usize) -> Markup {
+pub fn footer(
+    tenant: Tenant,
+    legal: &LegalTokens,
+    site_description: Option<&str>,
+    article_count: usize,
+) -> Markup {
     html! {
         footer."k-footer" role="contentinfo" {
             div."k-footer__inner" {
@@ -375,6 +386,23 @@ pub fn footer(tenant: Tenant, legal: &LegalTokens, site_description: Option<&str
                             // Cross-company link last — related but separate org.
                             @let (other_label, other_url) = tenant.other_org();
                             li { a."k-footer__link" href=(other_url) target="_blank" rel="noopener" { (other_label) } }
+                        }
+                    }
+                    // Added 2026-09-01 (operator-directed footer redesign, Fable+Opus
+                    // "best of both" consult): both bim.woodfinegroup.com and
+                    // design.pointsav.com declare a real machine-readable surface in
+                    // their footer — this one links only routes that actually exist
+                    // and actually resolve. NOT /mcp: both models independently
+                    // verified against this crate's own src/main.rs that MCP here is
+                    // stdio-only (`Command::Mcp`, provisional), no HTTP route — a
+                    // literal bim/design-style "/mcp" link would 404.
+                    div."k-footer__col" {
+                        h2."k-footer__col-title" { "Machine-readable" }
+                        ul."k-footer__list" {
+                            li { a."k-footer__link" href="/llms.txt" { "llms.txt" } }
+                            li { a."k-footer__link" href="/feed.atom" { "Atom feed" } }
+                            li { a."k-footer__link" href="/sitemap.xml" { "Sitemap" } }
+                            li { a."k-footer__link" href="/healthz" { "Health" } }
                         }
                     }
                 }
@@ -544,18 +572,6 @@ pub fn article(
     alt_lang: Option<(&str, &str)>,
     badge: Option<&str>,
     body_html: &str,
-    // Adjacent articles in the same category, by title order — `(slug, title)`.
-    // `None`/`None` when the article has no category or sits at either end
-    // of it. A real UX-review finding: no prev/next navigation existed
-    // anywhere, forcing article -> back to category -> next article.
-    prev: Option<(&str, &str)>,
-    next: Option<(&str, &str)>,
-    // Display label for the category prev/next are drawn from. Labelled
-    // "More in <category>" rather than "Previous/Next" — the underlying
-    // order is alphabetical-by-title (Command/project-editorial finding,
-    // 2026-08-25), not an editorial sequence, so "Previous/Next" promised a
-    // reading order that doesn't exist.
-    pager_category: Option<&str>,
 ) -> Markup {
     html! {
         article."k-article" {
@@ -593,25 +609,6 @@ pub fn article(
                 }
             }
             div."k-prose" { (PreEscaped(body_html)) }
-            @if prev.is_some() || next.is_some() {
-                nav."k-article-pager" aria-label={ "More in " (pager_category.unwrap_or("this category")) } {
-                    @if let Some(cat) = pager_category {
-                        span."k-article-pager__label" { "More in " (cat) }
-                    }
-                    @if let Some((p_slug, p_title)) = prev {
-                        a."k-article-pager__link"."k-article-pager__link--prev" href={ "/wiki/" (p_slug) } {
-                            span."k-article-pager__dir" { "\u{2190}" }
-                            span."k-article-pager__title" { (p_title) }
-                        }
-                    }
-                    @if let Some((n_slug, n_title)) = next {
-                        a."k-article-pager__link"."k-article-pager__link--next" href={ "/wiki/" (n_slug) } {
-                            span."k-article-pager__dir" { "\u{2192}" }
-                            span."k-article-pager__title" { (n_title) }
-                        }
-                    }
-                }
-            }
             @if asof.is_none() {
                 // Print-only citation stamp (Phase 9 — .k-print-citation is
                 // display:none on screen, shown only in @media print).
@@ -1457,7 +1454,13 @@ mod tests {
 
     #[test]
     fn breadcrumb_renders_trail_and_current_as_plain_text() {
-        let trail = vec![("/".to_string(), "PointSav Documentation".to_string()), ("/category/architecture".to_string(), "Architecture".to_string())];
+        let trail = vec![
+            ("/".to_string(), "PointSav Documentation".to_string()),
+            (
+                "/category/architecture".to_string(),
+                "Architecture".to_string(),
+            ),
+        ];
         let html = breadcrumb(&trail, "Zero-container inference").into_string();
         assert!(html.contains(r#"href="/""#));
         assert!(html.contains(r#"href="/category/architecture""#));
@@ -1484,14 +1487,24 @@ mod tests {
     #[test]
     fn breadcrumb_jsonld_emits_positioned_list() {
         let items = vec![
-            ("https://documentation.pointsav.com/".to_string(), "PointSav Documentation".to_string()),
-            ("https://documentation.pointsav.com/category/architecture".to_string(), "Architecture".to_string()),
-            ("https://documentation.pointsav.com/wiki/foo".to_string(), "Foo".to_string()),
+            (
+                "https://documentation.pointsav.com/".to_string(),
+                "PointSav Documentation".to_string(),
+            ),
+            (
+                "https://documentation.pointsav.com/category/architecture".to_string(),
+                "Architecture".to_string(),
+            ),
+            (
+                "https://documentation.pointsav.com/wiki/foo".to_string(),
+                "Foo".to_string(),
+            ),
         ];
         let html = breadcrumb_jsonld(&items).into_string();
         let json_start = html.find('{').unwrap();
         let json_end = html.rfind('}').unwrap() + 1;
-        let parsed: serde_json::Value = serde_json::from_str(&html[json_start..json_end]).expect("valid JSON-LD");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&html[json_start..json_end]).expect("valid JSON-LD");
         assert_eq!(parsed["@type"], "BreadcrumbList");
         let list = parsed["itemListElement"].as_array().unwrap();
         assert_eq!(list.len(), 3);
@@ -1500,7 +1513,10 @@ mod tests {
         assert_eq!(list[2]["name"], "Foo");
         // The last entry (current page) must still carry `item` — a real
         // finding the schema requires it even for non-linked breadcrumb steps.
-        assert_eq!(list[2]["item"], "https://documentation.pointsav.com/wiki/foo");
+        assert_eq!(
+            list[2]["item"],
+            "https://documentation.pointsav.com/wiki/foo"
+        );
     }
 
     #[test]
@@ -1515,18 +1531,35 @@ mod tests {
         .into_string();
         let json_start = html.find('{').unwrap();
         let json_end = html.rfind('}').unwrap() + 1;
-        let parsed: serde_json::Value = serde_json::from_str(&html[json_start..json_end]).expect("valid JSON-LD");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&html[json_start..json_end]).expect("valid JSON-LD");
         assert_eq!(parsed["@type"], "TechArticle");
         assert_eq!(parsed["headline"], "Zero-container inference");
-        assert_eq!(parsed["author"]["@id"], "https://pointsav.com/#organization");
-        assert!(parsed["author"].get("name").is_none(), "author must be an @id reference, not an inline Organization");
+        assert_eq!(
+            parsed["author"]["@id"],
+            "https://pointsav.com/#organization"
+        );
+        assert!(
+            parsed["author"].get("name").is_none(),
+            "author must be an @id reference, not an inline Organization"
+        );
         assert_eq!(parsed["dateModified"], "2026-06-01");
     }
 
     #[test]
     fn jsonld_neutralizes_script_breakout() {
-        let evil = article_jsonld(Tenant::Corporate, "</script><script>alert(1)</script>", "", "https://corporate.woodfinegroup.com/wiki/x", None).into_string();
-        assert!(!evil.contains("</script><script>alert"), "raw script-breakout sequence must not survive into the HTML: {evil}");
+        let evil = article_jsonld(
+            Tenant::Corporate,
+            "</script><script>alert(1)</script>",
+            "",
+            "https://corporate.woodfinegroup.com/wiki/x",
+            None,
+        )
+        .into_string();
+        assert!(
+            !evil.contains("</script><script>alert"),
+            "raw script-breakout sequence must not survive into the HTML: {evil}"
+        );
     }
 
     fn test_author(name: &str, affiliation: &str, email: &str) -> Author {
@@ -1555,7 +1588,10 @@ mod tests {
 
     #[test]
     fn masthead_renders_correspondence_for_every_author_with_an_email() {
-        let authors = vec![test_author("A. One", "Org", "a@example.com"), test_author("B. Two", "Org", "b@example.com")];
+        let authors = vec![
+            test_author("A. One", "Org", "a@example.com"),
+            test_author("B. Two", "Org", "b@example.com"),
+        ];
         let html = masthead("Title", &authors).into_string();
         assert!(html.contains(r#"href="mailto:a@example.com""#));
         assert!(html.contains(r#"href="mailto:b@example.com""#));
@@ -1571,23 +1607,42 @@ mod tests {
     #[test]
     fn notice_banner_renders_nothing_until_the_data_source_exists() {
         // Blocked stub (SPEC §4) — must not fabricate disclosure text locally.
-        let html = notice_banner(Some("draft"), Some("0.4.0"), Some("2026-07-02"), Some("CC BY 4.0"), Some("a@example.com"), Some("Woodfine (2026)")).into_string();
+        let html = notice_banner(
+            Some("draft"),
+            Some("0.4.0"),
+            Some("2026-07-02"),
+            Some("CC BY 4.0"),
+            Some("a@example.com"),
+            Some("Woodfine (2026)"),
+        )
+        .into_string();
         assert_eq!(html, "");
     }
 
     #[test]
     fn research_fulltext_carries_geospatial_class_only_when_requested() {
-        let with_class = research_fulltext("T", &[], "<p>body</p>", true, "slug", None).into_string();
+        let with_class =
+            research_fulltext("T", &[], "<p>body</p>", true, "slug", None).into_string();
         assert!(with_class.contains("k-research--geospatial"));
-        let without_class = research_fulltext("T", &[], "<p>body</p>", false, "slug", None).into_string();
+        let without_class =
+            research_fulltext("T", &[], "<p>body</p>", false, "slug", None).into_string();
         assert!(!without_class.contains("k-research--geospatial"));
     }
 
     #[test]
     fn print_citation_stamp_prefers_cite_as_over_url_fallback() {
-        let with_cite_as = research_fulltext("T", &[], "<p>b</p>", false, "my-slug", Some("Woodfine (2026)")).into_string();
+        let with_cite_as = research_fulltext(
+            "T",
+            &[],
+            "<p>b</p>",
+            false,
+            "my-slug",
+            Some("Woodfine (2026)"),
+        )
+        .into_string();
         assert!(with_cite_as.contains("Cite this record: Woodfine (2026)."));
-        let without_cite_as = research_fulltext("T", &[], "<p>b</p>", false, "my-slug", None).into_string();
+        let without_cite_as =
+            research_fulltext("T", &[], "<p>b</p>", false, "my-slug", None).into_string();
         assert!(without_cite_as.contains("Cite this record: /research/my-slug."));
     }
 
@@ -1601,14 +1656,18 @@ mod tests {
 
     #[test]
     fn print_brand_mark_prefers_site_description_over_tenant_tagline() {
-        let html = print_brand_mark(Tenant::Documentation, Some("A record repository.")).into_string();
+        let html =
+            print_brand_mark(Tenant::Documentation, Some("A record repository.")).into_string();
         assert!(html.contains("A record repository."));
         assert!(!html.contains("Technical records for the PointSav platform."));
     }
 
     #[test]
     fn demote_heading_shifts_h1_to_h2() {
-        assert_eq!(demote_heading("<h1>Important Information</h1>"), "<h2>Important Information</h2>");
+        assert_eq!(
+            demote_heading("<h1>Important Information</h1>"),
+            "<h2>Important Information</h2>"
+        );
         assert_eq!(
             demote_heading(r#"<h1 id="important-information">Text</h1><p>Body</p>"#),
             r#"<h2 id="important-information">Text</h2><p>Body</p>"#

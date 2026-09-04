@@ -103,7 +103,7 @@ impl AppState {
         let important_info = primary_root.as_ref().and_then(|root| {
             std::fs::read_to_string(root.join("important-information.md"))
                 .ok()
-                .map(|text| content::render(&content::parse(&text).body_md).html)
+                .map(|text| content::render(&content::parse(&text).body_md, &index, Lang::En).html)
         });
         // Per-wiki category nav + redirects from the content repo root.
         let root = primary_root;
@@ -308,7 +308,13 @@ fn nav_cats(state: &AppState) -> Vec<(String, String, String)> {
 /// not necessarily the request path's `/es/` prefix, since `resolve()` can
 /// fall back to English content under an `/es/wiki/` URL.
 fn content_type_badge(index_type: Option<&str>, lang: Lang) -> Option<&'static str> {
-    index_type.map(|_| if lang == Lang::Es { "\u{00cd}ndice" } else { "Index" })
+    index_type.map(|_| {
+        if lang == Lang::Es {
+            "\u{00cd}ndice"
+        } else {
+            "Index"
+        }
+    })
 }
 
 /// Display label for a category id — the categories.yaml `name` when present.
@@ -372,7 +378,7 @@ async fn home(State(state): State<AppState>) -> Response {
         .and_then(|doc| content::load(doc).ok());
     let lede = index_parsed
         .as_ref()
-        .map(|p| content::render(&p.body_md).html)
+        .map(|p| content::render(&p.body_md, &state.index, Lang::En).html)
         .unwrap_or_default();
     // The home page is the highest-value URL on the site — never leave its
     // description empty (a prior audit found this was the only page type
@@ -487,14 +493,21 @@ async fn category_page_es(
     serve_category(state, name, params, Lang::Es).await
 }
 
-async fn serve_category(state: AppState, name: String, params: CategoryQuery, lang: Lang) -> Response {
+async fn serve_category(
+    state: AppState,
+    name: String,
+    params: CategoryQuery,
+    lang: Lang,
+) -> Response {
     let tenant = state.tenant;
     let prefix = if lang == Lang::Es { "/es" } else { "" };
     let lang_code = if lang == Lang::Es { "es" } else { "en" };
     let label = category_label(&state, &name);
     if !params.wants_flat_list() {
         if let Some(index_doc) = state.index.index_topic_for_scope(&name) {
-            if let Some(resp) = render_index_topic_category(&state, index_doc, &name, &label, lang).await {
+            if let Some(resp) =
+                render_index_topic_category(&state, index_doc, &name, &label, lang).await
+            {
                 return resp;
             }
             // `parse_index_topic` returned `None` (malformed content) — fall
@@ -531,7 +544,11 @@ async fn serve_category(state: AppState, name: String, params: CategoryQuery, la
     // Avoid "Articles in the The Buildings area." when a category's display
     // name already leads with an article (a real finding: 2 of 3 wikis had
     // this doubled verbatim in search snippets).
-    let description = if label.split_whitespace().next().is_some_and(|w| w.eq_ignore_ascii_case("the")) {
+    let description = if label
+        .split_whitespace()
+        .next()
+        .is_some_and(|w| w.eq_ignore_ascii_case("the"))
+    {
         format!("Articles in {label}.")
     } else {
         format!("Articles in the {label} area.")
@@ -655,11 +672,21 @@ async fn research_landing(State(state): State<AppState>, Path(slug): Path<String
         .frontmatter
         .abstract_text
         .as_deref()
-        .map(|a| content::render(a).html)
+        .map(|a| content::render(a, &state.index, doc.lang).html)
         .unwrap_or_default();
-    let description = parsed.frontmatter.short_description.clone().unwrap_or_default();
+    let description = parsed
+        .frontmatter
+        .short_description
+        .clone()
+        .unwrap_or_default();
     let cite_as = parsed.frontmatter.cite_as.as_deref();
-    let body = ui::research_landing(&title, &parsed.frontmatter.authors, &abstract_html, &doc.slug, cite_as);
+    let body = ui::research_landing(
+        &title,
+        &parsed.frontmatter.authors,
+        &abstract_html,
+        &doc.slug,
+        cite_as,
+    );
     let trail = vec![
         ("/".to_string(), tenant.home_label().to_string()),
         ("/research".to_string(), "Research".to_string()),
@@ -721,9 +748,13 @@ async fn research_fulltext(State(state): State<AppState>, Path(slug): Path<Strin
         .title
         .clone()
         .unwrap_or_else(|| doc.title.clone());
-    let description = parsed.frontmatter.short_description.clone().unwrap_or_default();
+    let description = parsed
+        .frontmatter
+        .short_description
+        .clone()
+        .unwrap_or_default();
     let cite_as = parsed.frontmatter.cite_as.as_deref();
-    let rendered = content::render_journal_doc(&parsed, &state.citations);
+    let rendered = content::render_journal_doc(&parsed, &state.citations, &state.index, doc.lang);
     let body = ui::research_fulltext(
         &title,
         &parsed.frontmatter.authors,
@@ -795,13 +826,16 @@ async fn render_index_topic_category(
     let prefix = if lang == Lang::Es { "/es" } else { "" };
     let lang_code = if lang == Lang::Es { "es" } else { "en" };
     let raw = content::load_raw(index_doc).ok()?;
-    let mut topic = content::parse_index_topic(&raw.body_md)?;
+    let mut topic = content::parse_index_topic(&raw.body_md, &state.index, lang)?;
     // A bare `[[slug]]` member link (no `|label`) carries the raw slug text
     // as its label rather than the article's real title — resolve it now
-    // that we have index access, which the parser itself doesn't.
+    // that we have index access, which the parser itself doesn't. Uses
+    // `lang` (the requested language), not a hardcoded `Lang::En` — real
+    // bug fixed 2026-08-26 (Command/project-editorial finding): Spanish
+    // category pages were showing English titles for unlabeled members.
     if let Some(sh) = topic.start_here.as_mut() {
         if !sh.explicit_label {
-            if let Some(doc) = state.index.resolve(&sh.slug, Lang::En) {
+            if let Some(doc) = state.index.resolve(&sh.slug, lang) {
                 sh.label = doc.title.clone();
             }
         }
@@ -809,7 +843,7 @@ async fn render_index_topic_category(
     for group in &mut topic.groups {
         for member in &mut group.members {
             if !member.explicit_label {
-                if let Some(doc) = state.index.resolve(&member.slug, Lang::En) {
+                if let Some(doc) = state.index.resolve(&member.slug, lang) {
                     member.label = doc.title.clone();
                 }
             }
@@ -826,7 +860,10 @@ async fn render_index_topic_category(
     // an Index Topic is a real committed file, unified chrome per the
     // 2026-08-05 header-unification round.
     let repo_root = &state.mounts.mounts[index_doc.mount_index].path;
-    let rel = index_doc.path.strip_prefix(repo_root).unwrap_or(&index_doc.path);
+    let rel = index_doc
+        .path
+        .strip_prefix(repo_root)
+        .unwrap_or(&index_doc.path);
     let prov = crate::history::file_history(repo_root, rel, 1);
     let sha = prov.first().map(|r| r.short_sha.as_str());
     let trail = vec![("/".to_string(), tenant.home_label().to_string())];
@@ -951,17 +988,20 @@ struct Suggestion {
 /// snippet/matched-context excerpt) — `DocRef` doesn't hold article bodies in
 /// memory, so a real excerpt needs either tantivy's own `SnippetGenerator` or
 /// a disk read per result; not worth building ahead of the route existing.
-async fn search_suggest(State(state): State<AppState>, Query(params): Query<SearchQuery>) -> Response {
+async fn search_suggest(
+    State(state): State<AppState>,
+    Query(params): Query<SearchQuery>,
+) -> Response {
     let q = params.q.unwrap_or_default();
     let suggestions: Vec<Suggestion> = state
         .search
         .query(&q, 8)
         .into_iter()
         .filter_map(|slug| {
-            state
-                .index
-                .resolve(&slug, Lang::En)
-                .map(|d| Suggestion { slug: d.slug.clone(), title: d.title.clone() })
+            state.index.resolve(&slug, Lang::En).map(|d| Suggestion {
+                slug: d.slug.clone(),
+                title: d.title.clone(),
+            })
         })
         .collect();
     axum::Json(suggestions).into_response()
@@ -1115,7 +1155,13 @@ async fn special_recent(State(state): State<AppState>) -> Response {
         })
         .collect();
     let body = ui::special_list("Recent changes", "Recent changes", &items);
-    let head = ui::doc_head("Recent changes", "Records most recently updated.", tenant, "/special/recent-changes", false);
+    let head = ui::doc_head(
+        "Recent changes",
+        "Records most recently updated.",
+        tenant,
+        "/special/recent-changes",
+        false,
+    );
     Html(
         ui::page(
             tenant,
@@ -1186,7 +1232,12 @@ async fn sitemap(State(state): State<AppState>) -> Response {
 }
 
 async fn feed_atom(State(state): State<AppState>) -> Response {
-    let docs: Vec<_> = state.index.recent(20).into_iter().filter(|d| d.slug != "index").collect();
+    let docs: Vec<_> = state
+        .index
+        .recent(20)
+        .into_iter()
+        .filter(|d| d.slug != "index")
+        .collect();
     let body = discovery::atom_feed(&site_base(&state), &state.config.site.title, &docs);
     (
         [(header::CONTENT_TYPE, "application/atom+xml; charset=utf-8")],
@@ -1347,12 +1398,9 @@ async fn serve_article(
     // Stamping `<html lang>` and the toggle from the *requested* `lang`
     // instead of this would mislabel English fallback content as Spanish.
     let lang_code = if doc.lang == Lang::Es { "es" } else { "en" };
-    // "In this topic" sidebar list + prev/next pager — real UX-review
-    // findings: the sidebar only ever showed categories, never sibling
-    // articles (reading flow was strictly article -> back to category page
-    // -> next article), and no prev/next navigation existed at all.
-    // `in_category` is already title-sorted, so index-of-current +/- 1 is
-    // the adjacent article with zero new lookups.
+    // "In this topic" sidebar list — real UX-review finding: the sidebar
+    // only ever showed categories, never sibling articles (reading flow was
+    // strictly article -> back to category page -> next article).
     let current_category = doc.category.as_deref();
     let category_docs: Vec<(String, String)> = current_category
         .map(|cat| {
@@ -1365,19 +1413,6 @@ async fn serve_article(
                 .collect()
         })
         .unwrap_or_default();
-    let self_index = category_docs.iter().position(|(s, _)| s == &doc.slug);
-    let prev = self_index
-        .filter(|&i| i > 0)
-        .and_then(|i| category_docs.get(i - 1))
-        .map(|(s, t)| (s.as_str(), t.as_str()));
-    let next = self_index
-        .and_then(|i| category_docs.get(i + 1))
-        .map(|(s, t)| (s.as_str(), t.as_str()));
-    // Pager label — "More in <category>", not "Previous/Next": the adjacency
-    // above is alphabetical-by-title, not an editorial sequence (Command/
-    // project-editorial finding, 2026-08-25).
-    let pager_category_label =
-        (prev.is_some() || next.is_some()).then(|| current_category.map(|c| category_label(&state, c))).flatten();
     let siblings: Vec<(String, String)> = category_docs
         .iter()
         .filter(|(s, _)| s != &doc.slug)
@@ -1392,7 +1427,7 @@ async fn serve_article(
             return not_found(&state, &format!("No such revision: {rev}."));
         };
         let parsed = content::parse(&text);
-        let rendered = content::render_doc(&parsed);
+        let rendered = content::render_doc(&parsed, &state.index, lang);
         let title = parsed
             .frontmatter
             .title
@@ -1400,12 +1435,25 @@ async fn serve_article(
             .unwrap_or_else(|| doc.title.clone());
         let short = rev.chars().take(8).collect::<String>();
         let badge = content_type_badge(parsed.frontmatter.index_type.as_deref(), doc.lang);
-        // A historical snapshot doesn't get prev/next pager links — those
-        // navigate the current article set, not this point-in-time view.
-        let body = ui::article(&title, &doc.slug, None, Some(&short), Some(&date), None, badge, &rendered.html, None, None, None);
+        let body = ui::article(
+            &title,
+            &doc.slug,
+            None,
+            Some(&short),
+            Some(&date),
+            None,
+            badge,
+            &rendered.html,
+        );
         // Canonical points at the CURRENT version, not this historical snapshot —
         // an as-of view shouldn't compete with the live article for indexing.
-        let head = ui::doc_head(&format!("{title} (as of {date})"), "", tenant, &format!("{prefix}/wiki/{}", doc.slug), false);
+        let head = ui::doc_head(
+            &format!("{title} (as of {date})"),
+            "",
+            tenant,
+            &format!("{prefix}/wiki/{}", doc.slug),
+            false,
+        );
         return Html(
             ui::page(
                 tenant,
@@ -1451,7 +1499,7 @@ async fn serve_article(
         }
         Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "internal error").into_response(),
     };
-    let rendered = content::render_doc(&parsed);
+    let rendered = content::render_doc(&parsed, &state.index, lang);
     let title = parsed
         .frontmatter
         .title
@@ -1513,14 +1561,15 @@ async fn serve_article(
         alt_ref,
         badge,
         &rendered.html,
-        prev,
-        next,
-        pager_category_label.as_deref(),
     );
     // Breadcrumb — a real finding: no page anywhere had one. Home -> Category
     // (when the article has one) -> current article (not a link).
     let mut trail = vec![("/".to_string(), tenant.home_label().to_string())];
-    if let Some(cat) = doc.category.as_deref().filter(|c| !c.is_empty() && *c != "root") {
+    if let Some(cat) = doc
+        .category
+        .as_deref()
+        .filter(|c| !c.is_empty() && *c != "root")
+    {
         trail.push((format!("/category/{cat}"), category_label(&state, cat)));
     }
     let body = html! { (ui::breadcrumb(&trail, &title)) (article_body) };
