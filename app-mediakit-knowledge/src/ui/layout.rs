@@ -18,6 +18,7 @@ use crate::content::render::Heading;
 use crate::content::IndexTopic;
 use crate::history::{FileDiff, Revision};
 use crate::legal::LegalTokens;
+use crate::notice_text::{fill_template, NoticeText};
 
 /// Serialize a `serde_json::Value` for embedding inside a literal
 /// `<script type="application/ld+json">` block. `serde_json` already
@@ -647,13 +648,49 @@ pub fn history_page(title: &str, slug: &str, issuer: &str, revs: &[Revision]) ->
             } @else {
                 ul."k-history" {
                     @for r in revs {
-                        li."k-history__item" {
-                            time."k-history__date" datetime=(r.date_iso) { (format_date(&r.date_iso)) }
-                            a."k-history__msg" href={ "/history/" (slug) "?rev=" (r.sha) } { (r.message) }
-                            span."k-history__meta" {
-                                code."k-history__sha" { (r.short_sha) }
+                        @if r.redacted {
+                            li."k-history__item k-history__item--redacted" {
+                                time."k-history__date" datetime=(r.date_iso) { (format_date(&r.date_iso)) }
+                                span."k-history__msg k-history__msg--redacted" {
+                                    "Revision redacted — superseded by a later correction"
+                                }
+                                span."k-history__meta" {
+                                    code."k-history__sha" { (r.short_sha) }
+                                }
+                            }
+                        } @else {
+                            li."k-history__item" {
+                                time."k-history__date" datetime=(r.date_iso) { (format_date(&r.date_iso)) }
+                                a."k-history__msg" href={ "/history/" (slug) "?rev=" (r.sha) } { (r.message) }
+                                span."k-history__meta" {
+                                    code."k-history__sha" { (r.short_sha) }
+                                }
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Shown in place of `diff_page` when the requested revision is covered by a
+/// `redactions.yaml` entry (2026-09-06 history-exposure decision) — the
+/// content/diff is hidden, but the page still confirms a correction exists
+/// rather than 404ing, per "hide the content, never the fact."
+pub fn redacted_notice(title: &str, slug: &str, reason: Option<&str>) -> Markup {
+    html! {
+        article."k-article" {
+            div."k-article-nav" { (tab_bar(slug, "history", None)) }
+            h1."k-article__title" { (title) }
+            div."k-diff__head" {
+                a."k-diff__back" href={ "/history/" (slug) } { "\u{2190} All revisions" }
+            }
+            aside."k-notice-banner" role="note" {
+                p {
+                    "This revision has been redacted and superseded by a later correction."
+                    @if let Some(r) = reason.filter(|s| !s.is_empty()) {
+                        " " (r)
                     }
                 }
             }
@@ -1234,42 +1271,90 @@ pub fn masthead(title: &str, authors: &[Author]) -> Markup {
     }
 }
 
-/// Working-paper / disclosure notice banner (SPEC §4) — **not yet
-/// implemented**. Blocked on Command's placement decision for the canonical
-/// notice-text data source (routed 2026-07-10 by project-editorial, still
-/// open as of BRIEF-knowledge-ng-rewrite.md's 2026-07-11 status update). The
-/// banner text (working-paper notice, forward-looking-statements advisory,
-/// citation banner, superseded notice) is disclosure copy this engine must
-/// never author locally — every word has to load verbatim from wherever that
-/// canonical file lands, the same discipline `legal.rs` already follows for
-/// trademark/copyright text. This signature is final per SPEC §4's table, so
-/// wiring it up once the data source exists is a one-line load-and-template
-/// change here, not a redesign — until then it renders nothing.
+/// Working-paper / disclosure notice banner (SPEC §4) — wired 2026-09-05 once
+/// Command placed the canonical notice-text data source (routed 2026-07-10 by
+/// project-editorial, placed `factory-release-engineering` commit `2ab879c`).
+/// The banner text is disclosure copy this engine must never author locally —
+/// every word loads verbatim from `notice_text::NoticeText`, the same
+/// discipline `legal.rs` already follows for trademark/copyright text.
+/// `notice` is `None` when the token file is absent/malformed — renders
+/// nothing rather than fabricating disclosure text, same fallback discipline.
+///
+/// Which template renders is driven by the paper's own `state:` frontmatter
+/// field: `draft`/`under-review` → working-paper notice + the static
+/// forward-looking-statements advisory; `published` → citation banner. A doc
+/// with no `state:` set, or any other value, renders no banner — there is
+/// nothing yet to disclose. `archived`/superseded-notice is a **known,
+/// deliberate gap**: its template needs a `revision_history.latest.*` value
+/// this crate's `Frontmatter` has no field for yet (the notice-text file
+/// itself flags this template "not yet needed" — no paper has reached
+/// `archived` as of the 2026-07-10 draft) — add that frontmatter field before
+/// wiring this state, don't guess at placeholder values.
+#[allow(clippy::too_many_arguments)]
 pub fn notice_banner(
-    _state: Option<&str>,
-    _version: Option<&str>,
-    _preprint_posted_date: Option<&str>,
-    _license: Option<&str>,
-    _corresponding_author: Option<&str>,
-    _cite_as: Option<&str>,
+    notice: Option<&NoticeText>,
+    state: Option<&str>,
+    version: Option<&str>,
+    preprint_posted_date: Option<&str>,
+    license: Option<&str>,
+    corresponding_author: Option<&str>,
+    cite_as: Option<&str>,
+    doi: Option<&str>,
 ) -> Markup {
-    html! {}
+    let Some(notice) = notice else {
+        return html! {};
+    };
+    let text = match state {
+        Some("draft") | Some("under-review") => {
+            let working_paper = fill_template(
+                &notice.working_paper_notice.template,
+                &[
+                    ("version", version.unwrap_or("")),
+                    ("preprint_posted_date", preprint_posted_date.unwrap_or("")),
+                    ("license", license.unwrap_or("")),
+                    ("corresponding_author", corresponding_author.unwrap_or("")),
+                    ("cite_as", cite_as.unwrap_or("")),
+                ],
+            );
+            let fls = notice
+                .forward_looking_statements
+                .template
+                .trim()
+                .to_string();
+            format!("{working_paper}\n\n{fls}")
+        }
+        Some("published") => fill_template(
+            &notice.citation_banner.template,
+            &[
+                ("cite_as", cite_as.unwrap_or("")),
+                ("doi", doi.unwrap_or("")),
+            ],
+        ),
+        _ => return html! {},
+    };
+    html! {
+        aside."k-notice-banner" role="note" {
+            p { (text) }
+        }
+    }
 }
 
 /// `/research/{slug}` landing page (SPEC §0 render model): masthead +
 /// abstract + a link to the full-text rendition — **not** the full body
-/// (that's `research_fulltext`). `notice_banner()` composes in once its data
-/// source exists (Phase 3); until then it renders nothing, same as here.
+/// (that's `research_fulltext`). `notice` is the caller's already-rendered
+/// `notice_banner()` output (renders empty when there's nothing to disclose).
 pub fn research_landing(
     title: &str,
     authors: &[Author],
     abstract_html: &str,
     slug: &str,
     cite_as: Option<&str>,
+    notice: Markup,
 ) -> Markup {
     html! {
         article."k-research k-research--landing" {
             (masthead(title, authors))
+            (notice)
             @if !abstract_html.is_empty() {
                 section."k-research__abstract" {
                     h2 { "Abstract" }
@@ -1345,10 +1430,12 @@ pub fn research_fulltext(
     geospatial: bool,
     slug: &str,
     cite_as: Option<&str>,
+    notice: Markup,
 ) -> Markup {
     html! {
         article."k-research k-research--fulltext"."k-research--geospatial"[geospatial] {
             (masthead(title, authors))
+            (notice)
             div."k-prose" { (PreEscaped(body_html)) }
             (print_citation_stamp(slug, cite_as))
         }
@@ -1604,28 +1691,101 @@ mod tests {
         assert!(!html.contains("k-masthead__authors"));
     }
 
+    fn test_notice_text() -> NoticeText {
+        serde_yaml::from_str(
+            r#"
+working_paper_notice:
+  template: >
+    This is a working paper (v{version}), posted {preprint_posted_date}, under
+    {license}. Correspondence: {corresponding_author}. Cite as: {cite_as}.
+forward_looking_statements:
+  template: >
+    Static FLS advisory text.
+citation_banner:
+  template: >
+    Published version: {cite_as} DOI: {doi}
+superseded_notice:
+  template: >
+    Superseded notice text.
+"#,
+        )
+        .unwrap()
+    }
+
     #[test]
-    fn notice_banner_renders_nothing_until_the_data_source_exists() {
-        // Blocked stub (SPEC §4) — must not fabricate disclosure text locally.
+    fn notice_banner_renders_nothing_without_a_data_source() {
+        // Must not fabricate disclosure text locally when the file is absent/malformed.
         let html = notice_banner(
+            None,
             Some("draft"),
             Some("0.4.0"),
             Some("2026-07-02"),
             Some("CC BY 4.0"),
             Some("a@example.com"),
             Some("Woodfine (2026)"),
+            None,
         )
         .into_string();
         assert_eq!(html, "");
     }
 
     #[test]
+    fn notice_banner_renders_nothing_with_no_state() {
+        let notice = test_notice_text();
+        let html =
+            notice_banner(Some(&notice), None, None, None, None, None, None, None).into_string();
+        assert_eq!(html, "");
+    }
+
+    #[test]
+    fn notice_banner_renders_working_paper_notice_for_draft() {
+        let notice = test_notice_text();
+        let html = notice_banner(
+            Some(&notice),
+            Some("draft"),
+            Some("0.4.0"),
+            Some("2026-07-02"),
+            Some("CC BY 4.0"),
+            Some("a@example.com"),
+            Some("Woodfine (2026)"),
+            None,
+        )
+        .into_string();
+        assert!(html.contains("k-notice-banner"));
+        assert!(html.contains("v0.4.0"));
+        assert!(html.contains("2026-07-02"));
+        assert!(html.contains("CC BY 4.0"));
+        assert!(html.contains("a@example.com"));
+        assert!(html.contains("Woodfine (2026)"));
+        assert!(html.contains("Static FLS advisory text"));
+    }
+
+    #[test]
+    fn notice_banner_renders_citation_banner_for_published() {
+        let notice = test_notice_text();
+        let html = notice_banner(
+            Some(&notice),
+            Some("published"),
+            None,
+            None,
+            None,
+            None,
+            Some("Woodfine (2026)"),
+            Some("10.1/example"),
+        )
+        .into_string();
+        assert!(html.contains("Woodfine (2026)"));
+        assert!(html.contains("10.1/example"));
+        assert!(!html.contains("working paper"));
+    }
+
+    #[test]
     fn research_fulltext_carries_geospatial_class_only_when_requested() {
         let with_class =
-            research_fulltext("T", &[], "<p>body</p>", true, "slug", None).into_string();
+            research_fulltext("T", &[], "<p>body</p>", true, "slug", None, html! {}).into_string();
         assert!(with_class.contains("k-research--geospatial"));
         let without_class =
-            research_fulltext("T", &[], "<p>body</p>", false, "slug", None).into_string();
+            research_fulltext("T", &[], "<p>body</p>", false, "slug", None, html! {}).into_string();
         assert!(!without_class.contains("k-research--geospatial"));
     }
 
@@ -1638,11 +1798,12 @@ mod tests {
             false,
             "my-slug",
             Some("Woodfine (2026)"),
+            html! {},
         )
         .into_string();
         assert!(with_cite_as.contains("Cite this record: Woodfine (2026)."));
         let without_cite_as =
-            research_fulltext("T", &[], "<p>b</p>", false, "my-slug", None).into_string();
+            research_fulltext("T", &[], "<p>b</p>", false, "my-slug", None, html! {}).into_string();
         assert!(without_cite_as.contains("Cite this record: /research/my-slug."));
     }
 

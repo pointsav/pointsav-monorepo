@@ -79,6 +79,20 @@ done
     exit 1
 }
 
+# .foundry-keep-alive marker (2026-09-04, Command fix commit 5ddd107) —
+# protects the cross-compiled binary from cargo-target-cleanup.sh's
+# disk-pressure sweep for the duration of this script's long debootstrap +
+# overlay-assembly steps. Real gap this session already found and worked
+# around by copying the binary to os-mediakit/.build-cache/ first (still the
+# recommended usage — see BINARIES_DIR examples above); this marker is
+# defense-in-depth for the case where BINARIES_DIR points directly at the
+# shared cargo-target release dir instead. Removed on exit (success or
+# failure) via trap — 12h bound in the cleanup timer itself is the backstop
+# if this script is ever killed in a way the trap can't catch.
+KEEP_ALIVE_MARKER="${BINARIES_DIR}/.foundry-keep-alive"
+touch "${KEEP_ALIVE_MARKER}" 2>/dev/null || true
+trap 'rm -f "${KEEP_ALIVE_MARKER}" 2>/dev/null || true' EXIT
+
 # Same resource-pressure guard as build-microkit-image.sh — debootstrap is
 # disk+network heavy and this host is shared across concurrent Totebox
 # sessions; hard-abort, not warn-and-continue.

@@ -378,7 +378,9 @@ mod tests {
         // professional-centres-canada-lp-structure|Professional Centres
         // Canada LP can force...".
         assert_eq!(
-            strip_wikilink_brackets("Limited partners in [[lp-structure|Professional Centres LP]] can force."),
+            strip_wikilink_brackets(
+                "Limited partners in [[lp-structure|Professional Centres LP]] can force."
+            ),
             "Limited partners in Professional Centres LP can force."
         );
     }

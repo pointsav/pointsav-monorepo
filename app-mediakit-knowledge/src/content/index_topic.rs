@@ -96,7 +96,11 @@ pub struct IndexTopic {
 /// shape, including a body with neither a start-here block nor any
 /// recognizable group (nothing structured found — most likely a stub
 /// `_index.md` that got `index_type` set without real content yet).
-pub fn parse_index_topic(raw_body_md: &str, index: &ContentIndex, lang: Lang) -> Option<IndexTopic> {
+pub fn parse_index_topic(
+    raw_body_md: &str,
+    index: &ContentIndex,
+    lang: Lang,
+) -> Option<IndexTopic> {
     let text = raw_body_md;
     let mut intro_end = text.len();
     let mut cursor = 0usize;
@@ -356,7 +360,8 @@ mod tests {
 
     #[test]
     fn parses_the_real_security_index_end_to_end() {
-        let topic = parse_index_topic(REAL_SECURITY_INDEX_BODY, &ContentIndex::default(), Lang::En).expect("should parse");
+        let topic = parse_index_topic(REAL_SECURITY_INDEX_BODY, &ContentIndex::default(), Lang::En)
+            .expect("should parse");
 
         assert!(topic.intro_html.contains("indexes the 13 articles"));
 
@@ -414,7 +419,12 @@ mod tests {
 
     #[test]
     fn returns_none_for_body_with_no_structure_at_all() {
-        assert!(parse_index_topic("Just a plain paragraph, no markers at all.\n", &ContentIndex::default(), Lang::En).is_none());
+        assert!(parse_index_topic(
+            "Just a plain paragraph, no markers at all.\n",
+            &ContentIndex::default(),
+            Lang::En
+        )
+        .is_none());
     }
 
     #[test]
@@ -445,7 +455,8 @@ mod tests {
             "<!-- END AUTO-GENERATED -->\n\n",
             "## Not a group\n\nJust prose, no membership block.\n",
         );
-        let topic = parse_index_topic(body, &ContentIndex::default(), Lang::En).expect("should parse (start-here + 1 group)");
+        let topic = parse_index_topic(body, &ContentIndex::default(), Lang::En)
+            .expect("should parse (start-here + 1 group)");
         assert_eq!(topic.groups.len(), 1);
         assert!(topic.tail_html.contains("Not a group"));
         assert!(topic.tail_html.contains("Just prose"));

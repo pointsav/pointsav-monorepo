@@ -19,6 +19,15 @@ pub struct Revision {
     pub author: String,
     pub date_iso: String, // YYYY-MM-DD
     pub message: String,  // subject line only
+    /// `true` if a `redactions.yaml` entry covers this revision (see
+    /// `sitedata::Redaction`). The row still renders (date/sha, the fact a
+    /// correction exists) — callers must never render `message` as-is for a
+    /// redacted revision, and must never call `file_at_rev`/`file_diff` for
+    /// its `sha`; render a generic redacted-notice instead. Content hiding
+    /// happens at the call site (`is_redacted` gate before those two
+    /// functions), not by blanking data here — this field is presentation
+    /// guidance, not itself a security boundary.
+    pub redacted: bool,
 }
 
 /// One line of a unified diff.
@@ -37,8 +46,16 @@ pub struct FileDiff {
 }
 
 /// History of `rel` (path relative to `repo_root`), newest first, up to `limit`.
-/// Returns an empty vec on any git error (no repo, detached, etc.).
-pub fn file_history(repo_root: &Path, rel: &Path, limit: usize) -> Vec<Revision> {
+/// `redacted_through`, if present, is a `redactions.yaml` boundary sha for
+/// this article (see `sitedata::Redaction`) — every revision at or before it
+/// is marked `redacted: true`. Returns an empty vec on any git error (no
+/// repo, detached, etc.).
+pub fn file_history(
+    repo_root: &Path,
+    rel: &Path,
+    limit: usize,
+    redacted_through: Option<&str>,
+) -> Vec<Revision> {
     let Ok(repo) = Repository::open(repo_root) else {
         return Vec::new();
     };
@@ -49,6 +66,9 @@ pub fn file_history(repo_root: &Path, rel: &Path, limit: usize) -> Vec<Revision>
     if walk.push_head().is_err() {
         return Vec::new();
     }
+    let boundary = redacted_through
+        .and_then(|s| repo.revparse_single(s).ok())
+        .map(|o| o.id());
 
     let mut out = Vec::new();
     for oid in walk.flatten() {
@@ -63,15 +83,41 @@ pub fn file_history(repo_root: &Path, rel: &Path, limit: usize) -> Vec<Revision>
         }
         let author = commit.author();
         let subject = commit.summary().unwrap_or("").to_string();
+        let redacted =
+            boundary.is_some_and(|b| oid == b || repo.graph_descendant_of(b, oid).unwrap_or(false));
         out.push(Revision {
             sha: oid.to_string(),
             short_sha: oid.to_string().chars().take(8).collect(),
             author: author.name().unwrap_or("unknown").to_string(),
             date_iso: iso_date(commit.time().seconds()),
             message: subject,
+            redacted,
         });
     }
     out
+}
+
+/// `true` iff `sha` is at or before `redacted_through` — i.e. `sha` is
+/// `redacted_through` itself, or an ancestor of it. Callers gate
+/// `file_at_rev`/`file_diff` on this *before* reading any blob/diff content —
+/// unlike `file_history`'s row-level `redacted` flag (presentation-only),
+/// this function is the actual content-hiding boundary. `false` (not
+/// redacted) on any git error or unresolvable sha — a boundary that fails to
+/// resolve must never silently widen what's hidden or, more dangerously,
+/// silently widen what's *shown*; see the call sites, which treat "can't
+/// resolve the boundary" as "can't resolve the target either" and 404 either
+/// way rather than exposing content past a broken redaction config.
+pub fn is_redacted(repo_root: &Path, sha: &str, redacted_through: &str) -> bool {
+    let Ok(repo) = Repository::open(repo_root) else {
+        return false;
+    };
+    let Some(target) = repo.revparse_single(sha).ok().map(|o| o.id()) else {
+        return false;
+    };
+    let Some(boundary) = repo.revparse_single(redacted_through).ok().map(|o| o.id()) else {
+        return false;
+    };
+    target == boundary || repo.graph_descendant_of(boundary, target).unwrap_or(false)
 }
 
 /// `true` iff `s` is a plausible (possibly abbreviated) commit SHA — 7 to 40

@@ -85,6 +85,25 @@
 }
 
 /* --- JOURNAL research pages (/research/{slug}, /research/{slug}/full) ---- */
+/* Working-paper / disclosure notice banner (SPEC §4) — a distinct callout,
+   deliberately not blockquote styling (no left-border-indent quote look):
+   this is a disclosure notice, not quoted material. */
+.k-notice-banner {
+  margin-top: var(--k-space-4);
+  padding: var(--k-space-3) var(--k-space-4);
+  border: 1px solid var(--k-border-subtle);
+  border-radius: 4px;
+  background: var(--k-surface-sunken);
+  max-width: var(--k-prose-measure);
+}
+.k-notice-banner p {
+  margin: 0;
+  font-size: var(--k-text-sm);
+  line-height: var(--k-leading-snug);
+  color: var(--k-ink-muted);
+  white-space: pre-line;
+}
+
 .k-research__abstract {
   margin-top: var(--k-space-4);
   padding-top: var(--k-space-4);
@@ -699,6 +718,12 @@
   color: var(--k-accent);
 }
 .k-history__msg:hover { text-decoration: underline; }
+.k-history__msg--redacted {
+  font-style: italic;
+  color: var(--k-ink-muted);
+  cursor: default;
+}
+.k-history__msg--redacted:hover { text-decoration: none; }
 @media (max-width: 640px) {
   .k-history__item { grid-template-columns: 1fr; }
   .k-history__meta { grid-column: 1; }

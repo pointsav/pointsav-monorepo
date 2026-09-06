@@ -95,6 +95,23 @@ impl Frontmatter {
     pub fn is_geospatial(&self) -> bool {
         self.paper_class.as_deref() == Some("geospatial")
     }
+
+    /// Best-effort corresponding-author display string for the working-paper
+    /// notice banner (`{corresponding_author}`, SPEC §4). There is no
+    /// explicit "is corresponding author" flag anywhere in this schema (the
+    /// render-contract SPEC that would define one is no longer available to
+    /// consult — checked, genuinely gone, not just unread) — the first author
+    /// with an `email` is the most defensible convention-following stand-in
+    /// (the common academic-paper convention), not a fabrication of new data.
+    /// `None` when no author has an email set.
+    pub fn corresponding_author_display(&self) -> Option<String> {
+        let author = self.authors.iter().find(|a| a.email.is_some())?;
+        let email = author.email.as_deref()?;
+        match author.name.as_deref() {
+            Some(name) => Some(format!("{name} <{email}>")),
+            None => Some(email.to_string()),
+        }
+    }
 }
 
 /// One JOURNAL paper author (SPEC-journal-wiki-render-contract.md, masthead fields).

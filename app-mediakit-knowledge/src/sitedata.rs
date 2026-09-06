@@ -90,6 +90,66 @@ pub fn load_redirects(root: &Path) -> HashMap<String, String> {
     }
 }
 
+/// One `redactions.yaml` entry — the boundary and reason for hiding an
+/// article's pre-correction revisions from `/history/{slug}` (2026-09-06
+/// history-exposure decision, BRIEF-knowledge-ng-rewrite.md). Editor-
+/// maintained, can be added or updated at any time (not tied to commit time —
+/// the operator scenario this exists for is discovering a historical problem
+/// *after* the correcting commit already landed).
+#[derive(Debug, Clone)]
+pub struct Redaction {
+    /// Every revision at or before this commit (an ancestor of it, or itself)
+    /// is hidden from `file_at_rev`/`file_diff` output. `file_history` still
+    /// lists the row — the fact a correction happened stays visible, only the
+    /// pre-fix content and diff are hidden — per convention/citation-substrate
+    /// discipline: redaction hides content, never the fact of a correction.
+    pub through: String,
+    /// Editor-authored, shown in the "redacted" placeholder in place of the
+    /// real commit message/diff. Never the real reason if that reason itself
+    /// would leak the sensitive content — write a generic note instead.
+    pub reason: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct RedactionsFile {
+    #[serde(default)]
+    redactions: HashMap<String, RedactionEntry>,
+}
+
+#[derive(Deserialize)]
+struct RedactionEntry {
+    through: String,
+    #[serde(default)]
+    reason: Option<String>,
+}
+
+/// Load `redactions.yaml` from the mount root → slug → `Redaction` map.
+/// Empty if absent or malformed — a missing/broken file must never take the
+/// whole wiki down, and (per the safe-default discipline this file already
+/// carries) never fails open to "everything visible" vs. "everything hidden"
+/// in a way that surprises an editor; absent just means no redactions apply.
+pub fn load_redactions(root: &Path) -> HashMap<String, Redaction> {
+    let Ok(text) = std::fs::read_to_string(root.join("redactions.yaml")) else {
+        return HashMap::new();
+    };
+    match serde_yaml::from_str::<RedactionsFile>(&text) {
+        Ok(file) => file
+            .redactions
+            .into_iter()
+            .map(|(slug, e)| {
+                (
+                    slug,
+                    Redaction {
+                        through: e.through,
+                        reason: e.reason,
+                    },
+                )
+            })
+            .collect(),
+        Err(_) => HashMap::new(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,5 +201,34 @@ mod tests {
             Some("https://example.com/new")
         );
         assert!(load_redirects(tempfile::tempdir().unwrap().path()).is_empty());
+    }
+
+    #[test]
+    fn redactions_load_by_slug_with_reason() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("redactions.yaml"),
+            "redactions:\n  q3-figures:\n    through: abc1234\n    reason: \"Superseded by corrected figures.\"\n",
+        )
+        .unwrap();
+        let map = load_redactions(dir.path());
+        let r = map.get("q3-figures").unwrap();
+        assert_eq!(r.through, "abc1234");
+        assert_eq!(
+            r.reason.as_deref(),
+            Some("Superseded by corrected figures.")
+        );
+    }
+
+    #[test]
+    fn redactions_absent_file_is_empty() {
+        assert!(load_redactions(tempfile::tempdir().unwrap().path()).is_empty());
+    }
+
+    #[test]
+    fn redactions_malformed_yaml_is_empty_not_panic() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(dir.path().join("redactions.yaml"), ":::not valid:::").unwrap();
+        assert!(load_redactions(dir.path()).is_empty());
     }
 }

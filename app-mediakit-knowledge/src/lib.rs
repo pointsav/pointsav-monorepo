@@ -29,6 +29,7 @@ pub mod history;
 pub mod jsonld;
 pub mod legal;
 pub mod mcp;
+pub mod notice_text;
 pub mod search;
 pub mod sitedata;
 pub mod ui;

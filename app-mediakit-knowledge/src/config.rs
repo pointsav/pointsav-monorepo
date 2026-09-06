@@ -50,6 +50,18 @@ pub struct Site {
     /// Navigation category slugs in display order. Empty → engine default.
     #[serde(default)]
     pub categories: Vec<String>,
+    /// Public exposure of `/history/{slug}` (git log, revision diffs, and the
+    /// `?rev=` point-in-time article view): `"off"` (default) | `"public"`.
+    /// Default-off deliberately, not an oversight — this engine is also a
+    /// distributed product (software.pointsav.com BETA); a stranger's content
+    /// mount is a pre-existing git repo whose full commit history (drafts,
+    /// removed pages, anything) this route would otherwise republish
+    /// unauthenticated by default. The operator's three wikis opt in
+    /// explicitly in their own `knowledge.toml` rather than inheriting a
+    /// permissive default. See BRIEF-knowledge-ng-rewrite.md's 2026-09-06
+    /// history-exposure decision for the full reasoning (Fable+Opus consult).
+    #[serde(default = "default_history")]
+    pub history: String,
 }
 
 /// `[[mount]]` — a content source. First primary mount is editable; guide
@@ -104,6 +116,18 @@ fn default_state_dir() -> PathBuf {
 }
 fn default_role() -> String {
     "primary".to_string()
+}
+fn default_history() -> String {
+    "off".to_string()
+}
+
+impl Site {
+    /// Whether `/history/{slug}` (and its `?rev=` sub-views) should be served
+    /// at all. Any value other than the literal `"public"` — including a
+    /// typo, or the field being absent — degrades to off, the safe default.
+    pub fn history_enabled(&self) -> bool {
+        self.history == "public"
+    }
 }
 
 impl Config {

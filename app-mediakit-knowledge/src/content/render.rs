@@ -150,7 +150,11 @@ pub fn render(body_md: &str, index: &ContentIndex, lang: Lang) -> Rendered {
 /// Render a full document. When the frontmatter carries a `references:` list, it
 /// appends synthesized footnote definitions (`[^id]: text <url>`) so the body's
 /// `[^id]` markers resolve into a rendered reference list instead of dead text.
-pub fn render_doc(doc: &super::frontmatter::ParsedDoc, index: &ContentIndex, lang: Lang) -> Rendered {
+pub fn render_doc(
+    doc: &super::frontmatter::ParsedDoc,
+    index: &ContentIndex,
+    lang: Lang,
+) -> Rendered {
     if doc.frontmatter.references.is_empty() {
         return render(&doc.body_md, index, lang);
     }
@@ -394,9 +398,8 @@ fn resolve_wikilinks_in_line(line: &str, index: &ContentIndex, lang: Lang, out: 
                         Some((t, l)) => (t.trim(), l.trim().to_string()),
                         None => {
                             let t = inner.trim();
-                            let resolved = index
-                                .resolve(&slugify(t), lang)
-                                .map(|d| d.title.clone());
+                            let resolved =
+                                index.resolve(&slugify(t), lang).map(|d| d.title.clone());
                             (t, resolved.unwrap_or_else(|| t.to_string()))
                         }
                     };
@@ -725,7 +728,11 @@ mod tests {
         // happened to already have `ContentIndex` access. 2,136 live
         // instances across 64% of pages on the 3 production wikis.
         let idx = test_index();
-        let r = render("See [[zero-container-inference]] for background.\n", &idx, Lang::En);
+        let r = render(
+            "See [[zero-container-inference]] for background.\n",
+            &idx,
+            Lang::En,
+        );
         assert!(
             r.html.contains(">Zero-Container Inference</a>"),
             "expected the real title as the label, got: {}",
@@ -775,7 +782,11 @@ mod tests {
 
     #[test]
     fn extracts_h2_h3_headings_only() {
-        let r = render("# H1\n\n## Why no containers\n\n### Detail\n\n#### Too deep\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "# H1\n\n## Why no containers\n\n### Detail\n\n#### Too deep\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         let ids: Vec<_> = r.headings.iter().map(|h| h.id.as_str()).collect();
         assert_eq!(ids, vec!["why-no-containers", "detail"]);
         assert_eq!(r.headings[0].level, 2);
@@ -784,7 +795,11 @@ mod tests {
 
     #[test]
     fn headings_inside_code_fence_are_ignored() {
-        let r = render("## Real\n\n```\n## Not a heading\n```\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "## Real\n\n```\n## Not a heading\n```\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert_eq!(r.headings.len(), 1);
         assert_eq!(r.headings[0].id, "real");
     }
@@ -797,7 +812,11 @@ mod tests {
         // comrak's own output picks up its Anchorizer's real -1 suffix, so
         // the TOC ids the article() template renders always match what's
         // actually clickable in the body.
-        let r = render("## Overview\n\ntext\n\n## Overview\n\nmore\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "## Overview\n\ntext\n\n## Overview\n\nmore\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert_eq!(r.headings.len(), 2);
         assert_ne!(
             r.headings[0].id, r.headings[1].id,
@@ -812,7 +831,11 @@ mod tests {
         // A naive slugify over the raw markdown line would see the literal
         // `[...](...)`  syntax; the real id must come from the *rendered*
         // text, and the TOC's display text should be plain (no markup).
-        let r = render("## See [the spec](/x)\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "## See [the spec](/x)\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert_eq!(r.headings.len(), 1);
         assert_eq!(r.headings[0].text, "See the spec");
         assert!(
@@ -823,7 +846,11 @@ mod tests {
 
     #[test]
     fn anchor_wikilink_stays_same_page() {
-        let r = render("Jump to [[#Cold start|cold start]].\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "Jump to [[#Cold start|cold start]].\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert!(r.html.contains(r##"href="#cold-start""##));
     }
 
@@ -979,7 +1006,11 @@ mod tests {
         // on the rendered `<h2>` — every Spanish-language heading was a dead
         // anchor. `Anchorizer` keeps Unicode letters, so `<h2 id=...>` (comrak's
         // own output, via `header_ids`) and our TOC `Heading.id` must now agree.
-        let r = render("## Estándares editoriales\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "## Estándares editoriales\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert_eq!(r.headings[0].id, "estándares-editoriales");
         assert!(
             r.html.contains(r#"id="estándares-editoriales""#),
@@ -990,7 +1021,11 @@ mod tests {
 
     #[test]
     fn strips_group_count_heading_attribute() {
-        let r = render("## Identity and permissions {#group-count-5}\n\nBody.\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "## Identity and permissions {#group-count-5}\n\nBody.\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert_eq!(r.headings[0].text, "Identity and permissions");
         assert!(!r.html.contains("group-count-5"));
         assert!(r.html.contains("Identity and permissions"));
@@ -998,7 +1033,11 @@ mod tests {
 
     #[test]
     fn heading_attr_strip_ignores_fenced_examples() {
-        let r = render("## Real {#real}\n\n```\n## Not a heading {#fake}\n```\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "## Real {#real}\n\n```\n## Not a heading {#fake}\n```\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert_eq!(r.headings.len(), 1);
         assert_eq!(r.headings[0].text, "Real");
         assert!(r.html.contains("Not a heading {#fake}"));
@@ -1021,7 +1060,11 @@ mod tests {
         // other inline formatting (bold, links) would. That's the correct,
         // visible-rendered-text behavior, not a regression of the guard this
         // test protects.
-        let r = render("## The heading-attribute syntax `{#id}` explained\n", &ContentIndex::default(), Lang::En);
+        let r = render(
+            "## The heading-attribute syntax `{#id}` explained\n",
+            &ContentIndex::default(),
+            Lang::En,
+        );
         assert_eq!(
             r.headings[0].text,
             "The heading-attribute syntax {#id} explained"
