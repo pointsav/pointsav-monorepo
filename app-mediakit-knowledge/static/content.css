@@ -218,6 +218,14 @@
   line-height: var(--k-prose-leading);
   color: var(--k-prose-ink);
 }
+/* The measure described above was never actually wired to paragraphs --
+   confirmed live 2026-09-07, running text measured ~150-156 characters/line
+   (roughly double Wikipedia's own convention) because nothing capped it.
+   --k-prose-measure (44rem, ~72ch) is the token already used elsewhere for
+   this exact purpose (e.g. .k-notice-banner, .k-home__lede) -- applying it
+   here finally fulfills the comment above. Scoped to direct-child <p> only,
+   not lists/tables/figures/code, matching the stated intent exactly. */
+.k-prose > p { max-width: var(--k-prose-measure); }
 /* Vertical rhythm — direct children carry the paragraph gap. Reset first so a
    later same-specificity rule can re-add the top gap (do NOT use `.k-prose p
    { margin: 0 }`, which out-specifies this and kills the spacing). */

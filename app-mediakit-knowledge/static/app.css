@@ -845,7 +845,16 @@ html[data-nav="open"] .k-sidebar--reading .k-sidenav__browse { display: block; }
   transition: transform var(--k-motion-fast) var(--k-ease);
 }
 .k-compliance__details[open] .k-compliance__summary::before { transform: rotate(45deg); }
-.k-compliance__body {
+/* .k-compliance__body.k-prose (compound selector, not just .k-compliance__body)
+   -- deliberate, not stylistic: the markup always carries both classes
+   together (ui/layout.rs), and .k-prose in content.css sets its own
+   font-size/color at equal specificity. content.css loads after app.css, so
+   a plain .k-compliance__body rule silently loses that cascade tie and this
+   band renders at full article-prose size instead of the intended smaller,
+   muted disclosure text -- confirmed live 2026-09-07 (measured 16px instead
+   of the intended 13px). The compound selector (0,0,2,0) wins regardless of
+   file order. */
+.k-compliance__body.k-prose {
   margin-top: var(--k-space-3);
   max-width: var(--k-prose-measure);
   font-size: var(--k-text-sm);
