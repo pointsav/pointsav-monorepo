@@ -43,6 +43,10 @@ pub struct AppState {
     /// Rendered HTML of `important-information.md` from the content repo (counsel-
     /// owned via Git), for the Important Information band. `None` → tenant default.
     pub important_info: Arc<Option<String>>,
+    /// The `.es.md` sibling of the above — call sites must use
+    /// `important_info_for(lang)`, never this field directly, so a bilingual
+    /// route can't silently fall back to English (the 2026-09-07 bug).
+    pub important_info_es: Arc<Option<String>>,
     /// Canonical category nav from the content repo's `categories.yaml` (id, name,
     /// order); empty → fall back to `knowledge.toml` categories + slug discovery.
     pub categories: Arc<Vec<sitedata::Category>>,
@@ -116,6 +120,20 @@ impl AppState {
                 .ok()
                 .map(|text| content::render(&content::parse(&text).body_md, &index, Lang::En).html)
         });
+        // Spanish disclosure text — a real, high-severity bug found 2026-09-07:
+        // every bilingual route (`/es/wiki/`, `/es/category/`) rendered this
+        // English-only field regardless of the request's language, so a
+        // Spanish reader on corporate/projects (both carrying real BCSC
+        // forward-looking-statement disclosure obligations) never actually
+        // saw the disclosure in their own language. Loaded the same way as
+        // the English file, just the `.es.md` sibling; `AppState::
+        // important_info_for(lang)` is what call sites now use to pick the
+        // right one.
+        let important_info_es = primary_root.as_ref().and_then(|root| {
+            std::fs::read_to_string(root.join("important-information.es.md"))
+                .ok()
+                .map(|text| content::render(&content::parse(&text).body_md, &index, Lang::Es).html)
+        });
         // Per-wiki category nav + redirects from the content repo root.
         let root = primary_root;
         let categories = root
@@ -174,6 +192,7 @@ impl AppState {
             index: Arc::new(index),
             search: Arc::new(search),
             important_info: Arc::new(important_info),
+            important_info_es: Arc::new(important_info_es),
             categories: Arc::new(categories),
             redirects: Arc::new(redirects),
             redactions: Arc::new(redactions),
@@ -185,6 +204,16 @@ impl AppState {
             site_description: Arc::new(site_description),
             article_count,
             notice_text: Arc::new(notice_text),
+        }
+    }
+
+    /// The Important Information band content for `lang` — the correct way
+    /// to read `important_info`/`important_info_es`, never the fields
+    /// directly, so a bilingual route can't silently fall back to English.
+    pub fn important_info_for(&self, lang: Lang) -> Option<&str> {
+        match lang {
+            Lang::Es => self.important_info_es.as_deref(),
+            Lang::En => self.important_info.as_deref(),
         }
     }
 }
@@ -593,7 +622,7 @@ async fn serve_category(
             &nav_cats(&state),
             &[],
             "",
-            state.important_info.as_deref(),
+            state.important_info_for(lang),
             &state.legal,
             state.site_description.as_deref(),
             state.article_count,
@@ -949,7 +978,7 @@ async fn render_index_topic_category(
                 &nav_cats(state),
                 &[], // the body is already a curated table of contents
                 "",
-                state.important_info.as_deref(),
+                state.important_info_for(lang),
                 &state.legal,
                 state.site_description.as_deref(),
                 state.article_count,
@@ -1553,7 +1582,7 @@ async fn serve_article(
                 &nav_cats(&state),
                 &rendered.headings,
                 "",
-                state.important_info.as_deref(),
+                state.important_info_for(lang),
                 &state.legal,
                 state.site_description.as_deref(),
                 state.article_count,
@@ -1713,7 +1742,7 @@ async fn serve_article(
             &nav_cats(&state),
             toc,
             "",
-            state.important_info.as_deref(),
+            state.important_info_for(lang),
             &state.legal,
             state.site_description.as_deref(),
             state.article_count,
