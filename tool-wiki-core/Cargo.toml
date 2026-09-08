@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+# Standalone crate, not a workspace member -- matches tool-accounting-core/
+# tool-construction-core precedent (own CWD required for build; see moonshot-toolkit for
+# the same pattern). An empty [workspace] table here overrides inheriting the monorepo
+# root's [workspace], which otherwise refuses to build an unlisted member's Cargo.toml.
+[workspace]
+
+[package]
+name = "tool-wiki-core"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+publish = false
+
+[lib]
+name = "tool_wiki_core"
+path = "src/lib.rs"
+
+[dependencies]
+# Frontmatter is real YAML in every wiki article (schema: foundry-doc-v1) -- parsing it by
+# hand would mean re-implementing a YAML subset badly. This is the crawler's only dependency;
+# the token-engine and change-log modules (BRIEF-tool-wiki plan Part 1) are deliberately not
+# started yet -- they're gated on Part 2's token-format decision (dtcg-vault/writing/ vs. the
+# older tokens/content-schema+linguistic tree), not on anything this crate needs.
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+
+[dev-dependencies]
+tempfile = "3"
