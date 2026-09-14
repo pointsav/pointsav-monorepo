@@ -1,5 +1,5 @@
 MULTI-LICENSE NOTICE
-Version 1.2 — Effective 2026-08-02
+Version 1.3 — Effective 2026-09-14
 Copyright © 2026 Woodfine Capital Projects Inc. All rights reserved.
 
 This repository contains code under multiple licenses. Each source file
@@ -21,9 +21,8 @@ Directories under AGPL-3.0-or-later:
   os-workplace/      — workplace module
   service-*/         — all platform services
   system-*/          — all platform systems
-  tool-*/            — all platform tools (except tool-wallet/, see Apache-2.0 below)
-  moonshot-*/        — experimental and speculative work (except the five
-                       FSL-1.1-ALv2 overrides listed below)
+  tool-*/            — all platform tools (no exceptions — tool-wallet/'s 2026-07-07
+                       Apache-2.0 exception was reversed 2026-09-01)
   app-console-*/     — applications extending os-console
   app-workplace-*/   — applications extending os-workplace
   xtask/             — workspace build-task runner
@@ -38,23 +37,21 @@ Apache-2.0 future license):
   os-infrastructure/   — infrastructure module
   os-privategit/       — private git / storefront engine module
   os-totebox/          — sovereign data vault module
-  os-mediakit/         — media kit module
   os-network-admin/    — network administration module
   app-privategit-*/    — applications extending os-privategit
   app-totebox-*/       — applications extending os-totebox
-  app-mediakit-*/      — applications extending os-mediakit
   app-network-*/       — applications extending os-network-admin
   templates/           — HTML/CSS shell templates for app-mediakit surfaces
-  moonshot-docengine/  — document-engine infrastructure (override of moonshot-* default)
-  moonshot-editor/     — editor/viewer/file-tree widget surface (override)
-  moonshot-crdt/       — collaborative state / version-lineage engine (override)
-  moonshot-parser/     — incremental syntax parser (override)
-  moonshot-bim-engine/ — sovereign IFC/BIM engine (override)
 
 Directories under Apache-2.0:
 
-  tool-wallet/  — payment/wallet tooling (override of tool-* default; no
-                  revenue role, seeds the Binary Library Open Source shelf)
+  os-mediakit/         — media kit module (relicensed 2026-09-01, was FSL-1.1-ALv2;
+                         linking-boundary audit clean, zero cross-tier dependencies)
+  app-mediakit-*/      — applications extending os-mediakit (relicensed with os-mediakit)
+  moonshot-*/          — experimental and speculative work (relicensed 2026-09-01, was
+                         AGPL-3.0-or-later; except moonshot-sel4-vmm/, see AGPL-3.0-or-later
+                         above — real GPL-2.0 ABI coupling to vendor-sel4-kernel via seL4
+                         syscalls, kept pending legal review)
 
 Directories under PointSav-ARR (proprietary — permanent commercial moat,
 not distributed under either the AGPL commercial-alternative tier or the
