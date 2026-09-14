@@ -25,6 +25,29 @@
 DOORMAN_ENDPOINT="${SLM_DOORMAN_ENDPOINT:-http://127.0.0.1:9080}"
 TOGGLE_FILE="${FOUNDRY_ROOT:-/srv/foundry}/identity/.toggle"
 
+# 2026-09-14: never capture business-admin content. This hook is normally
+# installed globally (core.hooksPath) on the workspace VM, so it fires
+# unconditionally for every repo, including the 10 zero-remote
+# business-admin/project-* repos that exist specifically to keep real
+# financial/personal data isolated from any AI pipeline (AGENT.md
+# "Business-administration data", SYS-ADR-07). Found via a full automation
+# audit: the global hook (a separate, already-diverged copy at
+# ~/Foundry/.githooks/post-commit) had this exact gap and was fixed
+# directly 2026-09-14 -- but that global-hook fix lives only on disk
+# (gitignored, no git history), so if a fresh provisioning ever regenerates
+# the global hook FROM this template instead, the fix would be silently
+# lost. Ported here for that reason. Skip by resolved real path
+# (readlink -f), not string-matching, since business-admin/ is itself a
+# symlink to a separate physical disk.
+REPO_TOPLEVEL=$(git rev-parse --show-toplevel 2>/dev/null)
+BUSINESS_ADMIN_REAL=$(readlink -f "${FOUNDRY_ROOT:-/srv/foundry}/business-admin" 2>/dev/null)
+if [ -n "$REPO_TOPLEVEL" ] && [ -n "$BUSINESS_ADMIN_REAL" ]; then
+    REPO_REAL=$(readlink -f "$REPO_TOPLEVEL" 2>/dev/null)
+    case "$REPO_REAL" in
+        "$BUSINESS_ADMIN_REAL"/*) exit 0 ;;
+    esac
+fi
+
 DIFF_FILE=$(mktemp)
 git diff HEAD~1 HEAD --unified=3 > "$DIFF_FILE" 2>/dev/null || git show HEAD --unified=3 > "$DIFF_FILE" 2>/dev/null
 
