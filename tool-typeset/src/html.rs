@@ -25,9 +25,22 @@ pub fn render_html(doc: &Doc) -> String {
     };
     // HTML has no page concept to swap width/height on the way pdf.rs's
     // Layout::new does -- the print-time page-size hint is the equivalent.
-    if doc.page.landscape {
-        css.push_str("\n@media print { @page { size: landscape; } }\n");
-    }
+    // Always emitted (not just for landscape) so a printed/PDF'd report gets an
+    // explicit, sane page setup instead of silently inheriting whatever the
+    // browser's own print defaults happen to be -- real gap found on the demo's
+    // report viewer (BRIEF-app-privategit-construction-demo-input-redesign.md
+    // decision 4): reports get printed daily/weekly onto job-shack ring-
+    // clipboards, and `body`'s own screen-only centered `max-width`/`margin`
+    // (see STYLE below) would otherwise fight the page's print margin, wasting
+    // space instead of using the full printable width.
+    let page_size = if doc.page.landscape {
+        "landscape"
+    } else {
+        "portrait"
+    };
+    css.push_str(&format!(
+        "\n@media print {{\n  @page {{ size: {page_size}; margin: 0.6in; }}\n  body {{ max-width: none; margin: 0; }}\n}}\n"
+    ));
     let body_class = match doc.page.register {
         Register::WorkingDocument => "working-document",
         Register::FormalStatement => "formal-statement",
@@ -651,6 +664,21 @@ mod tests {
             landscape.contains("@media print") && landscape.contains("size: landscape"),
             "expected a print page-size hint when landscape is set"
         );
+    }
+
+    #[test]
+    fn every_doc_gets_an_explicit_portrait_print_page_size_and_sane_margins_by_default() {
+        // Real gap this guards: before this, only landscape docs got any explicit print @page
+        // hint at all -- an ordinary (portrait) report silently inherited whatever the browser's
+        // own print defaults happened to be. Every report a typical crate consumer prints
+        // (status reports, payroll registers, capital call requests, etc.) is portrait, so this
+        // is the common case, not the edge case.
+        let html = render_html(&doc(Register::WorkingDocument, vec![]));
+        assert!(html.contains("@media print"));
+        assert!(html.contains("@page { size: portrait; margin: 0.6in; }"));
+        // The screen-only centered max-width/margin must not survive into print -- it would
+        // fight the page's own margin and waste printable width on a physical page.
+        assert!(html.contains("body { max-width: none; margin: 0; }"));
     }
 
     #[test]
