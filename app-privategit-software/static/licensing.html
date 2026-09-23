@@ -1,0 +1,160 @@
+<!--
+  SPDX-License-Identifier: FSL-1.1-ALv2
+  SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+-->
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Licensing — PointSav Software</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<meta name="description" content="Software license terms for PointSav products — Proprietary, FSL-1.1-ALv2, AGPL-3.0-or-later + PointSav Commercial, and Apache-2.0 tiers, one-time USDC purchases with no recurring charge.">
+<link rel="canonical" href="https://software.pointsav.com/licensing">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PointSav Software">
+<meta property="og:title" content="Licensing — PointSav Software">
+<meta property="og:description" content="Software license terms for PointSav products — Proprietary, FSL-1.1-ALv2, AGPL-3.0-or-later + PointSav Commercial, and Apache-2.0 tiers, one-time USDC purchases with no recurring charge.">
+<meta property="og:url" content="https://software.pointsav.com/licensing">
+<meta property="og:image" content="https://software.pointsav.com/static/og-default.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Licensing — PointSav Software">
+<meta name="twitter:description" content="Software license terms for PointSav products — Proprietary, FSL-1.1-ALv2, AGPL-3.0-or-later + PointSav Commercial, and Apache-2.0 tiers, one-time USDC purchases with no recurring charge.">
+<meta name="twitter:image" content="https://software.pointsav.com/static/og-default.png">
+</head>
+<body>
+<main class="sw-legal">
+<h1>Licensing</h1>
+<p>
+PointSav distributes pre-compiled binaries under four license tiers, one per product family. All
+are one-time purchases in native USDC on the Polygon network — there is no subscription, and no
+recurring charge for continued use of a binary you have already purchased. Every product is
+priced at $0 during the current BETA period, regardless of which tier applies — tier governs the
+rights you hold, not what's charged today.
+</p>
+
+<h2 id="proprietary">Proprietary</h2>
+<p>
+This tier applies to <code>os-orchestration</code> and its <code>app-orchestration-*</code>
+surfaces — permanently, no source grant. It's PointSav's stated commercial moat: a solo Totebox
+deployment is free forever, and aggregation or resale requires a separate commercial agreement.
+</p>
+
+<h2 id="fsl">FSL-1.1-ALv2</h2>
+<p>
+The Functional Source License, version 1.1, with an Apache-2.0 future grant. The source for every
+release is published immediately and readable by anyone — inspect it, audit it, build it yourself.
+What FSL restricts for two years from each release is competing use: standing up the software as
+a product or service that competes with what PointSav sells. Internal use, non-competing use, and
+modification for your own purposes are unrestricted from day one.
+</p>
+<p>
+Two years after each specific release, that release automatically converts to Apache-2.0 —
+permanently, with no further action from PointSav required. Nothing is retroactively restricted:
+once a version converts, it stays converted, even if a later release's own two-year window is
+still open.
+</p>
+<p>
+This is the current tier for products PointSav intends to move toward a more permissive license —
+the source dependencies that currently pull them into the AGPL tier below are still being removed;
+until that work lands, FSL is the accurate, real state of the code, not a placeholder.
+</p>
+<p>
+<strong>On license keys.</strong> Products in this tier require a license key to download the
+official signed binary, for the same reason as the AGPL tier below — the key governs the build and
+its distribution, not your right to read or build the source, which FSL grants unconditionally from
+publication.
+</p>
+<p>
+This tier covers the self-hosted distribution stack (<code>os-privategit</code> and the
+<code>app-privategit-*</code> surfaces — the same software this storefront runs on) and
+<code>os-totebox</code>, the self-hosted data archive appliance.
+</p>
+
+<h2 id="agpl">AGPL-3.0-or-later + PointSav Commercial (dual license)</h2>
+<p>
+Most of what PointSav ships is licensed under the GNU Affero General Public License, version 3
+or later, with a commercial license available as an alternative — you choose which terms you
+operate under. The source is public, forkable, and buildable by anyone, at no cost, indefinitely.
+AGPL asks one thing in return: if you modify the software and run it as a network service other
+people reach, you must publish your modified source under the same terms. Running it unmodified,
+or modifying it for purely internal use, carries no such obligation.
+</p>
+<p>
+The commercial license exists for the case where that obligation does not fit — embedding the
+code in a product you will not open-source, operating a modified version as a service for third
+parties without publishing your changes, or redistributing the binary under your own name. It
+replaces the AGPL copyleft term with a conventional grant and adds official signed builds and
+commercial redistribution rights. It changes what you owe; it does not change the code you receive.
+</p>
+<p>
+<strong>On license keys.</strong> Most products in this tier require a license key to download the
+official signed binary. That key governs our build and its distribution, not the source: the AGPL
+grant stands on its own and is never conditional on holding one — you can always clone the
+repository and build the software yourself, at no cost. A key here is not a subscription either; it
+gates the download, not your continued use of a version you already hold.
+</p>
+<p>
+This tier covers <code>os-console</code>, the self-hosted pipeline terminal for Totebox
+Orchestration, the <code>tool-*</code> family of developer tools for accounting, construction,
+payroll, and payment workflows (including the Polygon USDC payment watcher this site's own
+checkout runs on), and the shared <code>service-*</code> and <code>system-*</code> crates those
+products are built from.
+</p>
+
+<h2 id="apache">Apache-2.0</h2>
+<p>
+Apache-2.0, unconditionally. Everything in this tier is free — not free during a BETA period,
+not free until a version bump. Fork it, modify it, embed it in a commercial product, redistribute
+it with or without your changes, at no cost. Attribution and the license text are the only
+conditions, and the Apache-2.0 patent grant travels with the code. A published Apache-2.0 release
+cannot be withdrawn: the version you hold stays Apache-2.0 permanently.
+</p>
+<p>
+<strong>No purchase is required — a license key is still issued.</strong> Claiming a product in
+this tier issues a real, signed key immediately and at no cost: no payment details, no account
+beyond the claim itself. Every binary we distribute, free or paid, travels through the same
+signing and verification pipeline, and the key is how a download proves what it is. It gates
+nothing you can't also get by building from source.
+</p>
+<p>
+This tier covers <code>os-mediakit</code> and the <code>app-mediakit-*</code> family, the
+self-hosted wiki engine and its companion applications; the <code>moonshot-*</code> crates —
+PointSav's foundational and experimental work across the kernel, hypervisor, database, network,
+and protocol layers; the PointSav design system; and the BIM component library.
+</p>
+
+<h2>What a purchase includes</h2>
+<p>
+A purchase is a one-time transaction for the version you buy. There are no subscriptions and no
+ongoing service commitment — you download the binary, and it is yours to run indefinitely. A
+license's update-channel window has an expiry date that governs whether that specific purchase
+still qualifies for newer version downloads; it never blocks or revokes your ability to keep
+running a version you have already downloaded. Purchasing a later version, when you want one, is
+a separate transaction at the same tier price.
+</p>
+
+<h2>Source availability</h2>
+<p>
+All licensed source code referenced above is published and version-controlled at
+<a href="https://github.com/pointsav/pointsav-monorepo">github.com/pointsav/pointsav-monorepo</a>,
+satisfying network-service source-availability obligations for any AGPL-licensed components in
+this stack.
+</p>
+
+<h2>Tax</h2>
+<p>
+PointSav Digital Systems currently operates below the CAD 30,000 GST small-supplier threshold and
+does not collect GST, HST, or any other sales tax on purchases made through this site.
+</p>
+
+<h2>Full terms</h2>
+<p>
+See the <a href="/page/disclaimer">Disclaimer</a> for the complete risk disclosure covering
+on-chain USDC payment (including its irreversibility) and the software-license-only nature of
+every product sold here.
+</p>
+</main>
+</body>
+</html>

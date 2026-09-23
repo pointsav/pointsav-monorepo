@@ -1,0 +1,173 @@
+<!--
+  SPDX-License-Identifier: FSL-1.1-ALv2
+  SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+-->
+
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Licencias — PointSav Software</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<meta name="description" content="Términos de licencia de software para los productos de PointSav — niveles Proprietary, FSL-1.1-ALv2, AGPL-3.0-or-later + PointSav Commercial y Apache-2.0, compras únicas en USDC sin cargo recurrente.">
+<link rel="canonical" href="https://software.pointsav.com/es/licensing">
+<link rel="alternate" hreflang="en" href="https://software.pointsav.com/licensing">
+<link rel="alternate" hreflang="es" href="https://software.pointsav.com/es/licensing">
+<link rel="alternate" hreflang="x-default" href="https://software.pointsav.com/licensing">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PointSav Software">
+<meta property="og:title" content="Licencias — PointSav Software">
+<meta property="og:description" content="Términos de licencia de software para los productos de PointSav — niveles Proprietary, FSL-1.1-ALv2, AGPL-3.0-or-later + PointSav Commercial y Apache-2.0, compras únicas en USDC sin cargo recurrente.">
+<meta property="og:url" content="https://software.pointsav.com/es/licensing">
+<meta property="og:image" content="https://software.pointsav.com/static/og-default.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Licencias — PointSav Software">
+<meta name="twitter:description" content="Términos de licencia de software para los productos de PointSav — niveles Proprietary, FSL-1.1-ALv2, AGPL-3.0-or-later + PointSav Commercial y Apache-2.0, compras únicas en USDC sin cargo recurrente.">
+<meta name="twitter:image" content="https://software.pointsav.com/static/og-default.png">
+</head>
+<body>
+<main class="sw-legal">
+<h1>Licencias</h1>
+<p>
+PointSav distribuye binarios precompilados bajo cuatro niveles de licencia, uno por
+familia de producto. Todas son compras únicas en USDC nativo sobre la red Polygon — no hay
+suscripción ni cargo recurrente por seguir usando un binario ya comprado. Todos los productos
+tienen actualmente un precio de $0 durante la fase BETA, sin importar el nivel aplicable — el
+nivel determina los derechos que usted posee, no lo que se cobra hoy.
+</p>
+
+<h2 id="proprietary">Proprietary</h2>
+<p>
+Este nivel aplica a <code>os-orchestration</code> y sus superficies <code>app-orchestration-*</code> — de
+forma permanente, sin concesión de código fuente. Es el resguardo comercial declarado de
+PointSav: una implementación Totebox individual es gratuita para siempre, y la agregación o
+reventa requiere un acuerdo comercial independiente.
+</p>
+
+<h2 id="fsl">FSL-1.1-ALv2</h2>
+<p>
+La Functional Source License, versión 1.1, con una concesión futura a Apache-2.0. El código fuente
+de cada versión se publica de inmediato y cualquiera puede leerlo — inspeccionarlo, auditarlo,
+compilarlo usted mismo. Lo que FSL restringe durante dos años desde cada versión es el uso
+competidor: poner en marcha el software como un producto o servicio que compita con lo que
+PointSav vende. El uso interno, el uso no competidor y la modificación para fines propios no
+tienen restricción alguna desde el primer día.
+</p>
+<p>
+Dos años después de cada versión específica, esa versión se convierte automáticamente a
+Apache-2.0 — de forma permanente, sin que PointSav deba hacer nada más. Nada se restringe
+retroactivamente: una vez que una versión se convierte, permanece convertida, incluso si la
+ventana de dos años de una versión posterior sigue abierta.
+</p>
+<p>
+Este es el nivel actual de los productos que PointSav pretende llevar a una licencia más
+permisiva — las dependencias de código fuente que hoy los sitúan en el nivel AGPL de abajo
+todavía se están eliminando; hasta que ese trabajo concluya, FSL es el estado real y preciso
+del código, no un marcador temporal.
+</p>
+<p>
+<strong>Sobre las claves de licencia.</strong> Los productos de este nivel requieren una clave de
+licencia para descargar el binario oficial firmado, por la misma razón que el nivel AGPL de
+abajo — la clave rige la compilación y su distribución, no su derecho a leer o compilar el
+código fuente, que FSL concede sin condiciones desde el momento de la publicación.
+</p>
+<p>
+Este nivel abarca la plataforma de distribución autoalojada (<code>os-privategit</code> y las
+superficies <code>app-privategit-*</code> — el mismo software sobre el que corre esta tienda) y
+<code>os-totebox</code>, el dispositivo de archivo de datos autoalojado.
+</p>
+
+<h2 id="agpl">AGPL-3.0-or-later + PointSav Commercial (licencia dual)</h2>
+<p>
+La mayor parte de lo que PointSav distribuye está licenciado bajo la GNU Affero General Public
+License, versión 3 o posterior, con una licencia comercial disponible como alternativa — usted
+elige bajo qué términos opera. El código fuente es público, se puede bifurcar y compilar
+libremente por cualquiera, sin costo, de forma indefinida. AGPL pide una sola cosa a cambio: si
+usted modifica el software y lo ejecuta como un servicio de red al que otras personas acceden,
+debe publicar su código fuente modificado bajo los mismos términos. Ejecutarlo sin modificar, o
+modificarlo para uso puramente interno, no conlleva esa obligación.
+</p>
+<p>
+La licencia comercial existe para el caso en que esa obligación no se ajusta a sus necesidades —
+incorporar el código en un producto que no hará de código abierto, operar una versión modificada
+como servicio para terceros sin publicar sus cambios, o redistribuir el binario bajo su propio
+nombre. Sustituye el término copyleft de AGPL por una concesión convencional y añade
+compilaciones oficiales firmadas y derechos de redistribución comercial. Cambia lo que usted
+debe; no cambia el código que recibe.
+</p>
+<p>
+<strong>Sobre las claves de licencia.</strong> La mayoría de los productos de este nivel requieren
+una clave de licencia para descargar el binario oficial firmado. Esa clave rige nuestra
+compilación y su distribución, no el código fuente: la concesión de AGPL se sostiene por sí sola
+y nunca depende de tener una — siempre puede clonar el repositorio y compilar el software usted
+mismo, sin costo. Una clave aquí tampoco es una suscripción; controla la descarga, no su uso
+continuado de una versión que ya posee.
+</p>
+<p>
+Este nivel abarca <code>os-console</code>, la terminal del pipeline autoalojada para Totebox
+Orchestration, la familia <code>tool-*</code> de herramientas para desarrolladores de
+contabilidad, construcción, nómina y flujos de pago (incluido el vigilante de pagos en USDC de
+Polygon sobre el que corre el propio checkout de este sitio), y los crates compartidos
+<code>service-*</code> y <code>system-*</code> a partir de los cuales se construyen esos
+productos.
+</p>
+
+<h2 id="apache">Apache-2.0</h2>
+<p>
+Apache-2.0, sin condiciones. Todo en este nivel es gratuito — no gratuito durante una fase BETA,
+no gratuito hasta el próximo salto de versión. Bifúrquelo, modifíquelo, incorpórelo en un
+producto comercial, redistribúyalo con o sin sus cambios, sin costo. La atribución y el texto de
+la licencia son las únicas condiciones, y la concesión de patentes de Apache-2.0 viaja con el
+código. Una versión publicada bajo Apache-2.0 no puede retirarse: la versión que usted posee
+permanece Apache-2.0 de forma permanente.
+</p>
+<p>
+<strong>No se requiere compra — aun así se emite una clave de licencia.</strong> Reclamar un
+producto de este nivel emite una clave real y firmada de inmediato y sin costo: sin datos de
+pago, sin cuenta más allá del propio reclamo. Todo binario que distribuimos, gratuito o de pago,
+pasa por el mismo proceso de firma y verificación, y la clave es cómo una descarga demuestra lo
+que es. No restringe nada que usted no pueda obtener también compilando desde el código fuente.
+</p>
+<p>
+Este nivel abarca <code>os-mediakit</code> y la familia <code>app-mediakit-*</code>, el motor de
+wiki autoalojado y sus aplicaciones complementarias; los crates <code>moonshot-*</code> — el
+trabajo fundacional y experimental de PointSav en las capas de kernel, hipervisor, base de datos,
+red y protocolo; el sistema de diseño de PointSav; y la biblioteca de componentes de BIM.
+</p>
+
+<h2>Qué incluye una compra</h2>
+<p>
+Una compra es una transacción única para la versión que adquiere. No hay suscripciones ni
+compromiso de servicio continuo — usted descarga el binario, y es suyo para ejecutar
+indefinidamente. La ventana del canal de actualización de una licencia tiene una fecha de
+vencimiento que determina si esa compra específica sigue calificando para descargar versiones
+más nuevas; nunca bloquea ni revoca su capacidad de seguir ejecutando una versión que ya
+descargó. Comprar una versión posterior, cuando lo desee, es una transacción independiente al
+mismo precio de nivel.
+</p>
+
+<h2>Disponibilidad del código fuente</h2>
+<p>
+Todo el código fuente licenciado mencionado arriba está publicado y bajo control de versiones en
+<a href="https://github.com/pointsav/pointsav-monorepo">github.com/pointsav/pointsav-monorepo</a>,
+satisfaciendo las obligaciones de disponibilidad de código fuente de servicios de red para
+cualquier componente licenciado bajo AGPL en esta plataforma.
+</p>
+
+<h2>Impuestos</h2>
+<p>
+PointSav Digital Systems opera actualmente por debajo del umbral de pequeño proveedor de GST de
+CAD 30,000 y no cobra GST, HST, ni ningún otro impuesto sobre las ventas realizadas a través de
+este sitio.
+</p>
+
+<h2>Términos completos</h2>
+<p>
+Consulte el <a href="/page/disclaimer">Aviso legal</a> (en inglés) para la divulgación completa
+de riesgos sobre el pago en USDC en cadena (incluida su irreversibilidad) y la naturaleza de
+"solo licencia de software" de cada producto vendido aquí.
+</p>
+</main>
+</body>
+</html>

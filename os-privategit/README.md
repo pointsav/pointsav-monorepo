@@ -19,8 +19,8 @@ services:
 
 | Service | Port | Role |
 |---|---|---|
-| `app-privategit-marketplace` | 9202 | Storefront — product catalog, payment verification, license issuance |
-| `app-privategit-source` | 9201 | Binary release server — authenticated downloads, Ed25519 token verification |
+| `app-privategit-software` | 9202 | Storefront — product catalog, payment verification, license issuance |
+| `app-privategit-release` | 9201 | Binary release server — authenticated downloads, Ed25519 token verification |
 | `tool-wallet` | — | Polygon USDC payment watcher — receipt writer, HD address derivation |
 
 This is the primary customer-facing distributable. Small business operators deploy

@@ -15,7 +15,7 @@ tool-wallet watches eth_getLogs for Transfer events to POLYGON_WALLET_ADDRESS
         ↓
 Confirmed transfer → LicenseReceipt written to service-fs WORM ledger
         ↓
-app-privategit-marketplace looks up receipt → issues license key + signed binary URL
+app-privategit-software looks up receipt → issues license key + signed binary URL
         ↓
 service-bookkeeper (project-bookkeeping) reads receipt → Dr Wallet/USDC Cr Revenue/Software-Sales
 ```

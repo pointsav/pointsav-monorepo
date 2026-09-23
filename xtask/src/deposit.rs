@@ -87,7 +87,7 @@ const USAGE: &str =
     "usage: xtask deposit --product <id> --version <v> --binary <path> --platform <slug>\n  \
     [--releases-dir <dir>] [--catalog <path/to/products.yaml>] [--sig <path>]\n  \
     [--source-commit <sha>] [--requires-license true|false] [--path-scheme fixed|latest-alias]\n  \
-    [--create-entry --name <s> --description <s> --license-tier commercial|fsl \\\n  \
+    [--create-entry --name <s> --description <s> --license-tier proprietary|fsl|agpl|apache \\\n  \
                     --price-usdc <int> --platform-label <s> --size-mb <int>]\n  \
     [--force] [--dry-run]";
 
@@ -223,8 +223,8 @@ fn parse_args(args: &[String]) -> Result<DepositArgs, String> {
     let releases_dir = releases_dir
         .or_else(|| std::env::var("RELEASES_DIR").ok().map(PathBuf::from))
         .unwrap_or_else(|| PathBuf::from("/var/lib/local-software/releases"));
-    let catalog = catalog
-        .unwrap_or_else(|| PathBuf::from("app-privategit-marketplace/catalog/products.yaml"));
+    let catalog =
+        catalog.unwrap_or_else(|| PathBuf::from("app-privategit-software/catalog/products.yaml"));
 
     let create_entry = if create_entry_requested {
         Some(NewEntry {
@@ -236,9 +236,9 @@ fn parse_args(args: &[String]) -> Result<DepositArgs, String> {
                 let t = license_tier.ok_or(format!(
                     "deposit: --create-entry requires --license-tier\n{USAGE}"
                 ))?;
-                if t != "commercial" && t != "fsl" {
+                if t != "proprietary" && t != "fsl" && t != "agpl" && t != "apache" {
                     return Err(format!(
-                        "deposit: --license-tier must be 'commercial' or 'fsl', got '{t}'"
+                        "deposit: --license-tier must be 'proprietary', 'fsl', 'agpl', or 'apache', got '{t}'"
                     ));
                 }
                 t

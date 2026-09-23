@@ -1,0 +1,365 @@
+# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+installers:
+  # os-console RE-ADDED 2026-08-06 — the leaking install.sh removed 2026-07-12 is a
+  # genuinely different mechanism (a native-binary + SSH-tunnel-back architecture),
+  # confirmed gone from RELEASES_DIR before this re-add. This entry is the new,
+  # separate seL4-hosted terminal (F11 pairing + pty relay), install.sh rewritten
+  # and tested against the real /releases/:product/:version/:platform scheme
+  # (project-totebox commit 902101713). Linux only for now — macOS/Windows are real,
+  # separately-blocked follow-ups (Apple hardware access; missing mingw-w64 glib2.0-dev
+  # packages), noted in facts below rather than as fake platform rows.
+  - id: os-console
+    name: The Operator's Console
+    description: Self-hosted pipeline terminal for Totebox Orchestration — F11-paired, seL4-hosted pty relay to a remote archive
+    edition: "0.1.0"
+    platform: "Linux x86_64 (macOS, Windows coming soon)"
+    size_mb: 88
+    path: os-console/0.1.0
+    license_tier: agpl
+    price_usdc: 0
+    tier: delivery
+    family: totebox_orchestration
+    becomes: "Turns a machine into your isolated terminal for a paired archive."
+    facts:
+      - label: "ISOLATION"
+        value: "seL4-hosted from line one — the boundary is the start, not a retrofit"
+      - label: "ENFORCES"
+        value: "Who can touch what, by architecture, not operator discipline"
+      - label: "PLATFORMS"
+        value: "Linux ready now; macOS + Windows coming soon"
+
+  # os-network-admin REMOVED 2026-08-03 — confirmed a placeholder, not real software.
+  # Its "Mesh Orchestration & Routing Authority / provisioning authorisation" catalog
+  # description was aspirational; the actual deposited binary's source is a 29-line
+  # hardcoded UDP poller pinging a specific personal-hardware IP ("Laptop B"),
+  # unrelated to any real network-admin function. Operator-confirmed retired/never a
+  # real product. Not re-adding unless it's actually rebuilt into real software.
+
+  - id: app-orchestration-command
+    name: PointSav Orchestration Command Server
+    description: Bootable seL4/Microkit appliance — invite-token pairing and fleet API hub for Totebox Orchestration, bundling a full GPU/model-brokering instance as its own managed child process
+    edition: "0.1.0"
+    platform: "aarch64 (seL4/Microkit appliance)"
+    size_mb: 108
+    path: app-orchestration-command/0.1.0
+    license_tier: proprietary
+    price_usdc: 0
+    platform_slug: aarch64-unknown-linux-gnu
+    tier: platform
+    family: totebox_orchestration
+    becomes: "Turns a machine into your fleet's command server — with a working AI broker built in."
+    facts:
+      - label: "RUNS AS"
+        value: "Bootable appliance image, aarch64 under QEMU"
+      - label: "SERVES"
+        value: "Fleet invite-token pairing + archive API, plus a bundled GPU/model broker"
+      - label: "USED BY"
+        value: "project-command and project-orchestration today"
+    bundled_registry_products: [app-orchestration-slm]
+    artifact: appliance_image
+    boot_notes: |
+      This ships as a bootable seL4/Microkit/libvmm appliance image (loader.img), not
+      a regular Linux binary — boot it under QEMU rather than running it directly.
+
+      This is a consolidated image: the guest runs the fleet command server as the
+      managed service, which spawns and supervises a full GPU/model-broker instance
+      as its own child process — one boot gives you both.
+
+      Real qemu invocation (adapt paths to wherever you place the downloaded image):
+
+        qemu-system-aarch64 \
+          -machine virt,virtualization=on,secure=off \
+          -cpu cortex-a53 \
+          -serial mon:stdio \
+          -device loader,file=./aarch64-unknown-linux-gnu,addr=0x70000000,cpu-num=0 \
+          -m size=2G \
+          -nographic \
+          -global virtio-mmio.force-legacy=false \
+          -drive file=./blk_storage,format=raw,if=none,id=hd \
+          -device virtio-blk-device,drive=hd,bus=virtio-mmio-bus.1 \
+          -device virtio-net-device,netdev=netdev0,bus=virtio-mmio-bus.0 \
+          -netdev user,id=netdev0,hostfwd=tcp::8020-:8020,hostfwd=tcp::9180-:9180
+
+      This runs under TCG software emulation (no KVM/hardware-virt required — works
+      on any host, including non-aarch64 hosts, but slower than native).
+
+      Before first boot, create the data disk file referenced above — QEMU will not
+      start without it:
+
+        qemu-img create -f raw blk_storage 2G
+
+      The guest formats this disk to ext4 itself automatically on first boot if it's
+      blank, then mounts it directly on every later boot — your data genuinely
+      persists across restarts as long as you keep reusing the same blk_storage file.
+
+      Once booted, the command server is reachable at http://127.0.0.1:8020 and the
+      bundled broker at http://127.0.0.1:9180 on the host (both forwarded from the
+      guest).
+
+      Known limitation: there is no supported host-side graceful shutdown for this
+      image today — stopping the VM (Ctrl-C, kill, or equivalent) hard-kills the
+      emulator process; there is no in-guest ACPI/power-button path to receive a
+      shutdown request from the host side. Avoid stopping the VM while writes are
+      actively in flight if you can avoid it.
+
+  - id: app-mediakit-knowledge
+    name: PointSav Knowledge Wiki
+    description: Self-hosted Wikipedia-pattern wiki engine — documentation, projects, and corporate instances
+    edition: "0.1.0"
+    platform: "x86_64-unknown-linux-gnu"
+    size_mb: 259
+    path: app-mediakit-knowledge/0.1.0
+    license_tier: apache
+    price_usdc: 0
+    platform_slug: linux-x86_64-qcow2
+    tier: delivery
+    family: independent
+    becomes: "Turns a machine into your organisation's wiki."
+    facts:
+      - label: "RUNS AS"
+        value: "qcow2 disk image, boots under QEMU"
+      - label: "SERVES"
+        value: "Web wiki on port 9090, forwarded to your host"
+      - label: "PERSISTENCE"
+        value: "All state in the one file you downloaded (copy-on-write)"
+    artifact: appliance_image
+    boot_notes: |
+      This ships as a self-contained qcow2 disk image, not a regular Linux binary —
+      boot it under QEMU rather than running it directly.
+
+        qemu-system-x86_64 \
+          -m 2G \
+          -drive file=./linux-x86_64-qcow2,format=qcow2 \
+          -netdev user,id=net0,hostfwd=tcp::9090-:9090 \
+          -device virtio-net-pci,netdev=net0 \
+          -nographic
+
+      Add -enable-kvm if your host supports hardware virtualization (Linux host with
+      /dev/kvm) for near-native speed; omit it to fall back to software emulation.
+
+      The wiki engine binds to 127.0.0.1:9090 inside the guest by default (its own
+      WIKI_BIND setting) — the hostfwd above forwards that to the same port on your
+      host. Once booted, reach it at http://127.0.0.1:9090.
+
+      Unlike the seL4 appliance images in this catalog, this is a standard qcow2
+      image with no separate data-disk step — all state lives in the one file you
+      downloaded, and qcow2's own copy-on-write format handles persistence across
+      restarts natively.
+
+  - id: os-totebox
+    name: PointSav Self-Hosted Data Archive
+    description: Bootable seL4/Microkit appliance — self-hosted DataGraph store, corpus ingestion, and audit ledger, operating standalone regardless of orchestration reachability
+    edition: "0.1.0"
+    platform: "aarch64 (seL4/Microkit appliance)"
+    size_mb: 115
+    path: os-totebox/0.1.0
+    license_tier: fsl
+    price_usdc: 0
+    platform_slug: aarch64-unknown-linux-gnu
+    tier: platform
+    family: totebox_orchestration
+    becomes: "Turns a machine into one asset's sealed archive."
+    facts:
+      - label: "RUNS AS"
+        value: "Bootable appliance image, aarch64 under QEMU"
+      - label: "ISOLATION"
+        value: "seL4/Microkit microkernel — no host OS in the trust path"
+      - label: "PERSISTENCE"
+        value: "Own 2 GiB ext4 data disk, formatted on first boot"
+    artifact: appliance_image
+    boot_notes: |
+      This ships as a bootable seL4/Microkit/libvmm appliance image (loader.img), not
+      a regular Linux binary — boot it under QEMU rather than running it directly.
+
+      Real qemu invocation (adapt paths to wherever you place the downloaded image):
+
+        qemu-system-aarch64 \
+          -machine virt,virtualization=on,secure=off \
+          -cpu cortex-a53 \
+          -serial mon:stdio \
+          -device loader,file=./aarch64-unknown-linux-gnu,addr=0x70000000,cpu-num=0 \
+          -m size=2G \
+          -nographic \
+          -global virtio-mmio.force-legacy=false \
+          -drive file=./blk_storage,format=raw,if=none,id=hd \
+          -device virtio-blk-device,drive=hd,bus=virtio-mmio-bus.1 \
+          -device virtio-net-device,netdev=netdev0,bus=virtio-mmio-bus.0 \
+          -netdev user,id=netdev0,hostfwd=tcp::9080-:9080
+
+      This runs under TCG software emulation (no KVM/hardware-virt required — works
+      on any host, including non-aarch64 hosts, but slower than native).
+
+      Before first boot, create the data disk file referenced above — QEMU will not
+      start without it:
+
+        qemu-img create -f raw blk_storage 2G
+
+      (2 GiB is a real operational minimum, not a placeholder — the upstream example
+      tooling defaults to 16 MiB, which is a scratch/demo size that fills up almost
+      immediately under real use.) The guest formats this disk to ext4 itself
+      automatically on first boot if it's blank, then mounts it directly on every
+      later boot — your data genuinely persists across restarts as long as you keep
+      reusing the same blk_storage file. Do not delete or replace it between boots if
+      you want to keep what's on it.
+
+      Once booted, the appliance's external-facing surface is reachable at
+      http://127.0.0.1:9080 on the host (forwarded from the guest).
+
+      Known limitation: there is no supported host-side graceful shutdown for this
+      image today — stopping the VM (Ctrl-C, kill, or equivalent) hard-kills the
+      emulator process; there is no in-guest ACPI/power-button path to receive a
+      shutdown request from the host side. Avoid stopping the VM while writes are
+      actively in flight if you can avoid it.
+
+  # os-privategit ADDED 2026-08-06 — confirmed a genuinely independent product
+  # (self-hostable storefront, no Totebox Orchestration dependency), separate from
+  # app-privategit-design (a sibling "privategit"-branded product, not a dependency
+  # relationship — see the structural-tension thread this session,
+  # command-20260806-app-privategit-design-os-privategit-need). Boot-verified before
+  # listing: the deployed 0.1.0 binary runs cleanly and reports its real product
+  # identity + license-gate status, not just present-on-disk. Its own README still
+  # says "Engineering scaffold (pending engineering cycle)" — honest about that in
+  # facts below rather than overselling readiness.
+  #
+  # bundled_registry_products briefly gained app-privategit-workbench 2026-08-25
+  # (commit 23f5fbddc), reverted same day once actually trying to ship it live
+  # showed the gating didn't hold up: os-privategit's real binary is a 34-line
+  # license-check stub, not the "full-stack installer" its own description implies —
+  # not something that should be the entitlement vehicle for someone else's real
+  # product. app-privategit-workbench now ships as its own standalone listing below
+  # instead, matching project-workplace's original request. os-privategit itself
+  # stays out of this — no publish, no description change.
+  - id: os-privategit
+    name: PointSav PrivateGit OS
+    description: Self-hosted software distribution stack — deploys app-privategit-software, app-privategit-release, and tool-wallet on your own hardware, so you can run your own storefront without routing source or payment through a third party
+    edition: "0.1.0"
+    platform: "Linux x86_64"
+    size_mb: 1
+    path: os-privategit/0.1.0
+    license_tier: fsl
+    price_usdc: 0
+    platform_slug: x86_64-unknown-linux-gnu
+    tier: platform
+    family: independent
+    becomes: "Turns a machine into your own self-hosted software storefront."
+    facts:
+      - label: "RUNS AS"
+        value: "Native Linux binary, systemd-managed service"
+      - label: "SERVES"
+        value: "Your own storefront, on hardware you control — no third-party routing"
+      - label: "STATUS"
+        value: "Early build — license-gate and activation flow live; full stack packaging in progress"
+
+  # app-privategit-workbench ADDED 2026-08-26 — standalone, free, no-gate listing per
+  # project-workplace's original handoff (msg-id project-workplace-20260825-binary-
+  # handoff-app-privategit-workbench-) and operator decision, reversing the same-day
+  # registry-gated approach above. Binary rebuilt this session to strip 180 embedded
+  # /home/jennifer/... build-path leaks found via direct `strings` scan before this
+  # entry was written — see NEXT.md / commit history for the rebuild + redeposit
+  # coordination with Command.
+  - id: app-privategit-workbench
+    name: PointSav PrivateGit Workbench
+    description: Self-hosted browser-based developer file tool — tree/viewer/editor, search, git-status badges, zip download, PDF export, running on your own infrastructure
+    edition: "0.1.0-beta"
+    platform: "Linux x86_64"
+    size_mb: 2
+    path: app-privategit-workbench/0.1.0-beta
+    license_tier: fsl
+    price_usdc: 0
+    platform_slug: x86_64-unknown-linux-gnu
+    tier: delivery
+    family: independent
+    becomes: "Turns a machine into your team's shared file workbench."
+    facts:
+      - label: "RUNS AS"
+        value: "Native Linux binary, config.toml-driven"
+      - label: "SERVES"
+        value: "Tree/viewer/editor, search, git-status badges, zip download, PDF export"
+      - label: "STATUS"
+        value: "BETA — free download, no license required"
+
+  # app-privategit-design ADDED 2026-08-06 — confirmed a standalone, directly-sellable
+  # os-family SKU, same shape as app-orchestration-command (own bootable appliance, own
+  # deployment instance vault-privategit-design-1) — NOT registry-only under
+  # os-privategit, correcting an earlier framing this session (see the
+  # structural-tension thread, command-20260806-app-privategit-design-os-privategit-need
+  # / command-20260806-correction-to-finding-1-app-privategit-d). Boot-verified by
+  # project-design under real QEMU before handoff: guest kernel boots, mounts a
+  # persistent EXT4 data disk, app starts and logs "listening on 0.0.0.0:9094", clean
+  # SIGTERM shutdown.
+  - id: app-privategit-design
+    name: PointSav PrivateGit Design
+    description: Self-hosted design-system engine — token gallery, component docs, Writing/Paper content, and an on-prem MCP endpoint, running on your own infrastructure
+    edition: "0.1.0"
+    platform: "aarch64 (seL4/Microkit appliance)"
+    size_mb: 108
+    path: app-privategit-design/0.1.0
+    license_tier: fsl
+    price_usdc: 0
+    platform_slug: aarch64-unknown-linux-gnu
+    tier: delivery
+    family: independent
+    becomes: "Turns a machine into your organisation's design system."
+    facts:
+      - label: "RUNS AS"
+        value: "Bootable appliance image, aarch64 under QEMU"
+      - label: "SERVES"
+        value: "Design token gallery, component docs, and an on-prem MCP endpoint"
+      - label: "PERSISTENCE"
+        value: "Own EXT4 data disk — your tokens, your change history, your perimeter"
+    artifact: appliance_image
+    boot_notes: |
+      This ships as a bootable seL4/Microkit/libvmm appliance image (loader.img), not
+      a regular Linux binary — boot it under QEMU rather than running it directly.
+
+      Real qemu invocation (adapt paths to wherever you place the downloaded image):
+
+        qemu-system-aarch64 \
+          -machine virt,virtualization=on,secure=off \
+          -cpu cortex-a53 \
+          -serial mon:stdio \
+          -device loader,file=./aarch64-unknown-linux-gnu,addr=0x70000000,cpu-num=0 \
+          -m size=2G \
+          -nographic \
+          -global virtio-mmio.force-legacy=false \
+          -drive file=./blk_storage,format=raw,if=none,id=hd \
+          -device virtio-blk-device,drive=hd,bus=virtio-mmio-bus.1 \
+          -device virtio-net-device,netdev=netdev0,bus=virtio-mmio-bus.0 \
+          -netdev user,id=netdev0,hostfwd=tcp::9094-:9094
+
+      This runs under TCG software emulation (no KVM/hardware-virt required — works
+      on any host, including non-aarch64 hosts, but slower than native).
+
+      Before first boot, create the data disk file referenced above — QEMU will not
+      start without it:
+
+        qemu-img create -f raw blk_storage 2G
+
+      The guest formats this disk to ext4 itself automatically on first boot if it's
+      blank, then mounts it directly on every later boot — your data genuinely
+      persists across restarts as long as you keep reusing the same blk_storage file.
+
+      Once booted, the design engine is reachable at http://127.0.0.1:9094 on the
+      host (forwarded from the guest).
+
+      Known limitation: there is no supported host-side graceful shutdown for this
+      image today — stopping the VM (Ctrl-C, kill, or equivalent) hard-kills the
+      emulator process; there is no in-guest ACPI/power-button path to receive a
+      shutdown request from the host side. Avoid stopping the VM while writes are
+      actively in flight if you can avoid it.
+
+  # app-orchestration-slm REMOVED 2026-08-06 — os-* vs app-* storefront/registry
+  # doctrine (conventions/soft-distribution-pipeline.md §1, amended 2026-07-02): the
+  # public storefront sells os-* images only; app-*/service-* packages belong behind
+  # the license-key-gated app-privategit-source registry, not as independent
+  # storefront SKUs. SLM's functionality is now also bundled as a managed child
+  # process inside app-orchestration-command's own appliance image (see that entry
+  # above) — nothing about the SLM software changed, it's still real and still works,
+  # it's just not sold twice. Folded into the registry: a app-orchestration-command
+  # license key now also authorizes downloading app-orchestration-slm directly (see
+  # its bundled_registry_products: field below, and LicensePayload.entitled_products
+  # in app-privategit-software/app-privategit-release's main.rs) — its own
+  # RELEASES_DIR/app-orchestration-slm/MANIFEST.json now requires a license
+  # (requires_license: true) rather than serving it open.

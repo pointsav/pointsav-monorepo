@@ -1,0 +1,146 @@
+/* working-papers-print.css
+ * Shared browser-native print stylesheet for the /working-papers series,
+ * identical across all 6 sites. Owned by project-design; content-wise built
+ * from the real, proven techniques in financial-report-layout (this vault's
+ * WeasyPrint compliance-document recipe), adapted for browser-native
+ * window.print() + @media print rather than server-side PDF generation, and
+ * for prose/figure/occasional-table content rather than dense financial
+ * tables.
+ *
+ * Usage: link this file on every /working-papers page, in addition to the
+ * site's own normal stylesheet. It only takes effect inside @media print —
+ * it does not affect on-screen rendering and requires no other integration.
+ */
+
+@media print {
+  /* Real, load-bearing: without this, browsers strip background fills and
+     colors by default when printing, silently degrading any color-coded
+     content (the paper's tables, callouts, the masthead rule). This is the
+     single most commonly-missed print-CSS requirement. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  @page {
+    size: letter;
+    margin: 0.75in 0.85in;
+  }
+
+  /* Hide everything that is site chrome, not the paper itself. Each site's
+     own markup uses different class names for nav/footer/search/theme-toggle
+     — this list is deliberately broad (attribute + common-name matching)
+     rather than tied to one site's naming, so the same file works everywhere
+     without per-site editing. Add a site-specific selector here only if a
+     real chrome element survives after applying this file; do not maintain
+     a separate per-site copy for this. */
+  nav,
+  footer,
+  [class*="nav"],
+  [class*="breadcrumb"],
+  [class*="footer"],
+  [class*="theme-toggle"],
+  [class*="lang-switch"],
+  [class*="search"],
+  .no-print,
+  .working-papers-print-hide {
+    display: none !important;
+  }
+
+  body,
+  main,
+  article,
+  .working-papers-print-root {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* A working paper is read start to finish; a heading stranded at the
+     bottom of a page, orphaned from the section it introduces, is the
+     single most common print defect. Keep headings glued to what follows,
+     and keep tables/blockquotes/figures from splitting mid-block. */
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  table, blockquote, figure, pre, .working-papers-print-keep {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Some print engines re-resolve table layout at print time and silently
+     drop rules that are not re-asserted inside @media print itself — this
+     is a documented, non-obvious cross-engine gotcha (see
+     financial-report-layout's own recipe notes). Any /working-papers page
+     using a fixed table layout on screen must restate it here explicitly;
+     this generic rule covers the common case of a two-column claims/tests
+     table.
+  */
+  table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  table th, table td {
+    border: 1px solid #999;
+    padding: 4px 6px;
+    font-size: 10pt;
+  }
+
+  /* Deliberate manual escape hatches for a paper's own markup, e.g. forcing
+     the rigor block or an appendix to start on its own page. Never applied
+     automatically — the paper's own HTML opts in per element. */
+  .page-break-before {
+    break-before: page;
+    page-break-before: always;
+  }
+  .page-break-after {
+    break-after: page;
+    page-break-after: always;
+  }
+  /* Landscape opt-in for wide ranking/data tables (e.g. the regional-markets
+     NA/EU ranking papers) — most working papers are prose-first and stay on
+     the default portrait @page above; a section that genuinely needs a wide
+     table opts in with class="landscape" rather than the whole document
+     switching orientation. Uses CSS Paged Media named pages (`@page
+     landscape` + `page: landscape` on the element) — the standards-based way
+     to scope page orientation to part of a document, not the whole thing. */
+  @page landscape {
+    size: letter landscape;
+    margin: 0.45in 0.5in 0.38in 0.5in;
+  }
+  .landscape {
+    page: landscape;
+    break-before: page;
+    break-after: page;
+  }
+  /* Wide tables need more room per column than the generic fixed-layout rule
+     above gives them; landscape sections restate their own table geometry
+     rather than inheriting the narrower portrait default. */
+  .landscape table {
+    table-layout: auto;
+    font-size: 9pt;
+  }
+
+
+  a[href] {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+  /* Working papers carry zero outbound links by editorial rule (master
+     BRIEF Decision #5) — this rule is defensive, not load-bearing, in case
+     a footnote-style URL ever appears in a citation entry. */
+  a[href^="http"]::after {
+    content: "";
+  }
+
+  body {
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+}

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 /// tool-wallet — Polygon USDC payment watcher + receipt writer + key utilities
@@ -37,12 +37,38 @@ const USDC_CONTRACT: &str = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
 // ERC-20 Transfer event topic
 const TRANSFER_TOPIC: &str = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
-// Known license prices in 6-decimal USDC units → product_id
-// $1.00 USDC = 1_000_000 units; $19.00 USDC = 19_000_000 units
-const PRICE_MAP: &[(u64, &str)] = &[
-    (1_000_000, "os-privategit"),      // Apache 2.0 — $1.00 USDC
-    (19_000_000, "os-privategit-fsl"), // FSL — $19.00 USDC
-];
+/// Mirrors the fields of `app-privategit-software`'s `Installer` struct that
+/// matter for payment matching. `price_usdc` is already in the same 6-decimal
+/// micro-USDC base units as the on-chain transfer `amount` this module compares
+/// it against — no unit conversion needed.
+#[derive(Deserialize)]
+struct CatalogInstaller {
+    id: String,
+    price_usdc: u64,
+    license_tier: String,
+}
+
+#[derive(Deserialize)]
+struct Catalog {
+    installers: Vec<CatalogInstaller>,
+}
+
+/// Resolve an on-chain transfer `amount` (micro-USDC) to a `(product_id, license_tier)`
+/// pair by reading the live catalog — replaces a prior hardcoded `PRICE_MAP` that
+/// referenced product IDs (`os-privategit`, `os-privategit-fsl`) absent from
+/// `products.yaml` entirely, at prices no live product actually charges. Every
+/// product being priced at `$0` today means this was previously untestable against
+/// a real transfer; it must still resolve correctly the moment any product's price
+/// becomes nonzero, which a stale hardcoded table could never do.
+fn match_product_by_amount(catalog_path: &str, amount: u64) -> (String, String) {
+    let catalog: Option<Catalog> = fs::read_to_string(catalog_path)
+        .ok()
+        .and_then(|raw| serde_yaml::from_str(&raw).ok());
+    match catalog.and_then(|c| c.installers.into_iter().find(|i| i.price_usdc == amount)) {
+        Some(installer) => (installer.id, installer.license_tier),
+        None => (format!("unknown-{amount}"), "unknown".to_string()),
+    }
+}
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
 
@@ -103,6 +129,13 @@ struct WatchArgs {
         help = "service-fs WORM ledger endpoint; if set, receipts are POST-ed asynchronously for Rekor anchoring"
     )]
     fs_endpoint: Option<String>,
+    #[arg(
+        env = "CATALOG_PATH",
+        long,
+        default_value = "/var/lib/local-software/catalog/products.yaml",
+        help = "products.yaml — resolves an on-chain transfer amount to a product/license_tier"
+    )]
+    catalog_path: String,
 }
 
 #[derive(Parser)]
@@ -445,20 +478,8 @@ async fn watch(args: WatchArgs) -> Result<()> {
                     from_padded.trim_start_matches("0x").trim_start_matches('0')
                 );
 
-                let product_id = PRICE_MAP
-                    .iter()
-                    .find(|(p, _)| *p == amount)
-                    .map(|(_, id)| id.to_string())
-                    .unwrap_or_else(|| format!("unknown-{amount}"));
-
-                let license_tier = if amount == 1_000_000 {
-                    "apache"
-                } else if amount == 19_000_000 {
-                    "fsl"
-                } else {
-                    "unknown"
-                }
-                .to_string();
+                let (product_id, license_tier) =
+                    match_product_by_amount(&args.catalog_path, amount);
 
                 let license_key = generate_license_key(&product_id, &tx_hash, &customer_ref);
 
@@ -850,7 +871,7 @@ fn run_export(args: ExportArgs) -> Result<()> {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Write logs to stderr so stdout carries only machine-readable output (JSON).
-    // The address/check subcommands are called as subprocesses by app-privategit-marketplace,
+    // The address/check subcommands are called as subprocesses by app-privategit-software,
     // which captures stdout to parse JSON responses.
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
@@ -869,5 +890,102 @@ async fn main() -> Result<()> {
         }
         Command::GenerateSeed(args) => generate_seed(args),
         Command::Export(args) => run_export(args),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    static SEQ: AtomicUsize = AtomicUsize::new(0);
+
+    fn scratch_catalog(yaml: &str) -> PathBuf {
+        let n = SEQ.fetch_add(1, Ordering::SeqCst);
+        let path = std::env::temp_dir().join(format!(
+            "tool-wallet-test-catalog-{}-{n}.yaml",
+            std::process::id()
+        ));
+        fs::write(&path, yaml).unwrap();
+        path
+    }
+
+    const TEST_CATALOG: &str = r#"
+installers:
+  - id: os-console
+    name: PointSav Console OS
+    description: test
+    edition: "0.2.4"
+    platform: "Linux"
+    size_mb: 1
+    path: os-console/0.2.4
+    license_tier: agpl
+    price_usdc: 1000000
+  - id: os-network-admin
+    name: PointSav Network OS
+    description: test
+    edition: "beta"
+    platform: "Linux"
+    size_mb: 1
+    path: os-network-admin/beta
+    license_tier: fsl
+    price_usdc: 19000000
+"#;
+
+    #[test]
+    fn matches_real_catalog_product_by_exact_amount() {
+        let path = scratch_catalog(TEST_CATALOG);
+        let (id, tier) = match_product_by_amount(path.to_str().unwrap(), 1_000_000);
+        assert_eq!(id, "os-console");
+        assert_eq!(tier, "agpl");
+        let (id2, tier2) = match_product_by_amount(path.to_str().unwrap(), 19_000_000);
+        assert_eq!(id2, "os-network-admin");
+        assert_eq!(tier2, "fsl");
+        let _ = fs::remove_file(&path);
+    }
+
+    #[test]
+    fn falls_back_to_unknown_when_no_product_matches_amount() {
+        let path = scratch_catalog(TEST_CATALOG);
+        let (id, tier) = match_product_by_amount(path.to_str().unwrap(), 5_000_000);
+        assert_eq!(id, "unknown-5000000");
+        assert_eq!(tier, "unknown");
+        let _ = fs::remove_file(&path);
+    }
+
+    #[test]
+    fn falls_back_to_unknown_when_catalog_missing_or_unparseable() {
+        let (id, tier) = match_product_by_amount("/nonexistent/path/products.yaml", 1_000_000);
+        assert_eq!(id, "unknown-1000000");
+        assert_eq!(tier, "unknown");
+
+        let bad_path = scratch_catalog("not: [valid, yaml: at all");
+        let (id2, tier2) = match_product_by_amount(bad_path.to_str().unwrap(), 1_000_000);
+        assert_eq!(id2, "unknown-1000000");
+        assert_eq!(tier2, "unknown");
+        let _ = fs::remove_file(&bad_path);
+    }
+
+    #[test]
+    fn zero_price_products_never_match_a_real_nonzero_transfer() {
+        // All 4 current live products are $0/BETA — confirms a real (nonzero)
+        // transfer never accidentally resolves to a free product.
+        let catalog = r#"
+installers:
+  - id: os-console
+    name: test
+    description: test
+    edition: "0.2.4"
+    platform: "Linux"
+    size_mb: 1
+    path: os-console/0.2.4
+    license_tier: agpl
+    price_usdc: 0
+"#;
+        let path = scratch_catalog(catalog);
+        let (id, tier) = match_product_by_amount(path.to_str().unwrap(), 1_000_000);
+        assert_eq!(id, "unknown-1000000");
+        assert_eq!(tier, "unknown");
+        let _ = fs::remove_file(&path);
     }
 }

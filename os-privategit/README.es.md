@@ -19,8 +19,8 @@ opera tres servicios cooperativos:
 
 | Servicio | Puerto | Función |
 |---|---|---|
-| `app-privategit-marketplace` | 9202 | Tienda — catálogo de productos, verificación de pagos, emisión de licencias |
-| `app-privategit-source` | 9201 | Servidor de binarios — descargas autenticadas, verificación de tokens Ed25519 |
+| `app-privategit-software` | 9202 | Tienda — catálogo de productos, verificación de pagos, emisión de licencias |
+| `app-privategit-release` | 9201 | Servidor de binarios — descargas autenticadas, verificación de tokens Ed25519 |
 | `tool-wallet` | — | Observador de pagos USDC en Polygon — escritor de recibos, derivación de direcciones HD |
 
 Este es el producto distribuible principal orientado al cliente. Los operadores de pequeñas
