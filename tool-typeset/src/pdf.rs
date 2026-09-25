@@ -1699,7 +1699,7 @@ mod tests {
             Row::data(vec![Cell::text("Cash").indent(1), Cell::figure("\u{2013}")]),
             Row::total(vec![
                 Cell::text("Total assets").bold(),
-                Cell::figure("1,585").bold(),
+                Cell::figure("12,345").bold(),
             ]),
         ];
         Doc {
