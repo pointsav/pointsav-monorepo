@@ -18,7 +18,7 @@
 #
 # Node constants (ratified 2026-05-30, Q2+Q3):
 #   PPN mesh IP:   10.8.0.9/24  (WireGuard wg0 address)
-#   GCP static IP: 34.53.65.203 (external; WireGuard listen port 51820)
+#   GCP static IP: set via PPN_GENESIS_EXTERNAL_IP env var (external; WireGuard listen port 51820)
 #   Mesh cmd port: 8090 UDP (app-network-admin broadcast)
 #   Pairing srv:   http://localhost:9205 (service-ppn-pairing, already deployed)
 #
@@ -41,7 +41,7 @@ WG_CONF="/etc/wireguard/wg0.conf"
 WG_KEY="/etc/wireguard/ppn-genesis.key"
 WG_PUB="/etc/wireguard/ppn-genesis.pub"
 PAIRING_SRV="http://localhost:9205"
-PAIRING_SRV_EXTERNAL="http://34.53.65.203:9205"
+PAIRING_SRV_EXTERNAL="http://${PPN_GENESIS_EXTERNAL_IP:-<GENESIS_EXTERNAL_IP>}:9205"
 
 MODE="${1:-}"
 SHORT_CODE="${2:-}"
@@ -83,7 +83,7 @@ case "${MODE}" in
 
         echo "provision-vm-infrastructure-cloud: Genesis-seed mode"
         echo "  PPN mesh IP:   ${PPN_MESH_IP}/24"
-        echo "  GCP static IP: 34.53.65.203"
+        echo "  GCP static IP: ${PPN_GENESIS_EXTERNAL_IP:-<GENESIS_EXTERNAL_IP>}"
         echo "  Listen port:   ${PPN_LISTEN_PORT}/UDP"
         echo "  Pairing srv:   ${PAIRING_SRV}"
         echo ""

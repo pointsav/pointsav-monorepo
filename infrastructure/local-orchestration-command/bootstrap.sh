@@ -4,7 +4,7 @@
 # workspace VM. Idempotent; safe to re-run for binary updates or upgrades.
 #
 # Run as:
-#   sudo /srv/foundry/infrastructure/local-orchestration-command/bootstrap.sh
+#   sudo <path-to-workspace>/infrastructure/local-orchestration-command/bootstrap.sh
 #
 # BINARY ACQUISITION (in priority order):
 #
@@ -13,7 +13,7 @@
 #        sudo -E bootstrap.sh
 #
 #   2. BINARY_SRC env var — local path (dev builds, CI):
-#        export BINARY_SRC="/srv/foundry/cargo-target/orchestration-command/release/orchestration-command-server"
+#        export BINARY_SRC="<path-to-workspace>/cargo-target/orchestration-command/release/orchestration-command-server"
 #        sudo -E bootstrap.sh
 #
 #   3. Default URL — used when neither env var is set. Update version tag when upgrading.
@@ -38,7 +38,7 @@ SERVICE_FILE="${INFRA_DIR}/local-orchestration-command.service"
 SERVICE_DEST="/etc/systemd/system/local-orchestration-command.service"
 SVC_USER="local-orchestration-command"
 SVC_HOME="/var/lib/local-orchestration-command"
-DEPLOYMENT_DIR="/srv/foundry/deployments/gateway-orchestration-command-1"
+DEPLOYMENT_DIR="${FOUNDRY_ROOT:-/srv/foundry}/deployments/gateway-orchestration-command-1"
 
 # Default download URL — project-software will confirm the canonical URL pattern.
 # Override with BINARY_URL env var for a specific version or mirror.
@@ -78,8 +78,8 @@ else
         echo "Error: download failed. Options:" >&2
         echo "  A) Supply a local dev build: export BINARY_SRC=/path/to/orchestration-command-server" >&2
         echo "     Build with:" >&2
-        echo "       cd /srv/foundry/clones/project-orchestration/pointsav-monorepo/app-orchestration-command" >&2
-        echo "       CARGO_TARGET_DIR=/srv/foundry/cargo-target/orchestration-command cargo build --release -p orchestration-command-server" >&2
+        echo "       cd <path-to-workspace>/clones/project-orchestration/pointsav-monorepo/app-orchestration-command" >&2
+        echo "       CARGO_TARGET_DIR=<path-to-workspace>/cargo-target/orchestration-command cargo build --release -p orchestration-command-server" >&2
         echo "  B) Supply an explicit download URL: export BINARY_URL=<url>" >&2
         exit 1
     fi

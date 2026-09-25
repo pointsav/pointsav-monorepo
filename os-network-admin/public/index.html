@@ -97,17 +97,17 @@
             <table>
                 <tr><th>Substrate ID</th><th>Classification</th><th>Mesh IP</th><th>State</th></tr>
                 <tr><td>fleet-infrastructure-cloud</td><td>GCP Relay Hub</td><td>REDACTED-RELAY-IP</td><td class="status-live">LIVE / ANCHORED</td></tr>
-                <tr><td>fleet-infrastructure-leased</td><td>Laptop B (Secure VPN Hub)</td><td>10.50.0.1</td><td class="status-live">LIVE / ARMED</td></tr>
-                <tr><td>fleet-infrastructure-onprem</td><td>Laptop A (Edge Processor)</td><td>10.50.0.2</td><td class="status-live">LIVE / ROUTING</td></tr>
+                <tr><td>fleet-infrastructure-leased</td><td>Laptop B (Secure VPN Hub)</td><td>REDACTED-MESH-IP</td><td class="status-live">LIVE / ARMED</td></tr>
+                <tr><td>fleet-infrastructure-onprem</td><td>Laptop A (Edge Processor)</td><td>REDACTED-MESH-IP</td><td class="status-live">LIVE / ROUTING</td></tr>
             </table>
         </div>
         <div id="f3-totebox" class="cartridge">
             <h2>TOTEBOX EDGE MATRIX (CRYPTOGRAPHIC ATTESTATION)</h2>
             <table>
                 <tr><th>LXC Container ID</th><th>Host Substrate</th><th>Internal IP</th><th>SHA-256 Attestation Fingerprint</th><th>Fiduciary State</th></tr>
-                <tr><td>totebox-archive-01</td><td>10.50.0.2</td><td>10.218.10.10</td><td class="crypto-hash">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</td><td class="status-live">SEALED / VERIFIED</td></tr>
-                <tr><td>totebox-archive-02</td><td>10.50.0.2</td><td>10.218.10.11</td><td class="crypto-hash">8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92</td><td class="status-live">SEALED / VERIFIED</td></tr>
-                <tr><td>totebox-archive-03</td><td>10.50.0.2</td><td>10.218.10.12</td><td class="crypto-hash">b1674191a88ec5cdd733e4240a81803105dc412d6c6708d53ab94fc248f4f553</td><td class="status-live">SEALED / VERIFIED</td></tr>
+                <tr><td>totebox-archive-01</td><td>REDACTED-MESH-IP</td><td>REDACTED-CONTAINER-IP</td><td class="crypto-hash">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</td><td class="status-live">SEALED / VERIFIED</td></tr>
+                <tr><td>totebox-archive-02</td><td>REDACTED-MESH-IP</td><td>REDACTED-CONTAINER-IP</td><td class="crypto-hash">8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92</td><td class="status-live">SEALED / VERIFIED</td></tr>
+                <tr><td>totebox-archive-03</td><td>REDACTED-MESH-IP</td><td>REDACTED-CONTAINER-IP</td><td class="crypto-hash">b1674191a88ec5cdd733e4240a81803105dc412d6c6708d53ab94fc248f4f553</td><td class="status-live">SEALED / VERIFIED</td></tr>
             </table>
         </div>
         <div id="f4-integration" class="cartridge"><h2>SYSTEM INTEGRATION</h2><p style="color: #52525B;">Awaiting API Gateway Telemetry...</p></div>

@@ -24,6 +24,7 @@
 
 set -euo pipefail
 
+FOUNDRY_ROOT="${FOUNDRY_ROOT:-/srv/foundry}"
 SERVICE="${1:-}"
 PORT="${2:-}"
 
@@ -100,9 +101,9 @@ case "$SERVICE" in
         echo "  copy: content-wiki-documentation (~20M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-documentation /opt/mediakit/data/knowledge"
         tar -czf - --exclude='.git' --exclude='target' \
-            -C /srv/foundry/clones/project-knowledge/content-wiki-documentation . \
+            -C "$FOUNDRY_ROOT/clones/project-knowledge/content-wiki-documentation" . \
             | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/content-wiki-documentation/"
-        scp $SCP_OPTS /srv/foundry/citations.yaml "${VM}:/opt/mediakit/data/content-wiki-documentation/citations.yaml"
+        scp $SCP_OPTS "$FOUNDRY_ROOT/citations.yaml" "${VM}:/opt/mediakit/data/content-wiki-documentation/citations.yaml"
         echo "  → /opt/mediakit/data/content-wiki-documentation/"
         FOUND_DEPLOY=1
         ;;
@@ -110,7 +111,7 @@ case "$SERVICE" in
         echo "  copy: content-wiki-corporate (~4M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-corporate /opt/mediakit/data/knowledge"
         tar -czf - --exclude='.git' \
-            -C /srv/foundry/customer/content-wiki-corporate . \
+            -C "$FOUNDRY_ROOT/customer/content-wiki-corporate" . \
             | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/content-wiki-corporate/"
         echo "  → /opt/mediakit/data/content-wiki-corporate/"
         FOUND_DEPLOY=1
@@ -119,7 +120,7 @@ case "$SERVICE" in
         echo "  copy: content-wiki-projects (~4M, tar pipe)..."
         ssh $SSH_OPTS "$VM" "mkdir -p /opt/mediakit/data/content-wiki-projects /opt/mediakit/data/knowledge"
         tar -czf - --exclude='.git' \
-            -C /srv/foundry/customer/content-wiki-projects . \
+            -C "$FOUNDRY_ROOT/customer/content-wiki-projects" . \
             | ssh $SSH_OPTS "$VM" "tar -xzf - -C /opt/mediakit/data/content-wiki-projects/"
         echo "  → /opt/mediakit/data/content-wiki-projects/"
         FOUND_DEPLOY=1

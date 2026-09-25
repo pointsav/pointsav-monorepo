@@ -6,13 +6,14 @@ Documentation=service-slm/scripts/start-yoyo.sh
 Type=oneshot
 User=<operator>
 TimeoutStartSec=4800
+Environment="FOUNDRY_ROOT=/srv/foundry"
 ExecStart=/bin/bash -c '\
-  mkdir -p /srv/foundry/data/smoke-test && \
-  LOG=/srv/foundry/data/smoke-test/tier-b-$(date +%%Y-%%m-%%d).log && \
+  mkdir -p $FOUNDRY_ROOT/data/smoke-test && \
+  LOG=$FOUNDRY_ROOT/data/smoke-test/tier-b-$(date +%%Y-%%m-%%d).log && \
   echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: starting Yo-Yo --wait-ready=300 --runtime=1h" >> "$LOG" 2>&1 && \
-  /srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh --wait-ready=300 --runtime=1h >> "$LOG" 2>&1 && \
+  $FOUNDRY_ROOT/clones/project-intelligence/service-slm/scripts/start-yoyo.sh --wait-ready=300 --runtime=1h >> "$LOG" 2>&1 && \
   echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: Yo-Yo ready, running full smoke test" >> "$LOG" 2>&1 && \
-  /srv/foundry/bin/smoke-test-service-slm.sh >> "$LOG" 2>&1 && \
+  $FOUNDRY_ROOT/bin/smoke-test-service-slm.sh >> "$LOG" 2>&1 && \
   echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: PASS" >> "$LOG" 2>&1 || \
   echo "[$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)] weekly-tier-b-smoke: FAIL (see log)" >> "$LOG" 2>&1'
 StandardOutput=journal

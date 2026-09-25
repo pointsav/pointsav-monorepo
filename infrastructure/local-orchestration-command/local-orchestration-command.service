@@ -1,7 +1,7 @@
 [Unit]
 Description=app-orchestration-command (PointSav Totebox OS — CommandCentre)
-Documentation=file:///srv/foundry/infrastructure/local-orchestration-command/README.md
-Documentation=file:///srv/foundry/clones/project-orchestration/.agent/manifest.md
+Documentation=file://<path-to-workspace>/infrastructure/local-orchestration-command/README.md
+Documentation=file://<path-to-workspace>/clones/project-orchestration/.agent/manifest.md
 After=network-online.target
 Wants=network-online.target
 

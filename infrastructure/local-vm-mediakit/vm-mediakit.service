@@ -1,16 +1,21 @@
 [Unit]
 Description=vm-mediakit — os-mediakit guest VM (Debian 12 Phase 1)
-Documentation=file:///srv/foundry/clones/project-infrastructure/infrastructure/virt/provision-vm-mediakit.sh
+Documentation=file://<path-to-workspace>/clones/project-infrastructure/infrastructure/virt/provision-vm-mediakit.sh
 After=network.target
 Wants=network.target
 
 [Service]
 Type=forking
+# NOTE (genericize pass, 2026-09-25): PIDFile=/ExecStart='s executable path/WorkingDirectory=
+# must stay literal absolute paths -- systemd requires this and rejects ${VAR} substitution
+# there (confirmed empirically, see project-infrastructure GitHub-exposure-remediation thread).
+# Only ExecStop='s bash -c string below can be env-var-ized, since bash (not systemd) expands it.
 PIDFile=/srv/foundry/clones/project-infrastructure/infrastructure/virt/work/vm-mediakit.pid
 ExecStart=/srv/foundry/clones/project-infrastructure/infrastructure/virt/provision-vm-mediakit.sh
+Environment="FOUNDRY_ROOT=/srv/foundry"
 ExecStop=/bin/bash -c '\
   echo "system_powerdown" | \
-  socat - UNIX-CONNECT:/srv/foundry/clones/project-infrastructure/infrastructure/virt/work/vm-mediakit.monitor \
+  socat - UNIX-CONNECT:$FOUNDRY_ROOT/clones/project-infrastructure/infrastructure/virt/work/vm-mediakit.monitor \
   && sleep 10'
 TimeoutStopSec=30
 Restart=no

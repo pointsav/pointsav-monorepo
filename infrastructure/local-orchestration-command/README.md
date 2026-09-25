@@ -2,7 +2,7 @@
 
 Infrastructure-as-code for the Foundry workspace CommandCentre. Authored by
 project-orchestration Totebox; Command Session installs to workspace-tier
-`/srv/foundry/infrastructure/local-orchestration-command/`.
+`<path-to-workspace>/infrastructure/local-orchestration-command/`.
 
 ## Files
 
@@ -18,8 +18,8 @@ project-orchestration Totebox; Command Session installs to workspace-tier
 |---|---|---|
 | `COMMAND_BIND_ADDR` | `127.0.0.1:8020` | HTTP bind address (loopback; Phase 3) |
 | `COMMAND_INSTANCE_ID` | `gateway-orchestration-command-1` | Stable instance label for WORM ledger |
-| `COMMAND_PAIRINGS_PATH` | `/srv/foundry/pairings.yaml` | Cluster topology source (read-only at startup) |
-| `COMMAND_CLONES_ROOT` | `/srv/foundry/clones` | Archive manifest + inbox root |
+| `COMMAND_PAIRINGS_PATH` | `<path-to-workspace>/pairings.yaml` | Cluster topology source (read-only at startup) |
+| `COMMAND_CLONES_ROOT` | `<path-to-workspace>/clones` | Archive manifest + inbox root |
 | `COMMAND_AUDIT_LEDGER_PATH` | `/var/lib/local-orchestration-command/audit.jsonl` | WORM append-only pairing ledger |
 | `COMMAND_LICENSE_TOKEN` | (unset = observation mode) | Ed25519-signed license token |
 | `COMMAND_LICENSE_PUBKEY_HEX` | (unset = observation mode) | License public key hex |
@@ -30,8 +30,8 @@ project-orchestration Totebox; Command Session installs to workspace-tier
 
 1. Build the release binary from the project-orchestration cluster:
    ```bash
-   cd /srv/foundry/clones/project-orchestration/pointsav-monorepo/app-orchestration-command
-   CARGO_TARGET_DIR=/srv/foundry/cargo-target/orchestration-command \
+   cd <path-to-workspace>/clones/project-orchestration/pointsav-monorepo/app-orchestration-command
+   CARGO_TARGET_DIR=<path-to-workspace>/cargo-target/orchestration-command \
      cargo build --release -p orchestration-command-server
    ```
 2. Command Session runs `sudo bootstrap.sh` to install + start.

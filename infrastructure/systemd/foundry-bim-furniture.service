@@ -1,6 +1,6 @@
 [Unit]
 Description=BIM furniture DXF + SVG pipeline (regenerate from DTCG tokens)
-Documentation=file:///srv/foundry/clones/project-bim/woodfine-bim-library/scripts/run-furniture-pipeline.sh
+Documentation=file://<path-to-workspace>/clones/project-bim/woodfine-bim-library/scripts/run-furniture-pipeline.sh
 After=local-bim-orchestration.service
 
 [Service]

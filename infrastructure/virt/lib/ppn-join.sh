@@ -24,10 +24,11 @@ set -euo pipefail
 # operator_code: the Crockford base32 code the operator received out-of-band
 #   from the genesis node's F12 panel. When supplied, it is included in the
 #   join request body so the server can pre-match. Pass "" to skip.
-# pairing_server: base URL of service-ppn-pairing (default: GCP relay at :9205).
+# pairing_server: base URL of service-ppn-pairing (default: $PPN_PAIRING_SERVER env
+#   var, or a placeholder requiring override if unset).
 ppn_join() {
     local operator_code="${1:-}"
-    local pairing_server="${2:-http://34.53.65.203:9205}"
+    local pairing_server="${2:-${PPN_PAIRING_SERVER:-http://<PAIRING_SERVER_IP>:9205}}"
 
     # Require jq for JSON parsing.
     if ! command -v jq &>/dev/null; then
