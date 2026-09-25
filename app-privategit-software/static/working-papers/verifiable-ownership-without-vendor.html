@@ -1,241 +1,92 @@
-<h2 id="1-the-question">1. The question</h2>
-<p>A software license that describes itself as "perpetual" or
-"non-revocable" is making a promise about the future: that the right to
-use the software will not expire and will not be taken away. Most
-software distributed today enforces that promise, if it enforces it at
-all, through a mechanism that quietly contradicts it — a license check
-that calls the vendor's own server at startup, or periodically, to
-confirm the license is still valid. If that server stops responding,
-because the vendor discontinued the product, was acquired and shut the
-service down, or simply let the infrastructure lapse, the "perpetual"
-license the customer paid for stops working, through no action or fault
-of the customer's own.</p>
-<p>This is not a hypothetical edge case. Software vendors are acquired,
-pivot, and shut down products routinely, and a license-verification
-architecture that depends on a live server call inherits that risk
-directly, regardless of what the license agreement's text says. The word
-"perpetual" in a contract describes an intention; whether that intention
-is actually deliverable depends on a separate, technical question: can
-the license be verified without the vendor's continued cooperation? If
-it cannot, "perpetual" is a promise the technical architecture is not
-actually equipped to keep.</p>
-<p>The question this paper asks is what a verification architecture
-would need to look like for that promise to be technically, not just
-contractually, real — and whether such an architecture can be built
-without asking the customer to trust the vendor any more than the
-purchase itself already required. We describe one such architecture,
-already deployed on this site, built from three specific pieces: a
-payment record the customer does not have to trust the vendor to attest
-to, a license token the customer can verify without calling anyone, and
-an artifact ledger that lets the customer confirm the software they are
-running is the software that was actually licensed. None of the three
-pieces is novel cryptography. What we argue is architectural: that
-combining these three specific, unglamorous pieces is what "verification
-without a vendor in the loop" actually requires, and that most software
-distribution today has none of them.</p>
-<h2 id="2-what-we-found">2. What we found</h2>
-<p>The verification problem splits cleanly into three separate
-questions, and a licensing architecture needs an answer to each one that
-does not depend on the vendor still being reachable.</p>
-<p><strong>Did the customer actually pay?</strong> Under most commercial
-software models, the answer lives only in the vendor's own database — a
-customer disputing a payment, or trying to prove a purchase after a
-vendor's records are unavailable, has no independent record to point to.
-This site's payment flow instead records the transaction on a public
-blockchain ledger: the payment itself is a public, timestamped,
-third-party-verifiable fact that exists independently of whether the
-vendor's own systems are running, and independently of whether the
-vendor attests to it. A customer, or any third party, can confirm the
-payment happened without asking the vendor to confirm anything.</p>
-<p><strong>Is the license the customer holds actually valid?</strong>
-Under a server-call model, validity is whatever the vendor's server
-currently says it is — which is precisely the property that makes
-"perpetual" unenforceable if the server disappears. This site's license
-tokens are signed with an Ed25519 keypair and verified entirely offline:
-the customer's software checks the token's signature against a published
-public key, with no network call and no dependency on any server being
-reachable at verification time. The mathematics of the signature check
-are the same whether the vendor's infrastructure is fully operational,
-temporarily down, or permanently gone. A license issued this way is only
-as revocable as the customer's own choice to stop using it — the vendor
-cannot silently invalidate an already-issued token by taking a server
-offline, because there is no server in the verification path to take
-offline.</p>
-<p><strong>Is the software the customer is running the software that was
-actually licensed?</strong> This is the question most licensing
-architectures skip entirely, and it matters because a license token
-verified against the wrong binary — a tampered build, a stale version
-with a since-fixed vulnerability, an unauthorized redistribution — is
-not actually proof of anything useful. This site maintains a per-binary,
-hash-chained ledger: each released artifact's cryptographic hash is
-recorded in an append-only chain, where each new entry incorporates the
-previous entry's hash, making the history tamper-evident — altering any
-past record would break the chain in a way that is detectable by
-re-verifying it. A customer can confirm the specific binary they
-downloaded matches a hash that was actually published by the vendor at a
-specific point in time, using the same append-only-ledger logic that
-underlies public timestamping systems generally
-[haber-stornetta-1991-timestamping-digital-documents], rather than
-trusting a vendor's live claim that "this is the official build."</p>
-<p>Put together, these three answers give a customer something a
-server-call model structurally cannot: proof of purchase, proof of
-license validity, and proof of artifact authenticity, none of which
-requires the vendor's infrastructure to still exist at the moment the
-customer needs to check any of them.</p>
-<h2 id="3-how-we-worked-through-it">3. How we worked through it</h2>
-<p>None of the three components described in §2 is a novel cryptographic
-primitive. Public, third-party-verifiable transaction records are the
-foundational property of public blockchain ledgers generally
-[nakamoto-2008-bitcoin]. Offline-verifiable digital signatures using
-published public keys are standard practice, and Ed25519 specifically is
-a well-studied, widely deployed signature scheme chosen for its
-combination of strong security properties and fast, simple verification
-[bernstein-2012-ed25519]. Append-only, hash-chained record-keeping for
-tamper-evidence is a decades-old technique in digital timestamping
-[haber-stornetta-1991-timestamping-digital-documents]. The contribution
-here is not inventing any of these mechanisms. It is recognizing that a
-licensing architecture needs all three together, because each one closes
-a different specific way a vendor-dependent system fails, and a system
-missing any one of the three still has a vendor-dependency somewhere in
-the chain.</p>
-<p>A payment record alone, without an offline-verifiable license token,
-still requires the customer to trust the vendor to correctly translate
-"payment happened" into "access is granted" — the payment can be public
-and verifiable while the access decision remains a private, server-side
-judgment the vendor can revise. A license token alone, without a public
-payment record, gives the customer an offline-verifiable credential but
-no independent proof they are entitled to it if a dispute ever arises.
-And either of the first two without an artifact ledger leaves open the
-question of whether the software actually running is the software that
-was actually licensed — a valid license checked against a compromised or
-incorrect binary verifies nothing useful. The architecture only delivers
-on the "no vendor in the loop" claim when all three pieces are present
-and each is independently checkable by the customer, not merely asserted
-by the vendor.</p>
-<p>We tested this architecture against the specific failure mode it is
-meant to prevent: what happens to a customer's access if the vendor's
-own infrastructure becomes unavailable, whether through business
-failure, acquisition, or simple neglect. Under this architecture, the
-answer is: nothing changes for a license that has already been issued
-and a binary that has already been downloaded, because neither the
-payment record, nor the license check, nor the artifact verification
-requires the vendor's servers to be running at the moment the customer
-needs them. This is the specific, checkable property the paper claims —
-not a general claim that the architecture prevents all forms of vendor
-misbehavior or business failure.</p>
-<h2 id="4-what-it-changes">4. What it changes</h2>
-<p>For a buyer evaluating a "perpetual" license claim, the practical
-change is knowing which question to ask before taking the word at face
-value: does verifying this license require a live call to the vendor's
-server? If it does, the license is perpetual in name only — its actual
-permanence is bounded by the vendor's infrastructure lifespan, not by
-the contract language. If verification is offline and cryptographic,
-checkable against a published key with no network dependency, the
-perpetual claim has a technical foundation matching its contractual one.
-This is a concrete, answerable due-diligence question a buyer can put to
-any vendor making a perpetual-license claim, regardless of whether that
-vendor uses this specific architecture.</p>
-<p>For a vendor, the practical change is that building this kind of
-architecture is a genuine constraint on future business decisions, not
-just a marketing claim. A vendor whose license verification is fully
-offline cannot later add a remote kill-switch to already-issued licenses
-without visibly changing the architecture in a way customers or auditors
-could detect — the commitment is structural, not merely stated. This is
-a real cost to the vendor (less future flexibility to change the terms
-of already-sold licenses) traded for a real benefit to the buyer
-(confidence that "perpetual" actually describes what they are buying),
-and making that trade-off explicit and inspectable is itself part of
-what this architecture is for.</p>
-<h2 id="5-where-this-could-be-wrong">5. Where this could be wrong</h2>
-<p><strong>Offline verification does not prevent all forms of vendor
-misbehavior.</strong> A vendor could still, for example, stop releasing
-security patches, decline to provide support, or otherwise make
-continued use of the software impractical without technically revoking
-the license. This architecture addresses one specific failure mode — the
-license or artifact becoming unverifiable because the vendor's
-infrastructure disappeared — not the general question of vendor good
-faith.</p>
-<p><strong>The public payment record and the license token are only as
-trustworthy as their initial issuance.</strong> If a vendor issues a
-fraudulent or mistaken license token in the first place, the
-offline-verification property does not detect that error after the fact
-— it confirms the token is authentic, not that it was correctly issued.
-The architecture protects against post-issuance vendor disappearance,
-not against errors made at issuance time.</p>
-<p><strong>We have not benchmarked this architecture against alternative
-approaches at scale.</strong> The claims here describe what the
-architecture is designed to do and the specific mechanism by which it
-does it; we have not compared its real-world robustness against other
-vendor-independent verification schemes, because we are not aware of
-directly comparable deployed alternatives to benchmark against.</p>
-<p><strong>The payment-record component is not yet operating at
-commercial volume.</strong> This site's products are currently offered
-free during a beta period, so the public-payment-ledger piece of this
-architecture has not yet been exercised by a large number of real, paid
-transactions. The signature-verification and artifact-ledger components
-do not depend on price and are fully exercised today regardless; the
-payment-record claim specifically should be read as a description of how
-the mechanism is designed to operate once pricing takes effect, not as a
-report of transaction volume already observed.</p>
-<h2 id="6-conclusion">6. Conclusion</h2>
-<p>The question was what a license-verification architecture needs,
-technically, for a "perpetual" or "non-revocable" license claim to be
-actually deliverable rather than a promise the underlying system cannot
-keep. The answer is three specific, individually unglamorous pieces,
-used together: a public, third-party-verifiable payment record; an
-offline-verifiable, cryptographically-signed license token; and an
-append-only, hash-chained artifact ledger confirming the software
-running is the software that was licensed. None of the three is novel on
-its own. Combined, they remove the vendor's own continued existence from
-the customer's verification path — which is the specific, checkable
-precondition for a perpetual-license claim to mean what its contract
-language says.</p>
-<h2 id="7-claims-and-what-would-count-against-them">7. Claims and what
-would count against them</h2>
-<p><strong>Claim.</strong> A license architecture combining a public
-payment record, an offline-verifiable signed license token, and a
-hash-chained artifact ledger does not require the vendor's
-infrastructure to remain available for a customer to verify purchase,
-license validity, or artifact authenticity.</p>
-<p><strong>This claim would be wrong if:</strong> any of the three
-verification steps is shown to actually depend, directly or indirectly,
-on a live vendor-controlled service at the moment of verification — for
-example, if the "offline" signature check silently calls out to a vendor
-endpoint, or if the published public key itself can only be retrieved
-from a vendor server with no independent distribution channel. An
-auditor finding such a dependency should treat it as a real defect in
-the implementation, not a detail to work around.</p>
-<p><strong>What this claim does not say.</strong> It does not claim this
-architecture prevents vendor bad faith at issuance time, does not claim
-it substitutes for ongoing support or security maintenance, and does not
-claim to be the only possible approach to vendor-independent
-verification — only that it is a real, deployed one that closes the
-specific failure mode described in §1.</p>
+<blockquote>
+<p>This paper is provided for engineering, operational, and research purposes and does not constitute investment advice or a solicitation to invest in any Woodfine direct-hold solution. Statements marked "planned," "intended," "targeted," "may," or "expected" are forward-looking and subject to change. Full disclosures appear at the end of this paper.</p>
+</blockquote>
+<p>Working Paper PDS-014 · v0.1.0 · CC BY 4.0</p>
+<p>Our thesis is that a buyer should be able to prove they own what they bought without the seller's cooperation, and that this is an ordinary engineering requirement rather than an unusual one. Almost every commercial software licence in existence fails it. A licence sold as perpetual — yours for ever, no renewal — is in practice only as durable as the seller's own computer remembering that you bought it. If that computer is switched off, if the records are lost in a migration, if the company is sold and the new owner runs the licence system differently, or if the company simply closes, the buyer holds a piece of software that can no longer establish that it is licensed. The word perpetual described the terms. It did not describe the mechanism.</p>
+<p>There are two things a buyer might need to prove, and they are usually conflated. The first is that the licence itself is genuine — that the seller really issued it, and that its contents have not been altered since. The second is that it was paid for. Our position is that both can be made checkable by an independent third party using only public information, and that where this is done, the buyer's proof outlives the seller's infrastructure and the seller's business.</p>
+<p>This paper takes three things in turn: what a signature that anyone can check actually is, built up from the beginning for a reader with no background in the subject; what a public settlement record is and why a payment recorded in one is a different kind of evidence from a receipt in a company's files; and how the two fit together in the arrangement running today, including three places where that arrangement is presently incomplete. On the connected question of what an expiring licence actually ends, this paper states the answer directly rather than leaving a reader to infer it: it ends the right to be handed further releases, and it ends the paid layer's own paid service, and it does not touch the free software a customer's records live in.</p>
+<h2 id="1-the-thesis">1. The thesis</h2>
+<p>A claim can be established in two ways. It can be <em>attested</em> — some authority states it, and you rely on the authority. Or it can be <em>verified</em> — you check it yourself, against evidence, using a method that does not require the authority's continued cooperation or continued honesty.</p>
+<p>Commercial software licensing is almost entirely attestation. The authority is the seller, the evidence is an entry in the seller's database, and the verification method is asking the seller. The arrangement works well while the seller exists, is reachable, is competent, and is not adverse to you. Those four conditions hold most of the time, which is why the arrangement persists. They do not hold all of the time, and they are least likely to hold at exactly the moment a buyer most needs the proof: when the seller has failed, or been acquired, or fallen out with the customer.</p>
+<p>We hold that a licence should be verified rather than attested, and that this requires two specific substitutions. In place of "the seller's database says you bought it," the proof becomes a sealed statement the buyer holds, checkable against a published key. In place of "our accounts show the payment cleared," the proof becomes a transfer recorded in a public register, identifiable by its own reference and confirmable by any independent observer.</p>
+<p>The composition is the claim, and none of the parts is ours. Sealing a statement so that anyone can confirm who wrote it, and that nobody has altered it since, is decades-old cryptography. Recording transfers of value in a register anyone can read, rather than in a ledger only the institution holds, is older still in the paper world — a land registry works exactly this way — and has a well-known modern form in software. The idea of a credential a holder carries and a third party can check without contacting the issuer is a standardised web construction [w3c-verifiable-credentials]. What we are doing is putting them together for something mundane: proving that a small business owns a copy of a piece of software.</p>
+<h2 id="2-the-problem-in-the-readers-terms">2. The problem, in the reader's terms</h2>
+<p>A reader over a certain age has had this experience in the physical world and remembers how it was solved.</p>
+<p>You wrote a cheque. The cheque had your signature. The bank held a signature card — a slip of paper, filed at the branch, bearing a specimen of your hand. When the cheque arrived, a clerk compared the two. The arrangement was a lookup: the truth about your signature lived in the branch's drawer, and everything depended on that drawer being present, correct, and honest. If the card was lost, you could not draw on your own account until it was replaced. If the branch closed, the card closed with it.</p>
+<p>Now consider how a deed to a property works instead. When you buy a house, you do not receive a slip of paper whose validity depends on the seller's filing cabinet. The transfer is recorded in a public register that anyone may search, indexed so that a particular entry can be pointed to, and kept by an institution whose whole function is to remain searchable long after any individual party to any individual transaction is gone. A purchaser's solicitor traces the chain backwards through that register. They do not telephone the previous owner and ask whether the sale really happened.</p>
+<p>The difference between those two arrangements is the difference this paper is about. The signature card is attestation: the proof lives with an intermediary and depends on them. The land register is verification: the proof lives in public and can be examined by anyone with the reference.</p>
+<p>Software licensing has, almost without exception, chosen the signature card. Consider what that has meant in practice for buyers over the past twenty years. Software bought outright has stopped working because an activation server was retired. Products have become unusable after an acquisition because the new owner did not carry over the old licensing system. Perpetual licences have been rendered unverifiable — not revoked, merely unverifiable — because the only party who could confirm them no longer answered. In each case the buyer's legal position was untouched. Their practical position was that the software did not run and there was nobody to call.</p>
+<p>The failure in all of these is structural, not moral. Nobody set out to strand a customer. The proof was simply kept in a place that did not have to outlive anything.</p>
+<h2 id="3-what-a-signature-anyone-can-check-actually-is">3. What a signature anyone can check actually is</h2>
+<p>This section builds the idea from the beginning. A reader who already knows what a public key is may go straight to Section 4.</p>
+<h3 id="two-keys-instead-of-one">Two keys instead of one</h3>
+<p>Ordinary locks use one key, and anyone who has it can both lock and unlock. Ordinary secrets work the same way: a password that lets you prove who you are also lets anyone else who learns it prove they are you. The whole difficulty of password security follows from that single fact.</p>
+<p>Cryptography of the kind used here works differently. A key comes in two mathematically related halves, made together, and what one half does the other undoes. One half — the <em>private</em> key — is kept by its owner and never shown to anyone. The other half — the <em>public</em> key — is published as widely as possible; there is no harm in anyone having it.</p>
+<p>The useful consequence is this. The holder of the private half can perform an operation on a piece of text that produces a short block of data called a <em>signature</em>. Anyone holding the public half can then check the signature and learn two things at once: that it was made by the holder of the private half, and that the text has not been altered by so much as a comma since. What they cannot do, no matter how many signatures they examine, is work out the private half or produce a new signature themselves.</p>
+<p>The closest traditional object is a seal rather than a signature. A wax seal impressed with a signet ring produces a mark everyone can recognise, while the ring itself never leaves the owner's hand. Publishing the <em>pattern</em> of the seal makes forgery no easier; only possession of the ring does. The mathematical version has one property the wax one lacks: the seal is computed from the text, so it seals that exact text and no other. Change a word and the seal no longer matches.</p>
+<h3 id="the-scheme-used-here-and-why-the-choice-matters">The scheme used here, and why the choice matters</h3>
+<p>The particular scheme this platform uses is a published, widely adopted one designed in the early 2010s. Its authors set out to be fast, to produce small signatures, and — the reason it matters most here — to remove a class of implementation mistake that had caused real failures in the previous generation of signature schemes, where a subtle error in how randomness was generated could leak the private key to anyone who collected enough signatures [bernstein-2012-ed25519]. We chose an established scheme rather than designing one. In this field, novelty is a liability.</p>
+<h3 id="what-a-licence-looks-like-once-it-is-a-sealed-statement">What a licence looks like once it is a sealed statement</h3>
+<p>A licence here is not a serial number and not a database row. It is a short statement — which product, until when the release channel runs, what the licence entitles the holder to, the earliest version it covers, and an opaque reference to the purchasing party — with the seal placed in front of it. The whole thing is encoded as a single block of text the buyer holds.</p>
+<p>Two things follow directly. The first is that the statement is self-contained: everything needed to evaluate the licence is inside it, so checking it requires no lookup anywhere. The second is that it cannot be edited. A buyer cannot extend their own expiry date, and neither can anybody else, because any change breaks the seal.</p>
+<p>The check itself is arithmetic. In the running system, the component that hands out software releases takes the block of text, separates the seal from the statement, verifies the seal against the public key it holds, and then reads the statement to see whether it covers the thing being requested. It contacts nothing. It queries no database. It does not ask the part of the system that issued the licence whether the licence is still good, because it has no need to and no way to. We read this routine directly in preparing this paper rather than relying on a description of it.</p>
+<p>One consequence of that design is worth drawing out because it is not obvious. The half of the key pair that can <em>create</em> licences is held only by the storefront. The component that <em>checks</em> them holds only the public half. If the checking component were broken into entirely, the intruder would gain the ability to hand out files — which is bad — but not the ability to manufacture a single valid licence, because the means of doing so is not there to steal.</p>
+<h3 id="signing-the-software-itself-separately">Signing the software itself, separately</h3>
+<p>There is a second, independent use of the same machinery, and it is deliberately available to everyone. Each released file is published alongside a detached seal of its own — a small separate file that seals the contents of that exact binary. That seal is served to anybody who asks for it, with no licence required and no payment, because a seal on a public file is public by design. Its purpose is to let any party confirm that the file they hold is the file we published and has not been tampered with in transit or on a mirror. A buyer, a security researcher, or a customer's own IT contractor can perform that check without holding a licence and without our permission.</p>
+<h2 id="4-what-a-payment-recorded-in-public-is">4. What a payment recorded in public is</h2>
+<h3 id="the-register-not-the-receipt">The register, not the receipt</h3>
+<p>Now the second half of the proof. Suppose a buyer can demonstrate that their licence is genuine. How do they demonstrate it was paid for?</p>
+<p>In the ordinary arrangement, the answer is a receipt: a document the seller produced, saying the seller received money. It is evidence, but it is evidence of exactly one thing — that the seller says so. A forged receipt and a genuine one look the same to a third party. The only way to check is to ask the seller, which returns us to attestation.</p>
+<p>The alternative is a payment made over a <em>public settlement network</em> — a register of transfers that is maintained collectively rather than by one institution, and that anybody may read in full. Every transfer in it has a reference of its own. Given that reference, any independent observer can look up the transfer, see the amount, see the parties' addresses, see the date, and confirm that it happened. The seller is not involved in that confirmation and cannot prevent it.</p>
+<p>The public land register is the right traditional comparison, and it is a closer one than it first appears. Both are public. Both are indexed so that a single entry can be cited. Both are maintained by an arrangement designed to outlive the parties to any individual entry. And in both, the public record is <em>the</em> record — not a copy of a private one, but the authoritative thing itself. The mechanism by which a collectively maintained register of this kind can be kept consistent without a single institution in charge was set out in a well-known 2008 paper [nakamoto-2008-bitcoin], building on much earlier work on how to fix a document's existence at a point in time so the fixing cannot later be backdated [haber-stornetta-1991-timestamping-digital-documents].</p>
+<h3 id="what-we-actually-do-with-it">What we actually do with it</h3>
+<p>The platform's payment side is a read-only observer of such a network. It does not run anything on that network, does not hold a contract there, and does not ask anyone's permission to watch. It simply reads the public record, looking for transfers addressed to our own address, and when it sees one confirmed it writes a local receipt noting the transfer reference, the sender, the block it appeared in, when it confirmed, and which product the amount corresponds to.</p>
+<p>The currency used is a unit pegged to the US dollar rather than a floating one, for a straightforward practical reason: a fixed software price is meaningless if the amount required changes between the buyer deciding and the buyer paying. The settlement network chosen is one with transaction costs low enough that a purchase in the single-digit dollar range is not dominated by the cost of making it.</p>
+<p>A buyer who prefers a dedicated receiving address for their own accounting can have one, derived for their order alone from a master value we hold, along a standard derivation path. That is an option rather than the default, and payments to derived addresses are observed by the same watcher.</p>
+<h3 id="the-sequence-and-what-is-absent-from-it">The sequence, and what is absent from it</h3>
+<p>The whole purchase runs as follows. The buyer sends the payment. The watcher observes the public record and writes the receipt. The buyer presents their transfer reference to the storefront, which finds the receipt and issues the sealed licence. The buyer presents the licence to the release component, which checks the seal and sends the file.</p>
+<p>Three things are absent from that sequence, and their absence is the design.</p>
+<p>There is no account. No registration, no password, and no profile to sign into later. The transfer reference is the order number, and asking the same question twice returns the same licence rather than creating a second one.</p>
+<p>There is no intermediary holding funds. The payment goes directly, and the settlement is between the two parties on a public register.</p>
+<p>And there is no moment at which the buyer's ability to prove what they hold depends on a system we operate. The seal is checkable against a public key. The payment is checkable against a public register. Both remain checkable if every machine we run is switched off, which is the entire point.</p>
+<h3 id="what-this-does-not-yet-do">What this does not yet do</h3>
+<p>Four limits belong here rather than at the end, because a reader assessing the claim needs them in the same breath as the claim.</p>
+<p>A licence once issued cannot be withdrawn. The design anticipates the checking component holding a list of licences no longer honoured; that list is not built. Until it is, a licence in circulation is good until its own channel date passes, whatever happens in between. For a one-time purchase of a perpetual right this is mostly the correct behaviour, but it is not a deliberate policy so much as a phase we have not reached, and we would rather say which it is.</p>
+<p>We publish our own verification key at a known address so that a buyer's own tooling can check a seal without asking us anything — which is the mechanism that makes the independence claim real rather than rhetorical. The underlying service serves it correctly. A routing fault in front of the public site means a request to that address does not presently reach the handler. Until that is repaired, independent key retrieval over the public site should be treated as unavailable, which weakens the practical form of this paper's own central claim today even though the design and the code behind it are sound.</p>
+<p>Recording the buyer's ownership of a specific file as an entry on the public network itself — so that the ownership, and not only the payment, is a public fact — is planned and not built. The association between a file and a purchaser is being written down now so that the data exists when the capability is added.</p>
+<p>And every product currently listed is priced at zero for a beta period and requires no licence at all to download. The ordering, watching, sealing, and checking described above are working code, and that code is what a paid order will use. It has not yet been exercised by paid orders at volume.</p>
+<h2 id="5-what-an-expiring-licence-actually-ends">5. What an expiring licence actually ends</h2>
+<p>This deserves its own short section, because it is the question a buyer asks immediately and because the honest answer is easy to state and easy to check.</p>
+<p>The sealed statement carries a date. What that date governs is the <em>release channel</em> — the right to be handed further releases of the product. It does not govern the running of software already installed.</p>
+<p>The reason is not restraint on our part; it is where the checks live. There are two places in this system where a licence is examined, and both sit on the paid side of the commercial boundary. The first is the component that hands out release files, at the moment a file is requested. The second is the paid aggregation layer — the commercial component that asks one question of many archives at once — which checks its own licence when it starts, entirely offline against a public key built into itself, and withdraws its own paid service if that licence has lapsed past a grace period of thirty days. That is a paid component enforcing the thing that was paid for.</p>
+<p>What matters here is the third place, where no check exists. In preparing this paper we looked in the free software a customer actually runs to hold and work with their records — the operating system inside an archive, the console, the workplace system — for any licence check at all. There is none. Nothing in them reads a licence, consults an entitlement, or compares a date against a clock. A copy already installed does not stop when a licence expires, because nothing in it is looking, and an archive and its records stay reachable whatever happens to any licence.</p>
+<p>There is a corresponding statement about our own infrastructure. If the storefront is unavailable, no new orders can be placed and every licence already issued continues to work. If the release component is unavailable, downloads stop and licences remain valid. Neither outage reaches software already on a customer's machine, because that software has no relationship with either of them — and the paid layer's own check, being offline, does not reach out to us either.</p>
+<p>A companion paper on this site argues the commercial position that follows — that software should be sold once, in full, for a version that keeps working. The mechanism described here is what makes that position something other than a promise.</p>
+<h2 id="6-what-this-changes-for-the-buyer">6. What this changes for the buyer</h2>
+<p>The first change is who has to still exist. Under the ordinary arrangement, a buyer's proof of a perpetual licence depends on the seller continuing to operate a particular service. Here it depends on arithmetic and on a public register, neither of which is ours. A buyer holding their sealed licence, the transfer reference, and our published verification key can establish both halves of their position with no reference to us.</p>
+<p>The second change is what a third party can be shown. A buyer's accountant, auditor, lender, or acquirer frequently needs to establish what software assets a business holds and what it paid for them. Today that examination consists of asking the business for invoices and, where it matters, asking the vendor to confirm. Under this arrangement the examiner can be handed a sealed licence and a transfer reference and check both themselves, at their own desk, with neither party's cooperation.</p>
+<p>The third change is what happens in an acquisition or a winding-up. When a software company is bought, its customers' licences become a matter of what the acquirer chooses to honour and what records survived the transition. A licence that verifies against a published key does not require the acquirer to have inherited anything, and a payment recorded in public does not require the acquirer to have inherited the ledger.</p>
+<p>The trade-offs are real and belong in the same paragraph. A buyer holds the licence, which means a buyer can lose the licence; there is no "forgot my password" path, because there is no account to recover. Settling in a unit priced on a public network is unfamiliar and, for a small business without anyone comfortable with it, a real barrier — it is the part of this design most likely to be a practical obstacle rather than a benefit. A public payment record is public: the amount and the addresses involved are visible to anyone with the reference, which is precisely what makes the verification work and is also a disclosure a buyer should make knowingly. And the independence claim is currently stronger in design than in practice, because the route by which a buyer would fetch our verification key is broken on the public site today.</p>
+<h2 id="7-an-open-invitation">7. An open invitation</h2>
+<p>This paper states a position we hold and several questions we cannot settle from where we sit.</p>
+<p>To researchers and practitioners in licensing infrastructure: the case handled here is the simplest one — a single product, owned outright by one buyer, with a release channel that expires. We do not know whether the model extends cleanly to the arrangements real businesses actually buy: per-seat licences where the seat count changes, usage-based licences where the count must be established after the fact, or site licences held by an entity whose membership changes. Each of those seems to reintroduce a party who must be consulted, which is the thing this design removes. Whether that is a fundamental limit or an unsolved design problem is a question we would rather work with people who have built such systems than answer alone.</p>
+<p>To specialists in verifiable credentials and standardised proof formats: the sealed statement described in Section 3 is a bespoke construction, and there is a mature standardised family of constructions for holder-carried credentials checkable by a third party without contacting the issuer [w3c-verifiable-credentials]. We chose the simple bespoke form because it was small and we understood it completely. We suspect that was the right trade for a first system and the wrong one for a durable standard, and we would value being told which by people who work on the standardised forms.</p>
+<p>To auditors and assurance professionals: a seal verified against a published key is mathematically conclusive, and it is not, so far as we are aware, a recognised form of evidence in any assurance standard. What documentation, procedure, or independent attestation an examiner would need before relying on such a check in place of a vendor confirmation letter is a question for that profession rather than for us, and the answer determines how much of Section 6's second claim is actually available today.</p>
+<p>To insolvency practitioners and lawyers who handle the wind-up of technology companies: the argument in Section 6 that these proofs survive a seller's failure is our reasoning about a situation we have not been in. What a liquidator, an acquirer, or a court actually does with a customer's cryptographic proof of purchase — whether it is treated as conclusive, as evidence, or as a curiosity — is something we would rather learn from people who have administered such estates.</p>
+<p>And to anyone who has deployed public-network settlement for small business customers: our honest assessment is that this is the weakest practical link in the design. We would rather hear where it has failed for ordinary buyers than discover it ourselves one customer at a time.</p>
+<h2 id="8-conclusion">8. Conclusion</h2>
+<p>A buyer's proof that they own what they bought should not require the seller's continued existence, competence, or goodwill. Both halves of that proof can be made independent. That the licence is genuine is established by a seal anyone can check against a published key, with the means of creating such seals held in one place and the means of checking them held everywhere. That it was paid for is established by a transfer recorded on a public settlement network, citable by its own reference and confirmable by any observer. No account is created, no intermediary holds the money, and nothing about the arrangement requires us to answer a question for the buyer's position to hold. What an expiry ends is the stream of future releases, not the software already installed — a fact about where the check is, not a promise about how we will behave. The arrangement is built and running, with a list of withdrawn licences not yet implemented, the public route to our own verification key presently broken, and every product still priced at zero while the model is tested. We hold that a proof you can check yourself is worth more than a promise from a party who may not be there, and we intend to close the three gaps above rather than argue around them.</p>
 <h2 id="references">References</h2>
-<p>Bernstein, D. J., N. Duif, T. Lange, P. Schwabe, and B.-Y. Yang.
-2012. High-speed high-security signatures. <em>Journal of Cryptographic
-Engineering</em> 2(2): 77–89.</p>
-<p>Haber, S., and W. S. Stornetta. 1991. How to time-stamp a digital
-document. <em>Journal of Cryptology</em> 3(2): 99–111.</p>
-<p>Nakamoto, S. 2008. <em>Bitcoin: A Peer-to-Peer Electronic Cash
-System.</em> bitcoin.org.</p>
+<p>Haber, S., and Stornetta, W. S. 1991. How to time-stamp a digital document. <em>Journal of Cryptology</em> 3(2): 99–111.</p>
+<p>Bernstein, D. J., Duif, N., Lange, T., Schwabe, P., and Yang, B.-Y. 2012. High-speed high-security signatures. <em>Journal of Cryptographic Engineering</em> 2(2): 77–89.</p>
+<p>Nakamoto, S. 2008. <em>Bitcoin: A Peer-to-Peer Electronic Cash System.</em> <a href="https://bitcoin.org/bitcoin.pdf"><span>https://bitcoin.org/bitcoin.pdf</span></a></p>
+<p>World Wide Web Consortium. <em>Verifiable Credentials Data Model 2.0.</em> <a href="https://www.w3.org/TR/vc-data-model-2.0/"><span>https://www.w3.org/TR/vc-data-model-2.0/</span></a></p>
 <h2 id="contributors">Contributors</h2>
-<p>Peter M. Woodfine, Jennifer M. Woodfine, and Mathew Woodfine are
-credited as founding contributors to PointSav Digital Systems's
-software-economics research programme.</p>
+<p>Prepared by Woodfine Management Corp.</p>
 <h2 id="how-this-paper-was-produced">How this paper was produced</h2>
-<p>This paper was prepared with AI assistance under human editorial
-direction; all analytical claims and conclusions are the responsibility
-of the named institutional author.</p>
+<p>This paper is grounded in the operating and development work the preparing staff do themselves, and in what they have learned from the people they work with routinely: the graphic designers, web developers, and software developers and engineers who build the platform alongside them, and the architects and structural, building-services, and civil engineers they develop buildings with. No outside professional reviewed or approved this paper, and nothing in it is professional advice. It was drafted and edited with AI assistance under editorial direction, and the analysis and conclusions are Woodfine's own.</p>
 <h2 id="disclosures">Disclosures</h2>
-<p>The architecture described is this site's own deployed licensing and
-distribution mechanism, disclosed directly because the paper uses it as
-its worked example. No named competitor or specific competing product is
-referenced or compared. This paper contains forward-looking language
-about the architecture's intended guarantees; such statements reflect
-current design choices and are subject to change without notice.</p>
+<p>Woodfine Capital Projects Inc. ("Woodfine") is the author of record. PointSav Digital Systems, which builds the platform described, is currently a trade name of Woodfine, planned to become a wholly-owned Woodfine subsidiary upon incorporation; PointSav does not itself offer, sell, or solicit any security. The licensing and payment architecture described is our own design and our own commercial model, so this paper argues for an approach we have a direct commercial interest in. This work was funded internally; no external research funding was received. Sections 3 and 4 describe cryptographic and settlement mechanisms in general terms in order to explain a design; nothing in this paper is legal, tax, accounting, or financial advice, and nothing in it is a recommendation to acquire, hold, or transact in any currency, digital asset, or settlement network. This paper's content is provided for engineering, operational, and research purposes and does not constitute investment advice or a solicitation to invest in any Woodfine direct-hold solution. Some statements above describe planned or intended future work; language such as "planned," "intended," "targeted," "may," and "expected" marks this forward-looking content, which is subject to change and does not constitute a commitment regarding future performance.</p>
 <h2 id="data-and-reproducibility">Data and reproducibility</h2>
-<p>This is an architectural paper describing a real, deployed system
-rather than reporting an empirical dataset. The public payment ledger
-and the per-binary artifact hash chain are, by design, independently
-verifiable by any third party without vendor cooperation.</p>
+<p>The mechanism described in this paper was confirmed by reading the platform's own published source directly in preparing it, rather than from a summary. The routine that checks a licence separates the seal from the sealed statement, verifies it strictly against a stored public key, and then compares the product, the release-channel date, and what the licence entitles the holder to — touching no network and no database at any point. The provision by which a product may be served with no licence check at all is a setting in that product's own description file, read by the same component. A search of the archive operating system, the console, and the workplace system for any licence, token, or entitlement check returned nothing, which is the basis for Section 5; the same search found licence-verification code in the paid aggregation layer, where it is documented at its own definition site as an offline check against a built-in public key with a thirty-day grace period, which is reported in Section 5 rather than omitted. The payment side reads a public settlement network and holds no position on it; any independent observer of that network can confirm a transfer from its reference without our involvement, which is the property the argument rests on. The three incomplete items named in Section 4 — no withdrawal list, the broken public route to our verification key, and the not-yet-built public record of ownership — are each stated in the platform's own published operating documentation, and the second of them is described there as a known fault rather than a design choice. The zero-price beta status of every currently listed product is likewise stated there. The code is open source and published in full, so a reader with access to it can confirm each of these at the place it is defined. No independent party has audited this software, reviewed its cryptographic implementation, or verified these claims.</p>
+<p>PointSav Digital Systems™ and Woodfine Capital Projects™ are trademarks of Woodfine Capital Projects Inc.</p>

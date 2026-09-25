@@ -1408,8 +1408,9 @@ fn render_privacy_page(lang: Lang) -> Response {
         .into_response()
 }
 
-// GET /working-papers — the 3 JOURNAL papers assigned to software.pointsav.com.
-// Added 2026-09-15 (project-editorial's /working-papers rendering bootstrap).
+// GET /working-papers — the 4 final JOURNAL papers assigned to software.pointsav.com.
+// Added 2026-09-15 (project-editorial's /working-papers rendering bootstrap);
+// refreshed 2026-09-24 to the final corpus (see ui/working_papers.rs doc comment).
 // English-only, same pattern as every other non-MVL page's fallback: no /es
 // sibling for paper bodies (institutional-authorship JOURNAL content is never
 // translated, matching every other site's own JOURNAL convention).
