@@ -295,9 +295,15 @@ mod tests {
 
     #[test]
     fn loads_real_shipped_taxonomy_without_warnings() {
-        let t = load_document_naming_taxonomy(
-            "/srv/foundry/clones/project-input/service-input/tests/fixtures/document-naming-taxonomy.csv",
-        );
+        // Was hardcoded to /srv/foundry/clones/project-input/... -- real bug
+        // found 2026-09-23: that path no longer exists (project-input folded
+        // into project-totebox, its clone directory removed), so this test
+        // had been silently failing since the consolidation. CARGO_MANIFEST_DIR
+        // anchors it to this crate's own checkout instead.
+        let t = load_document_naming_taxonomy(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/document-naming-taxonomy.csv"
+        ));
         assert_eq!(t.entries.len(), 77);
         assert!(t.warnings.is_empty(), "unexpected warnings: {:?}", t.warnings);
     }

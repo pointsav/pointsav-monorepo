@@ -1084,8 +1084,13 @@ async fn main() {
     }
     // Same tests/fixtures/ rationale as code_namespaces_path above — this
     // is service-input's own real shipped vocabulary, not a test-only file.
+    // Was hardcoded to /srv/foundry/clones/project-input/... -- real bug found
+    // 2026-09-23: that path no longer exists (project-input folded into
+    // project-totebox, its clone directory removed), silently zeroing this
+    // crate's live taxonomy load in production. CARGO_MANIFEST_DIR anchors
+    // this to wherever this crate is actually checked out instead.
     let taxonomy_path = std::env::var("SERVICE_INPUT_TAXONOMY").unwrap_or_else(|_| {
-        "/srv/foundry/clones/project-input/service-input/tests/fixtures/document-naming-taxonomy.csv".into()
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/document-naming-taxonomy.csv").into()
     });
     let taxonomy = taxonomy::load_document_naming_taxonomy(&taxonomy_path);
     if taxonomy.warnings.is_empty() {
