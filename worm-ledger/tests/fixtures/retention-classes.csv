@@ -1,0 +1,29 @@
+# retention-classes.csv — retention-class vocabulary for service-fs's
+# disposal mechanism (Decisions locked #7, BRIEF-cross-compliance-worm-
+# design.md, project-input). Grounded in that BRIEF's real compliance
+# research — not invented values. `duration_days` blank means no-expiry
+# (permanent retention, never eligible for disposal, D11's per-deployment
+# "no expiry" setting).
+#
+# This is a shipped, software-controlled vocabulary, not customer-editable
+# in place — unlike document-naming-taxonomy.csv's desk/type axes. A
+# customer needing a new class is a real compliance decision, not a
+# label edit.
+#
+# Columns: class,duration_days,regime,notes,anchor
+# anchor (added when this vocabulary moved into worm-ledger, BRIEF-
+# os-totebox-communication-complex-2026-09.md): blank/absent = created
+# (record's own creation timestamp). finra-6y anchors on last-entry
+# because FINRA 4511's "books of original entry" duty runs from the
+# end of the fiscal year the last entry was made in, not from when any
+# one entry was created -- getting this wrong understated real expiry
+# dates for anything ledger-shaped (bookkeeping, minutebook) until
+# fixed. Communications-style classes (finra-3y, mifid-5y) are
+# individually-dated events, not entries in a running book, so
+# creation-anchored is correct for them as-is.
+class,duration_days,regime,notes,anchor
+finra-6y,2192,FINRA Rule 4511,6-year default retention period for most broker-dealer books of original entry (2192 days ~= 6 x 365.33 -- approximate calendar-day count; not leap-year-adjusted),last-entry
+finra-3y,1096,FINRA Rule 4511,3-year exception for most business communications
+mifid-5y,1827,MiFID II -- confidence downgraded per BRIEF decisions-open #11: well-reasoned legal argument uncontested across practitioner sources but not ESMA-adjudicated precedent,5-year retention argument
+no-expiry,,NARA-style permanent retention,never eligible for disposal -- e.g. corporate minutebook/constating documents held under a permanent-record posture
+internal-90d,90,Internal housekeeping,non-regulated short-lived content with no external retention obligation

@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "envelope"
+version = "0.1.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "The Envelope record -- one signed schema for 'an assertion about entities at a time, with source, observed-vs-attested state, and lineage.' Foundational data model for the os-totebox communication + data-collection + POI complex. See BRIEF-os-totebox-communication-complex-2026-09.md decision 8."
+license = "Apache-2.0"
+
+[lib]
+name = "envelope"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ciborium = { version = "0.2", default-features = false, features = ["std"] }
+chrono = { version = "0.4", default-features = false, features = ["std", "clock", "serde"] }
+tempfile = "3"

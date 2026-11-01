@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "worm-ledger"
+version = "0.1.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "WORM (Write-Once-Read-Many) ledger core -- the LedgerBackend trait, entry/checkpoint types, and InMemory/PosixTile backend implementations. Extracted from service-fs so every service can own its own ledger instance instead of writing through one shared daemon process; the durable contract is this trait, not any one process. See BRIEF-os-totebox-communication-complex-2026-09.md decision 6."
+license = "Apache-2.0"
+
+[lib]
+name = "worm_ledger"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"
+ed25519-dalek = "2"
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock", "serde"] }
+csv = "1.3"

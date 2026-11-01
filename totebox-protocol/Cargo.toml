@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "totebox-protocol"
+version = "0.1.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "The unified os-totebox wire protocol -- one protocol for client<->server and fleet server<->server, QUIC transport, postcard-framed RPC/subscription carrying signed canonical-CBOR Envelope bodies, deny-by-default capability table. See BRIEF-os-totebox-communication-complex-2026-09.md decision 9."
+license = "Apache-2.0"
+
+[lib]
+name = "totebox_protocol"
+path = "src/lib.rs"
+
+[dependencies]
+envelope = { path = "../envelope" }
+worm-ledger = { path = "../worm-ledger" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ciborium = { version = "0.2", default-features = false, features = ["std"] }
+postcard = { version = "1", features = ["use-std"] }
+chrono = { version = "0.4", default-features = false, features = ["std", "clock", "serde"] }
+quinn = "0.11"
+rustls = { version = "0.23", default-features = false, features = ["std", "ring", "tls12"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time"] }
+
+[dev-dependencies]
+rcgen = "0.13"

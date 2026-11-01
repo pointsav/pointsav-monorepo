@@ -1,6 +1,11 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
-//! EWS SOAP client — replaces the former Microsoft Graph REST bridge.
+//! EWS SOAP client — implements `crate::ingest::IngestAdapter`, the
+//! first (as of Phase 1) of possibly several ingest adapters this
+//! crate wraps. Moved here verbatim from the former top-level
+//! `ews_client.rs` per
+//! `BRIEF-os-totebox-communication-complex-2026-09.md` Phase 1, step
+//! 1a — replaces the former Microsoft Graph REST bridge.
 //!
 //! Sends SOAP requests to Exchange Web Services using a pre-acquired
 //! bearer token. Protocol: Exchange Web Services 2016 over HTTPS.
@@ -165,6 +170,26 @@ impl EwsClient {
         )
         .await?;
         Ok(())
+    }
+}
+
+impl super::IngestAdapter for EwsClient {
+    async fn find_new(&self) -> Result<Vec<String>, super::IngestError> {
+        self.find_unread_ids()
+            .await
+            .map_err(|e| super::IngestError(e.to_string()))
+    }
+
+    async fn fetch_raw(&self, id: &str) -> Result<Vec<u8>, super::IngestError> {
+        self.get_mime(id)
+            .await
+            .map_err(|e| super::IngestError(e.to_string()))
+    }
+
+    async fn mark_ingested(&self, id: &str) -> Result<(), super::IngestError> {
+        self.mark_read(id)
+            .await
+            .map_err(|e| super::IngestError(e.to_string()))
     }
 }
 

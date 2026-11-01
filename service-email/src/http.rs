@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Axum router and application state for service-email.
 //!
 //! Endpoints:
 //!   GET  /healthz   → liveness, always 200
 //!   GET  /readyz    → readiness; 200 with module_id
-//!   POST /mcp       → MCP JSON-RPC 2.0 tool interface (email.ingest)
+//!   POST /mcp       → MCP JSON-RPC 2.0 tool interface (email.ingest, email.send)
 
 use std::sync::Arc;
 
@@ -16,12 +16,17 @@ use axum::routing::{get, post};
 use axum::Router;
 use serde::Serialize;
 
-use crate::fs_client::FsClient;
+use crate::ledger_backing::LedgerBacking;
 use crate::mcp::mcp_handler;
 
 pub struct AppState {
     pub module_id: String,
-    pub fs_client: FsClient,
+    pub ledger_backing: Arc<LedgerBacking>,
+    /// Outbound SMTP relay `(host, port)`, if configured
+    /// (`EMAIL_SMTP_RELAY_HOST`/`EMAIL_SMTP_RELAY_PORT`). `email.send`
+    /// returns an error when this is `None` rather than guessing a
+    /// destination.
+    pub smtp_relay: Option<(String, u16)>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! MCP-server interface layer for service-email.
 //!
@@ -192,6 +192,23 @@ fn handle_tools_list() -> Value {
                     },
                     "required": ["source_id", "raw_eml_bytes_b64"]
                 }
+            },
+            {
+                "name": "email.send",
+                "description": "Build and send an outbound email via this service's \
+                    configured SMTP relay (EMAIL_SMTP_RELAY_HOST/EMAIL_SMTP_RELAY_PORT). \
+                    The sent message is also appended to this service's own ledger as an \
+                    outbound record. Returns the assigned ledger cursor.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "from": { "type": "string" },
+                        "to": { "type": "array", "items": { "type": "string" } },
+                        "subject": { "type": "string" },
+                        "text_body": { "type": "string" }
+                    },
+                    "required": ["from", "to", "subject", "text_body"]
+                }
             }
         ]
     })
@@ -235,8 +252,8 @@ async fn handle_tools_call(
                 })?;
 
             let cursor = state
-                .fs_client
-                .append_email(source_id, &bytes)
+                .ledger_backing
+                .append_message(source_id, &bytes, crate::ledger_backing::Direction::Inbound)
                 .map_err(|e| (INTERNAL_ERROR, e.to_string()))?;
 
             let result_text = serde_json::to_string(&serde_json::json!({
@@ -244,6 +261,62 @@ async fn handle_tools_call(
                 "message_id": source_id,
             }))
             .unwrap_or_default();
+
+            Ok(serde_json::json!({
+                "content": [{"type": "text", "text": result_text}],
+                "isError": false
+            }))
+        }
+        "email.send" => {
+            let args = &params["arguments"];
+
+            let (host, port) = state.smtp_relay.clone().ok_or_else(|| {
+                (
+                    INTERNAL_ERROR,
+                    "no outbound SMTP relay configured (set EMAIL_SMTP_RELAY_HOST/\
+                     EMAIL_SMTP_RELAY_PORT)"
+                        .to_string(),
+                )
+            })?;
+
+            let from = args["from"]
+                .as_str()
+                .ok_or_else(|| (INVALID_PARAMS, "arguments.from is required".to_string()))?;
+
+            let to: Vec<&str> = args["to"]
+                .as_array()
+                .ok_or_else(|| (INVALID_PARAMS, "arguments.to must be an array".to_string()))?
+                .iter()
+                .filter_map(|v| v.as_str())
+                .collect();
+            if to.is_empty() {
+                return Err((INVALID_PARAMS, "arguments.to must have at least one recipient".to_string()));
+            }
+
+            let subject = args["subject"]
+                .as_str()
+                .ok_or_else(|| (INVALID_PARAMS, "arguments.subject is required".to_string()))?;
+
+            let text_body = args["text_body"]
+                .as_str()
+                .ok_or_else(|| (INVALID_PARAMS, "arguments.text_body is required".to_string()))?;
+
+            let cursor = crate::smtp_send::send_plain(
+                &host,
+                port,
+                crate::smtp_send::OutboundMessage {
+                    from,
+                    to,
+                    subject,
+                    text_body,
+                },
+                &state.ledger_backing,
+            )
+            .await
+            .map_err(|e| (INTERNAL_ERROR, e.to_string()))?;
+
+            let result_text = serde_json::to_string(&serde_json::json!({ "cursor": cursor }))
+                .unwrap_or_default();
 
             Ok(serde_json::json!({
                 "content": [{"type": "text", "text": result_text}],
@@ -265,10 +338,32 @@ mod tests {
     use tower::ServiceExt;
 
     fn make_state(module_id: &str) -> Arc<AppState> {
-        use crate::fs_client::FsClient;
+        use crate::ledger_backing::LedgerBacking;
+        use worm_ledger::InMemoryLedger;
+
+        static TMPCTR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let n = TMPCTR.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        let dir = std::env::temp_dir().join(format!(
+            "service-email-mcp-test-ledger-{}-{}",
+            std::process::id(),
+            n
+        ));
+        let vocab_path = std::env::temp_dir().join(format!(
+            "service-email-mcp-test-vocab-{}-{}.csv",
+            std::process::id(),
+            n
+        ));
+        std::fs::write(
+            &vocab_path,
+            "class,duration_days,regime,notes\nemail-message,,test,test\n",
+        )
+        .unwrap();
+        let ledger = Box::new(InMemoryLedger::open(dir, module_id).unwrap());
+        let vocab = worm_ledger::retention::load_retention_classes(vocab_path.to_str().unwrap());
         Arc::new(AppState {
             module_id: module_id.to_string(),
-            fs_client: FsClient::new("http://127.0.0.1:0", module_id),
+            ledger_backing: Arc::new(LedgerBacking::new(ledger, vocab, module_id)),
+            smtp_relay: None,
         })
     }
 
@@ -327,13 +422,47 @@ mod tests {
             tools.iter().any(|t| t["name"] == "email.ingest"),
             "email.ingest must be listed"
         );
+        assert!(
+            tools.iter().any(|t| t["name"] == "email.send"),
+            "email.send must be listed"
+        );
     }
 
     #[tokio::test]
-    async fn tools_call_ingest_returns_error_without_fs() {
-        // With no real service-fs, FsClient::append_email fails at
-        // transport (port 0 refuses connections). The RPC response must
-        // be a JSON-RPC error, not a panic.
+    async fn email_send_without_relay_configured_returns_error() {
+        let state = make_state("m8");
+        let app = crate::http::router(state);
+        let resp = mcp_call(
+            app,
+            "m8",
+            serde_json::json!({
+                "jsonrpc": "2.0", "id": 8,
+                "method": "tools/call",
+                "params": {
+                    "name": "email.send",
+                    "arguments": {
+                        "from": "a@example.com",
+                        "to": ["b@example.com"],
+                        "subject": "hi",
+                        "text_body": "hi"
+                    }
+                }
+            }),
+        )
+        .await;
+        assert!(
+            resp["error"].is_object(),
+            "expected RPC error when no relay configured, got: {resp}"
+        );
+    }
+
+    #[tokio::test]
+    async fn tools_call_ingest_succeeds_against_local_ledger() {
+        // Real improvement over the old FsClient-backed test this
+        // replaces: ingest no longer depends on a remote service-fs
+        // being reachable (the old test here asserted the *failure*
+        // mode when no such server was running — that failure mode no
+        // longer exists, persistence is in-process).
         let state = make_state("m3");
         let app = crate::http::router(state);
         let bytes_b64 = base64::engine::general_purpose::STANDARD
@@ -355,9 +484,13 @@ mod tests {
         )
         .await;
         assert!(
-            resp["error"].is_object(),
-            "expected JSON-RPC error when fs_client has no server, got: {resp}"
+            resp["error"].is_null(),
+            "expected email.ingest to succeed against the local ledger, got: {resp}"
         );
+        let content = resp["result"]["content"][0]["text"].as_str().unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(content).unwrap();
+        assert_eq!(parsed["message_id"], "msg-001");
+        assert!(parsed["cursor"].as_u64().unwrap() >= 1);
     }
 
     #[tokio::test]

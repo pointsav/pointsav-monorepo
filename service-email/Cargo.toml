@@ -1,25 +1,31 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 [package]
-license = "AGPL-3.0-or-later"
+license = "Apache-2.0"
 name = "service-email"
 version = "0.1.0"
 edition = "2021"
 description = "Ring 1 Communications Ledger — EWS SOAP ingest from Microsoft Exchange."
 
 [dependencies]
+worm-ledger = { path = "../worm-ledger" }
+envelope = { path = "../envelope" }
 tokio = { version = "1.35", features = ["full"] }
 reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
 axum = "0.7"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-ureq = { version = "3.3.0", default-features = false, features = ["json"] }
 base64 = "0.22"
 uuid = { version = "1.6", features = ["v4"] }
-chrono = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+mail-send = { version = "0.6.2", default-features = false, features = ["tls12", "ring", "builder"] }
+smtp-proto = "0.2.4"
+rustls = { version = "0.23", features = ["ring"] }
+tokio-rustls = "0.26"
 
 [dev-dependencies]
 tower = { version = "0.4", features = ["util"] }
+rcgen = "0.14"
