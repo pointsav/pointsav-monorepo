@@ -404,8 +404,7 @@ pub fn verify_checkpoint_signature(
     let vk = ed25519_dalek::VerifyingKey::from_bytes(&vk_arr)
         .map_err(|e| LedgerError::InvalidKey(format!("invalid verifying key: {e}")))?;
     let sig = ed25519_dalek::Signature::from_bytes(&sig_arr);
-    use ed25519_dalek::Verifier as _;
-    Ok(vk.verify(body.as_bytes(), &sig).is_ok())
+    Ok(vk.verify_strict(body.as_bytes(), &sig).is_ok())
 }
 
 /// In-memory `LedgerBackend` implementation. Used today for unit
@@ -815,6 +814,25 @@ mod tests {
         assert!(
             !verify_checkpoint_signature(&cp, &wrong_vk).unwrap(),
             "signature must NOT verify with the wrong key"
+        );
+    }
+
+    #[test]
+    fn checkpoint_signature_rejects_small_order_key() {
+        // Identity point as the verifying key, signature R = identity, S = 0: plain
+        // `verify` accepts this for any body; `verify_strict` must not.
+        let key = SigningKey::from_bytes(&[1u8; 32]);
+        let l = InMemoryLedger::open_with_signing_key(tmpdir(), "foundry", key).unwrap();
+        l.append("a", &serde_json::json!({"x": 1})).unwrap();
+        let mut cp = l.checkpoint().unwrap();
+        let mut sig = vec![0u8; 64];
+        sig[0] = 1;
+        cp.signature = Some(sig);
+        let mut identity = [0u8; 32];
+        identity[0] = 1;
+        assert!(
+            !verify_checkpoint_signature(&cp, &identity).unwrap(),
+            "small-order key with identity signature must be rejected"
         );
     }
 

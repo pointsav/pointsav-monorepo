@@ -106,8 +106,9 @@ pub fn verify_pair_token(token: &str, public_key_b64: &str) -> Result<TokenPaylo
     let sig = Signature::from_bytes(&sig_arr);
 
     // Verify: signature is over the payload_b64 bytes (same convention as membership.rs).
-    use ed25519_dalek::Verifier as _;
-    vk.verify(payload_b64.as_bytes(), &sig)
+    // `verify_strict` rejects small-order keys and non-canonical signatures; plain `verify`
+    // accepts the identity point with S = 0 for any payload.
+    vk.verify_strict(payload_b64.as_bytes(), &sig)
         .map_err(|_| PairError::BadSignature)?;
 
     // Decode and parse payload.
@@ -524,8 +525,7 @@ pub fn verify_capability(
         .map_err(|_| CapabilityError::Malformed)?;
     let sig = Signature::from_bytes(&sig_arr);
 
-    use ed25519_dalek::Verifier as _;
-    vk.verify(payload_b64.as_bytes(), &sig)
+    vk.verify_strict(payload_b64.as_bytes(), &sig)
         .map_err(|_| CapabilityError::BadSignature)?;
 
     let payload_bytes = URL_SAFE_NO_PAD
@@ -634,6 +634,41 @@ mod tests {
         assert_eq!(payload.role, "INTERFACE");
         assert_eq!(payload.peer_type, "totebox");
         assert!(!payload.is_expired());
+    }
+
+    /// Small-order public key (the identity point) with the signature R = identity, S = 0:
+    /// plain `verify` accepts this for any payload; `verify_strict` must not.
+    fn small_order_key_and_signature() -> (String, String) {
+        let mut identity = [0u8; 32];
+        identity[0] = 1;
+        let mut sig = [0u8; 64];
+        sig[0] = 1;
+        (
+            URL_SAFE_NO_PAD.encode(identity),
+            URL_SAFE_NO_PAD.encode(sig),
+        )
+    }
+
+    #[test]
+    fn small_order_key_rejected_for_pair_token() {
+        let (pk, sig) = small_order_key_and_signature();
+        let payload = URL_SAFE_NO_PAD.encode(b"{}");
+        let token = format!("{payload}.{sig}");
+        assert!(matches!(
+            verify_pair_token(&token, &pk),
+            Err(PairError::BadSignature)
+        ));
+    }
+
+    #[test]
+    fn small_order_key_rejected_for_capability() {
+        let (pk, sig) = small_order_key_and_signature();
+        let payload = URL_SAFE_NO_PAD.encode(b"{}");
+        let token = format!("{payload}.{sig}");
+        assert!(matches!(
+            verify_capability(&token, &pk),
+            Err(CapabilityError::BadSignature)
+        ));
     }
 
     #[test]
