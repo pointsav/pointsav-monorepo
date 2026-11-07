@@ -37,6 +37,9 @@ members = [
     "tool-typeset",
     "app-privategit-workbench",
     "tool-keyplan",
+    "tool-precedent-core",
+    "tool-precedent-drawings",
+    "tool-precedent-schedule",
     # PPN focus crates
     "system-substrate-broadcom",
     "system-network-interface",

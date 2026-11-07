@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "tool-precedent-core"
+version = "0.1.0"
+edition = "2021"
+description = "Generic flat-file precedent shard: change log, version lineage, terms, Draw Register, hash-fenced tokens. Zero dependencies. The generic base of tool-precedent-documents and tool-precedent-orgcharts; sibling of tool-forecasting-core."
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+
+[lib]
+name = "tool_precedent_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tool-precedent-core"
+path = "src/main.rs"

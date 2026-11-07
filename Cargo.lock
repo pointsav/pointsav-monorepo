@@ -8235,6 +8235,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tool-precedent-core"
+version = "0.1.0"
+
+[[package]]
+name = "tool-precedent-drawings"
+version = "0.1.0"
+
+[[package]]
+name = "tool-precedent-schedule"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "tool-typeset"
 version = "0.1.0"
 

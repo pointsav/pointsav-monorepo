@@ -1,0 +1,34 @@
+# class	element	kind	status	aliases	families
+cover	div	wrapper	current		fideicomiso;prospecto;canada
+cl1	p	block	current	inciso	fideicomiso;prospecto;canada
+cl2	p	block	current	subinciso	fideicomiso;prospecto;canada
+cl1c	p	block	current		canada
+cl2c	p	block	current		canada
+def-term	span	inline	current	strong.def-term;definition-term	fideicomiso;prospecto;canada;letter
+signature-block	table	table	current		fideicomiso;prospecto;canada
+annex-page	div	wrapper	current		all
+data-table	table	table	current	mx-tabla;fee-table;sched-table	fideicomiso;prospecto;canada
+clm	span	label	current		fideicomiso;prospecto;canada
+clm-r	span	label	current		fideicomiso;prospecto;canada
+recital-hang	p	block	current		canada
+recital-title	p	heading	current		canada
+sig-section	div	wrapper	current		canada;letter
+sig-block	div	wrapper	current		canada;letter
+sig-line-rule	div	block	current		canada;letter
+sig-per	p	block	current		canada
+sig-name	p	block	current		canada
+centered	p	modifier	current	center	canada;fideicomiso;prospecto;letter
+divider	hr	block	current		canada;fideicomiso;prospecto;letter
+schedule-cover	div	wrapper	current		canada;fideicomiso;prospecto
+subclause-head	h3	heading	current		canada
+sched-subtitle	h3	heading	current		canada
+sched-lead	p	block	current		canada
+bullets	ul	list	current	bullet	canada;letter
+bullets-2	ul	list	current		canada
+sig-line	span	inline	current		canada
+change-annex	div	wrapper	retired		canada
+lower-alpha	ol	list	current		canada;fideicomiso;prospecto
+(word) cell-plain	p	word-only	current		canada
+operative	p	block	alias		canada
+center	p;h3	modifier	alias		canada
+lead	p	block	current	operative	canada;fideicomiso;prospecto

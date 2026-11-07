@@ -1,0 +1,6 @@
+id,class,file,version,hash,scope,docx_styles,requires
+recital,DESIGN,templates/components/recital.css,1,ce34a2ec1340a346,,Normal,
+signature-stack,DESIGN,templates/components/signature-stack.css,1,40ce39aac4317b75,,Normal,
+cover-toc,DESIGN,templates/components/cover-toc.css,1,d03e079cea976368,,Normal,
+ca-classes,DESIGN,templates/components/ca-classes.css,1,24f55c51c755b3b5,,Normal,
+annex-page,DESIGN,templates/components/annex-page.css,1,e7463a689241020a,,Normal,

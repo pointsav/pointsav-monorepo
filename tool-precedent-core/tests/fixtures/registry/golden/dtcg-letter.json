@@ -1,0 +1,904 @@
+{
+ "$description": "Woodfine unified typesetting registry (P-34), generated from precedent/registry/ts-geometry.csv. Dimensions in px (DTCG allows px/rem only); the source pt and Word twips ride in $extensions.",
+ "ts": {
+  "family": {
+   "letter": {
+    "body": {
+     "$type": "typography",
+     "$value": {
+      "fontFamily": [
+       "Tinos",
+       "Times New Roman",
+       "Liberation Serif",
+       "Times",
+       "serif"
+      ],
+      "fontSize": {
+       "value": 15.3333,
+       "unit": "px"
+      },
+      "fontWeight": 400,
+      "lineHeight": 1.5,
+      "letterSpacing": {
+       "value": 0,
+       "unit": "px"
+      }
+     }
+    },
+    "page-margin": [
+     {
+      "$type": "dimension",
+      "$value": {
+       "value": 96.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 72.0,
+        "twips": 1440
+       }
+      }
+     }
+    ]
+   }
+  },
+  "component": {
+   "letter-agreement": {
+    "body": {
+     "$description": "body (letter; templates/letter-agreement.css:22)",
+     "font-size": {
+      "$type": "dimension",
+      "$value": {
+       "value": 15.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 11.5,
+        "twips": 230
+       }
+      }
+     },
+     "line-height": {
+      "$type": "number",
+      "$value": 1.5
+     },
+     "color": {
+      "$type": "color",
+      "$value": "#000"
+     }
+    },
+    "h1": {
+     "$description": "h1 (letter; templates/letter-agreement.css:23)",
+     "font-size": {
+      "$type": "dimension",
+      "$value": {
+       "value": 24.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 18.0,
+        "twips": 360
+       }
+      }
+     },
+     "font-weight": {
+      "$type": "fontWeight",
+      "$value": 700
+     },
+     "text-align": {
+      "$value": "center",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "color": {
+      "$type": "color",
+      "$value": "#000"
+     },
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 8.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 6.0,
+        "twips": 120
+       }
+      }
+     },
+     "margin-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "keep-next": {
+      "$value": "avoid",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "h2": {
+     "$description": "h2 (letter; templates/letter-agreement.css:24)",
+     "font-size": {
+      "$type": "dimension",
+      "$value": {
+       "value": 16.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 12.0,
+        "twips": 240
+       }
+      }
+     },
+     "font-weight": {
+      "$type": "fontWeight",
+      "$value": 700
+     },
+     "color": {
+      "$type": "color",
+      "$value": "#000"
+     },
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 21.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 16.0,
+        "twips": 320
+       }
+      }
+     },
+     "margin-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 8.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 6.0,
+        "twips": 120
+       }
+      }
+     },
+     "margin-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "keep-next": {
+      "$value": "avoid",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "h3": {
+     "$description": "h3 (letter; templates/letter-agreement.css:25)",
+     "font-size": {
+      "$type": "dimension",
+      "$value": {
+       "value": 15.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 11.5,
+        "twips": 230
+       }
+      }
+     },
+     "font-weight": {
+      "$type": "fontWeight",
+      "$value": 700
+     },
+     "color": {
+      "$type": "color",
+      "$value": "#000"
+     },
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 16.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 12.0,
+        "twips": 240
+       }
+      }
+     },
+     "margin-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 5.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 4.0,
+        "twips": 80
+       }
+      }
+     },
+     "margin-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "keep-next": {
+      "$value": "avoid",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "p": {
+     "$description": "p (letter; templates/letter-agreement.css:26)",
+     "text-align": {
+      "$value": "justify",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 10.6667,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 8.0,
+        "twips": 160
+       }
+      }
+     },
+     "margin-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "orphans": {
+      "$type": "number",
+      "$value": 2
+     },
+     "widows": {
+      "$type": "number",
+      "$value": 2
+     }
+    },
+    "em": {
+     "$description": "em (letter; templates/letter-agreement.css:27)",
+     "font-style": {
+      "$value": "italic",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    }
+   },
+   "signature-stack": {
+    "sig-section": {
+     "$description": ".sig-section (canada;letter; templates/components/signature-stack.css:9)",
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 29.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 22.0,
+        "twips": 440
+       }
+      }
+     },
+     "keep-together": {
+      "$value": "avoid",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "sig-block": {
+     "$description": ".sig-block (canada;letter; templates/components/signature-stack.css:10)",
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 24.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 18.0,
+        "twips": 360
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 8.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 6.0,
+        "twips": 120
+       }
+      }
+     },
+     "keep-together": {
+      "$value": "avoid",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "sig-line-rule": {
+     "$description": ".sig-line-rule (canada;letter; templates/components/signature-stack.css:11)",
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 40.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 30.0,
+        "twips": 600
+       }
+      }
+     },
+     "padding-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 5.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 4.0,
+        "twips": 80
+       }
+      }
+     },
+     "border-top": {
+      "$value": "1pt solid black",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "width": {
+      "$value": "60%",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "sig-per": {
+     "$description": ".sig-per (canada;letter; templates/components/signature-stack.css:12)",
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 8.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 6.0,
+        "twips": 120
+       }
+      }
+     },
+     "margin-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     }
+    },
+    "sig-name": {
+     "$description": ".sig-name (canada;letter; templates/components/signature-stack.css:13)",
+     "text-align": {
+      "$value": "left",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "padding-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 2.6667,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 2.0,
+        "twips": 40
+       }
+      }
+     },
+     "width": {
+      "$value": "60%",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    }
+   },
+   "data-table": {
+    "table_data-table": {
+     "$description": "table.data-table (all; templates/components/mx-tabla.css:3;templates/components/mx-tabla.css:8)",
+     "margin-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 10.6667,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 8.0,
+        "twips": 160
+       }
+      }
+     },
+     "margin-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "margin-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 18.6667,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 14.0,
+        "twips": 280
+       }
+      }
+     },
+     "margin-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 0.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 0.0,
+        "twips": 0
+       }
+      }
+     },
+     "width": {
+      "$value": "100%",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "table_data-table_tr": {
+     "$description": "table.data-table tr (all; templates/components/mx-tabla.css:4)",
+     "keep-together": {
+      "$value": "avoid",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "table_data-table_thead": {
+     "$description": "table.data-table thead (all; templates/components/mx-tabla.css:9)",
+     "display": {
+      "$value": "table-header-group",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    },
+    "table_data-table_th_table_data-table_td": {
+     "$description": "table.data-table th,table.data-table td (all; templates/components/mx-tabla.css:5)",
+     "font-size": {
+      "$type": "dimension",
+      "$value": {
+       "value": 14.0,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 10.5,
+        "twips": 210
+       }
+      }
+     },
+     "text-align": {
+      "$value": "left",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "padding-top": {
+      "$type": "dimension",
+      "$value": {
+       "value": 5.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 4.0,
+        "twips": 80
+       }
+      }
+     },
+     "padding-right": {
+      "$type": "dimension",
+      "$value": {
+       "value": 9.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 7.0,
+        "twips": 140
+       }
+      }
+     },
+     "padding-bottom": {
+      "$type": "dimension",
+      "$value": {
+       "value": 5.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 4.0,
+        "twips": 80
+       }
+      }
+     },
+     "padding-left": {
+      "$type": "dimension",
+      "$value": {
+       "value": 9.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 7.0,
+        "twips": 140
+       }
+      }
+     },
+     "border-top": {
+      "$value": "0.75pt solid #000",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "border-right": {
+      "$value": "0.75pt solid #000",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "border-bottom": {
+      "$value": "0.75pt solid #000",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "border-left": {
+      "$value": "0.75pt solid #000",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    }
+   },
+   "annex-page": {
+    "annex-page": {
+     "$description": ".annex-page (all; templates/components/annex-page.css:10)",
+     "font-size": {
+      "$type": "dimension",
+      "$value": {
+       "value": 13.3333,
+       "unit": "px"
+      },
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "pt": 10.0,
+        "twips": 200
+       }
+      }
+     },
+     "line-height": {
+      "$type": "number",
+      "$value": 1.3
+     },
+     "text-align": {
+      "$value": "left",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "break-before": {
+      "$value": "page",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     },
+     "hyphens": {
+      "$value": "none",
+      "$extensions": {
+       "com.pointsav.typeset": {
+        "css-keyword": true
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

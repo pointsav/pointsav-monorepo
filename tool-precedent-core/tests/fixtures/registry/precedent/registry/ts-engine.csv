@@ -1,0 +1,26 @@
+key,family,value,unit,applies_to,evidence,reason
+letter.bottom-allowance,letter,0,twips,bottom margin,bin/build-docx-letter.py:42,Word places a line a hair lower than WeasyPrint; 0 since the split-paragraph fix. Overridable by <meta name=typeset:bottom-allowance>.
+letter.right-adjust,letter,0,twips,right margin,bin/build-docx-letter.py:43,
+letter.logo-adjust,letter,4,pt,space under logo picture,bin/build-docx-letter.py:44,An inline picture sits on the text baseline.
+letter.rule-trim,letter,3,pt,space after a ruled line,bin/build-docx-letter.py:45,Word adds the border and a hair of line height.
+letter.compat-mode,letter,14,,Word compatibility mode,bin/build-docx-letter.py:46,15 drops the banner but changes LibreOffice line breaks.
+letter.header-distance,letter,600,twips,header/footer distance,bin/build-docx-letter.py:47,30pt; the Spanish build uses 720.
+es.header-footer-distance,fideicomiso;prospecto,720,twips,header/footer distance,bin/docx_postprocess-es.py:59,0.5in.
+es.page,fideicomiso;prospecto,12240x15840 / 1440,twips,page size / margins,bin/docx_postprocess-es.py:57;bin/docx_postprocess-es.py:58,"Letter, 1in = CSS @page."
+es.tab-right,fideicomiso;prospecto,9360,twips,TOC dot-leader tab and header stamp tab,bin/docx_postprocess-es.py:558,= 6.5in text width (page width - margins).
+es.table-width,fideicomiso;prospecto,5000,pct (fiftieths of a percent),every table,bin/docx_postprocess-es.py:512,= CSS width:100%.
+es.table-look,fideicomiso;prospecto,0420 firstRow=1 (MXTabla); 0000 (others),,tblLook,bin/docx_postprocess-es.py:505,
+es.row-cant-split,fideicomiso;prospecto,on,,every table row,bin/docx_postprocess-es.py:522,= CSS tr break-inside:avoid.
+es.header-row-repeat,fideicomiso;prospecto,MXTabla tables with a header row,,tblHeader,bin/docx_postprocess-es.py:525,= CSS thead display:table-header-group.
+es.logo-width,fideicomiso;prospecto,height_pt * 1501 / 402 / 72,in,data-URI logos,bin/docx-es.lua:39,Keeps the logo aspect ratio from the CSS height.
+es.label-tab,fideicomiso;prospecto,label + w:tab,,span.clm / span.clm-r,bin/docx-es.lua:63,The hanging indent of the style = label width (ts-labels).
+es.placeholder-highlight,all,every run containing U+25CF,,yellow highlight,bin/docx_postprocess-es.py:275,P-37 changes this to the <mark> element (T4).
+es.keep-clause-headings,fideicomiso;prospecto,title-only MXClausula before an inciso gets keepNext+keepLines,,post-process,bin/docx_postprocess-es.py:620,Already keepNext in the style; kept for documents built from an older reference.
+word.single-line,all,1.15,x font size,this check: Word 'auto' line spacing,bin/script-typeset-reference.py:37,Times New Roman (ascent 1825 + descent 443 + gap 87) / 2048.
+word.margin-collapse,all,subtract-preceding,pt,Word space-before of every generated paragraph style,bin/script-typeset-reference.py word_props;ts-families.csv p_margin_bottom,"P-40: CSS collapses adjacent vertical margins (gap = the larger), Word adds space-after + space-before. Generated Word before = max(0, CSS margin-top - preceding margin-bottom), preceding margin-bottom = the family body p margin-bottom (8pt), or the class column word_prev_margin where something else precedes the style (page start = 0; contents entries 2pt; pr-fecha after pr-leyenda 12pt). Exact for every style that follows body text; replaces the hand rule (2pt incisos dropped, 18pt Sección kept)."
+word.keep-rules,all,from registry,,keepNext / keepLines of every generated style,ts-geometry.csv keep_next/keep_together;ua:h1..h4,"P-40: keepNext = break-after:avoid, keepLines = break-inside:avoid, stated once in ts-geometry (incl. the WeasyPrint UA heading rules); no hand-set Word keeps."
+word.line-exact,all,exact,twips,every generated paragraph style,ts-geometry.csv line_height,P-40: Word line = CSS line-height (px/pt or factor x font size) as an exact rule; 'normal' (page margin boxes only) stays Word auto single.
+word.box,all,pBdr from CSS border + padding,eighths of a point / pt,boxed paragraph styles,bin/script-typeset-reference.py word_props,P-40: border width x 8 = w:sz; padding = w:space (Word maximum 31pt).
+word.table-cell-margins,all,tblCellMar from CSS td padding,twips,every generated table style,bin/script-typeset-reference.py table_style_props_registry,P-40: cell margins = CSS padding (pt x 20); borders = CSS border width x 8.
+word.builtin-names,all,TOC1 toc 1;TOC2 toc 2;Header header;Footer footer,,style names,bin/make-reference-es.py:103,P-40: built-in names kept (Word's contents field needs toc 1/toc 2; header/footer are Word built-ins).
+css.own-file-components,canada,ca-classes,,components whose whole CSS file is generated from ts-geometry.csv (no hand-written part): the handwritten column is written into the generated rule and registry check proves the file holds the block,bin/script-typeset-reference.py:OWN_FILE_COMPONENTS;tool-precedent-core/src/registry.rs,"Moves the list out of the code (P-51 follow-up: data-driven styles, no hard-coded geometry in code)."

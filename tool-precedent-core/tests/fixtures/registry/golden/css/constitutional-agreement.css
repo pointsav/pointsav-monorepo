@@ -1,0 +1,21 @@
+/* @generated ts-geometry begin — from precedent/registry/ts-geometry.csv by bin/script-typeset-reference.py; do not edit */
+body{font-size:11.5pt;line-height:1.5;text-align:justify;color:#000;margin:0 0 0 0;padding:0 0 0 0;}
+em{font-style:italic;}
+strong{font-weight:bold;}
+h1{font-size:16pt;font-weight:bold;text-align:center;margin:0 0 4pt 0;break-after:avoid;page-break-after:avoid;}
+table.sched-table{margin:8pt 0 8pt 0;width:100%;}
+table.sched-table tr{break-inside:avoid;page-break-inside:avoid;}
+table.sched-table th, table.sched-table td{font-size:11pt;text-align:left;padding:4pt 8pt 4pt 8pt;border:0.75pt solid #000;}
+.divider{margin:18pt 0 18pt 0;border-top:1pt solid #000;border-right:none;border-bottom:none;border-left:none;}
+h2{font-size:12pt;font-weight:bold;text-align:center;margin:16pt 0 6pt 0;break-after:avoid;page-break-after:avoid;}
+.schedule-cover{break-before:page;page-break-before:always;}
+h3{font-size:11.5pt;font-weight:bold;text-align:left;margin:12pt 0 4pt 0;break-after:avoid;page-break-after:avoid;}
+mark{color:#000;background:#ffff00;}
+h4{font-size:11.5pt;font-weight:bold;font-style:italic;text-align:left;margin:8pt 0 4pt 0;break-after:avoid;page-break-after:avoid;}
+/* ol.lower-alpha: no generated geometry */
+p{margin:0 0 8pt 0;orphans:2;widows:2;}
+table.signature-block td{font-size:10.5pt;line-height:1.15;padding:3pt 10pt 3pt 0;}
+table.sched-table th{font-weight:bold;background:#f0f0f0;}
+span.clm{margin-left:-36pt;width:36pt;display:inline-block;}
+table.signature-block{margin:6pt 0 6pt 0;width:100%;break-inside:avoid;page-break-inside:avoid;}
+/* @generated ts-geometry end */

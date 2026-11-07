@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "tool-precedent-drawings"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+description = "Drawing-capture engine for the tool-precedent-* Platform-shaped precedent substrate. Forked from tool-documents-core's shard-capture pattern (catalog scan + categorization), adapted for FreeCAD/BIM drawing output (IFC interchange format). See BRIEF-dogfood-totebox-orchestration-architecture.md section A."
+
+# Zero third-party dependencies, matching every tool-precedent-* sibling's
+# stated bar (tool-documents-core, tool-accounting-core, tool-typeset).
+# IFC parsing is implemented directly in this crate (src/ifc.rs) rather than
+# depending on moonshot-bim-engine -- that crate lives on project-construction's
+# own un-promoted cluster branch (not reachable from this clone before Stage 6,
+# see conventions/ "Cross-cluster Cargo dep visibility") and as of this writing
+# still carries an FSL-1.1-ALv2 license header, which cannot sit underneath an
+# Apache-2.0 Platform crate without contaminating every downstream consumer
+# (Workbench under os-workplace, the appliance's precedent services under
+# os-totebox) with a proprietary dependency. Flagged to project-dogfood
+# separately rather than silently worked around.
+[dependencies]
+
+[[bin]]
+name = "tool-precedent-drawings"
+path = "src/main.rs"
+
+[lib]
+name = "tool_precedent_drawings"
+path = "src/lib.rs"

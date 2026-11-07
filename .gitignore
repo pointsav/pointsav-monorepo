@@ -105,7 +105,26 @@ system-gateway-mba/vault_identity.key
 system-gateway-mba/keys/gcp_node_mba_ed25519
 *.key
 
-# Canonical-mirror repos never carry real per-archive .agent/ state — that lives in
-# clones/<archive>/.agent/ only. Untracked .agent/ residue here previously caused
-# false-positive CRITICAL drift alerts in bin/foundry-health.sh (root-caused 2026-07-09).
-.agent/
+# Corrected 2026-10-06 (known-bug-patterns.md #2, blanket-agent-gitignore):
+# the blanket `.agent/` rule above was copy-pasted from canonical's own
+# .gitignore (correct there — canonical never carries per-archive state) into
+# this archive's own top-level .gitignore, where it incorrectly also swallows
+# real archive state (manifest.md, briefs/, rules/, memory/) that should be
+# git-tracked normally. Replaced with the same narrow exclusion list every
+# other correctly-configured archive uses (see e.g. project-dogfood/.gitignore):
+.agent/engines/*/session.lock
+.agent/locks/
+
+# [Option-A-mailbox-fix] — do not remove this block
+# Per-archive state files — local only; never push to shared origin/main.
+# All archives share origin/main of pointsav-monorepo. Tracking these
+# files causes cross-archive contamination during git rebase because every
+# archive .agent/inbox.md lives at the same path in the shared repo.
+# MCP send_mailbox_message writes to local paths directly; no git tracking needed.
+.agent/inbox.md
+.agent/inbox-archive.md
+.agent/outbox.md
+.agent/memory/session-context.md
+.agent/memory/session-context-archive.md
+.agent/drafts-outbound/
+.agent/outbox-archive.md
