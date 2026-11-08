@@ -28,6 +28,26 @@ const LABEL_STATUS: &[&str] = &["current", "review", "proposed"];
 const GLYPH_STATUS: &[&str] = &["current", "proposed"];
 const SECTION_STATUS: &[&str] = &["current", "reference"];
 const FAMILY_STATUS: &[&str] = &["current", "reference"];
+/// ts-families.csv columns a child family takes from its parent when its own cell is blank.
+const FAMILY_INHERIT: &[&str] = &[
+    "body_font_family",
+    "word_font",
+    "body_text_align",
+    "body_color",
+    "p_margin_bottom",
+    "orphans",
+    "widows",
+    "lang",
+    "hyphens",
+    "page_size",
+    "page_margin",
+    "word_reference_source",
+    "word_builder",
+    "pdf_builder",
+    "lua_filter",
+    "word_defaults_cascade",
+    "status",
+];
 const CHANGE_STATUS: &[&str] = &["applied", "pending-css"];
 const GEOM_SOURCES: &[&str] = &["css", "word", "registry", "page", "ua"];
 /// Geometry columns that become CSS declarations (and DTCG tokens), in output order.
@@ -131,13 +151,15 @@ impl Registry {
     pub fn load(dir: &Path) -> Result<Registry, String> {
         let t = |n: &str| read_table(&dir.join(format!("ts-{n}.csv")));
         debug_assert_eq!(TABLES.len(), 8);
+        let mut families = t("families")?;
+        Self::inherit_families(&mut families);
         Ok(Registry {
             classes: t("classes")?,
             geometry: t("geometry")?,
             labels: t("labels")?,
             glyphs: t("glyphs")?,
             sections: t("sections")?,
-            families: t("families")?,
+            families,
             engine: t("engine")?,
             changes: t("changes")?,
         })
@@ -238,9 +260,121 @@ impl Registry {
         out
     }
 
+    /// Family inheritance (ts-families.csv column `parent`): a blank inheritable cell of a child takes the parent's value.
+    fn inherit_families(rows: &mut [Row]) {
+        let snapshot: Vec<Row> = rows.to_vec();
+        for r in rows.iter_mut() {
+            let mut cur = g(r, "parent").to_string();
+            let mut guard = 0;
+            while !cur.is_empty() && guard < 8 {
+                guard += 1;
+                let Some(p) = snapshot.iter().find(|x| g(x, "family") == cur) else {
+                    break;
+                };
+                for k in FAMILY_INHERIT {
+                    if g(r, k).is_empty() && !g(p, k).is_empty() {
+                        r.insert((*k).to_string(), g(p, k).to_string());
+                    }
+                }
+                cur = g(p, "parent").to_string();
+            }
+        }
+    }
+
+    /// The family and its ancestors, nearest first (`fideicomiso` -> `fideicomiso`, `mexico`).
+    pub fn lineage(&self, family: &str) -> Vec<String> {
+        let mut out = vec![family.to_string()];
+        let mut cur = family.to_string();
+        while let Some(r) = self.families.iter().find(|x| g(x, "family") == cur) {
+            let p = g(r, "parent");
+            if p.is_empty() || out.iter().any(|x| x == p) {
+                break;
+            }
+            out.push(p.to_string());
+            cur = p.to_string();
+        }
+        out
+    }
+
+    /// True when a `;` list of family tokens applies to `family`: the family itself, one of its ancestors, or `all`.
+    pub fn applies(&self, tokens: &str, family: &str) -> bool {
+        let lin = self.lineage(family);
+        toks(tokens)
+            .iter()
+            .any(|t| *t == "all" || lin.iter().any(|l| l == t))
+    }
+
+    fn css_block(&self, r: &Row, own: &[String]) -> String {
+        let mut decl = Self::geom_to_css(r);
+        if own.iter().any(|c| c == g(r, "component")) && !g(r, "handwritten").is_empty() {
+            decl.push(g(r, "handwritten").to_string());
+        }
+        let decl = decl.join(";");
+        let sel = g(r, "selector");
+        if decl.is_empty() {
+            format!("/* {sel}: no generated geometry */")
+        } else {
+            format!("{sel}{{{decl};}}")
+        }
+    }
+
+    /// The CSS-sourced rows that make up the token CSS of a family: its own rows and those of its ancestors (ts-families
+    /// `parent`), in the order of the family's token file (line of the evidence in `token_css`; a family without ancestors keeps the table order).
+    fn effective_rows(&self, family: &str) -> Vec<&Row> {
+        let lin = self.lineage(family);
+        let stems: Vec<&str> = lin
+            .iter()
+            .filter_map(|f| self.families.iter().find(|r| g(r, "family") == f))
+            .map(|r| g(r, "token_stem"))
+            .collect();
+        let tok = self
+            .families
+            .iter()
+            .find(|r| g(r, "family") == family)
+            .map(|r| g(r, "token_css"))
+            .unwrap_or("");
+        let line = |r: &Row| -> usize {
+            let ev: Vec<&str> = g(r, "evidence").split(';').collect();
+            let hit = ev
+                .iter()
+                .find(|e| e.rsplit_once(':').map(|(p, _)| p == tok).unwrap_or(false))
+                .or_else(|| ev.first());
+            hit.and_then(|e| e.rsplit_once(':'))
+                .and_then(|(_, l)| l.parse::<usize>().ok())
+                .unwrap_or(0)
+        };
+        let mut rows: Vec<&Row> = self
+            .geometry
+            .iter()
+            .filter(|r| {
+                matches!(g(r, "source"), "css" | "registry")
+                    && g(r, "status") != "retired"
+                    && stems.contains(&g(r, "component"))
+            })
+            .collect();
+        if lin.len() > 1 {
+            rows.sort_by_key(|r| line(r));
+        }
+        rows
+    }
+
     /// (component, generated CSS file text) for every component with CSS-sourced rows, in first-seen order; `only` selects one.
+    /// A family token component (ts-families `token_stem` with a `token_css`) is written whole: its own rows and its ancestors'.
+    /// The abstract parent of a family (no `token_css`) has no file of its own.
     pub fn css_files(&self, only: Option<&str>) -> Vec<(String, String)> {
         let own = self.own_file_components();
+        let fam_of_stem: BTreeMap<&str, &str> = self
+            .families
+            .iter()
+            .filter(|r| !g(r, "token_css").is_empty())
+            .map(|r| (g(r, "token_stem"), g(r, "family")))
+            .collect();
+        let abstract_stems: Vec<&str> = self
+            .families
+            .iter()
+            .filter(|r| g(r, "token_css").is_empty())
+            .map(|r| g(r, "token_stem"))
+            .collect();
         let mut order: Vec<String> = vec![];
         let mut blocks: BTreeMap<String, Vec<String>> = BTreeMap::new();
         for r in &self.geometry {
@@ -248,24 +382,28 @@ impl Registry {
                 continue;
             }
             let comp = g(r, "component");
+            if abstract_stems.contains(&comp) {
+                continue;
+            }
             if only.map(|c| c != comp).unwrap_or(false) {
                 continue;
             }
-            let mut decl = Self::geom_to_css(r);
-            if own.iter().any(|c| c == comp) && !g(r, "handwritten").is_empty() {
-                decl.push(g(r, "handwritten").to_string());
+            if blocks.contains_key(comp) && fam_of_stem.contains_key(comp) {
+                continue;
             }
-            let decl = decl.join(";");
-            let sel = g(r, "selector");
-            let block = if decl.is_empty() {
-                format!("/* {sel}: no generated geometry */")
-            } else {
-                format!("{sel}{{{decl};}}")
-            };
             if !blocks.contains_key(comp) {
                 order.push(comp.to_string());
             }
-            blocks.entry(comp.to_string()).or_default().push(block);
+            if let Some(fam) = fam_of_stem.get(comp) {
+                let rows = self.effective_rows(fam);
+                blocks.insert(
+                    comp.to_string(),
+                    rows.iter().map(|x| self.css_block(x, &own)).collect(),
+                );
+                continue;
+            }
+            let b = self.css_block(r, &own);
+            blocks.entry(comp.to_string()).or_default().push(b);
         }
         order
             .into_iter()
@@ -282,9 +420,8 @@ impl Registry {
     pub fn classes_list(&self, family: Option<&str>) -> String {
         let mut o = String::from("# class\telement\tkind\tstatus\taliases\tfamilies\n");
         for r in &self.classes {
-            let fams = toks(g(r, "families"));
             if let Some(f) = family {
-                if !fams.iter().any(|x| *x == f || *x == "all") {
+                if !self.applies(g(r, "families"), f) {
                     continue;
                 }
             }
@@ -487,6 +624,24 @@ impl Registry {
             err("precedent/components.csv missing or empty".into());
         }
         for r in &self.families {
+            let p = g(r, "parent");
+            if !p.is_empty() && !fam_names.contains(&p) {
+                err(format!(
+                    "ts-families.csv: {}: parent '{p}' is not a family",
+                    g(r, "family")
+                ));
+            }
+            let lin = self.lineage(g(r, "family"));
+            if let Some(last) = lin.last() {
+                if let Some(lr) = self.families.iter().find(|x| g(x, "family") == last) {
+                    if !g(lr, "parent").is_empty() {
+                        err(format!(
+                            "ts-families.csv: {}: parent chain loops",
+                            g(r, "family")
+                        ));
+                    }
+                }
+            }
             comp_file.insert(
                 g(r, "token_stem").to_string(),
                 g(r, "token_css").to_string(),
@@ -566,6 +721,9 @@ impl Registry {
             if family.map(|x| x != name).unwrap_or(false) {
                 continue;
             }
+            if g(f, "body_size").is_empty() {
+                continue; // an abstract parent family (mexico) has no body of its own
+            }
             let size = pf(g(f, "body_size").trim_end_matches(['p', 't']));
             let ff: Vec<J> = g(f, "body_font_family")
                 .split(',')
@@ -606,9 +764,8 @@ impl Registry {
             if g(r, "status") == "retired" || g(r, "source") == "ua" {
                 continue;
             }
-            let fams: Vec<&str> = g(r, "family").split(';').collect();
             if let Some(f) = family {
-                if !fams.contains(&f) && g(r, "family") != "all" {
+                if !self.applies(g(r, "family"), f) {
                     continue;
                 }
             }
@@ -904,10 +1061,11 @@ impl Registry {
                         rep.add("proposed-class", e.line, format!("{}.{}", e.tag, c));
                     }
                     let fams = Self::families_in(&cmap, &amap, c);
+                    let lin = self.lineage(&fam);
                     if known_fams.contains(&fam.as_str())
                         && !fams.is_empty()
                         && !fams.iter().any(|x| x == "all")
-                        && !fams.contains(&fam)
+                        && !fams.iter().any(|x| lin.contains(x))
                     {
                         let mut s = fams.clone();
                         s.sort();
@@ -1610,6 +1768,77 @@ mod tests {
         assert_eq!(pt_value("1.5pt"), Some(1.5));
         assert_eq!(pt_value("1pt solid black"), None);
         assert_eq!(pt_value("80%"), None);
+    }
+
+    fn mk(kv: &[(&str, &str)]) -> Row {
+        kv.iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn parent_family_inherits_cells_lineage_and_css() {
+        // parent `mx` (no token file), children `a` (own body size) and `b`; one row shared by both, one row only a has.
+        let fam = |f: &str, parent: &str, stem: &str, tok: &str, size: &str, lang: &str| {
+            mk(&[
+                ("family", f),
+                ("parent", parent),
+                ("token_stem", stem),
+                ("token_css", tok),
+                ("body_size", size),
+                ("lang", lang),
+                ("status", "current"),
+            ])
+        };
+        let geo = |id: &str, comp: &str, fam: &str, sel: &str, ev: &str, size: &str| {
+            mk(&[
+                ("id", id),
+                ("component", comp),
+                ("family", fam),
+                ("selector", sel),
+                ("source", "css"),
+                ("status", "current"),
+                ("evidence", ev),
+                ("font_size", size),
+            ])
+        };
+        let mut families = vec![
+            fam("mx", "", "mx", "", "", "es-MX"),
+            fam("a", "mx", "a", "t/a.css", "11pt", ""),
+            fam("b", "mx", "b", "t/b.css", "10pt", ""),
+        ];
+        Registry::inherit_families(&mut families);
+        let r = Registry {
+            classes: vec![mk(&[("class", "x"), ("families", "mx;letter")])],
+            geometry: vec![
+                geo("a:body", "a", "a", "body", "t/a.css:3", "11pt"),
+                geo("mx:p", "mx", "mx", "p", "t/a.css:9;t/b.css:5", "9pt"),
+                geo("mx:em", "mx", "mx", "em", "t/a.css:7;t/b.css:8", "8pt"),
+                geo("b:body", "b", "b", "body", "t/b.css:2", "10pt"),
+            ],
+            labels: vec![],
+            glyphs: vec![],
+            sections: vec![],
+            families,
+            engine: vec![],
+            changes: vec![],
+        };
+        assert_eq!(g(&r.families[1], "lang"), "es-MX");
+        assert_eq!(g(&r.families[1], "body_size"), "11pt");
+        assert_eq!(r.lineage("a"), vec!["a", "mx"]);
+        assert!(
+            r.applies("mx;letter", "b") && r.applies("all", "b") && !r.applies("letter;b", "a")
+        );
+        assert!(r.classes_list(Some("a")).contains("x\t"));
+        let files = r.css_files(None);
+        let names: Vec<&str> = files.iter().map(|(c, _)| c.as_str()).collect();
+        assert_eq!(names, vec!["a", "b"], "the abstract parent writes no file");
+        // a: its token file order = line 3 body, 7 em, 9 p; b: 2 body, 5 p, 8 em
+        let pos = |t: &str, s: &str| t.find(s).unwrap();
+        let a = &files[0].1;
+        assert!(pos(a, "body{") < pos(a, "em{") && pos(a, "em{") < pos(a, "p{"));
+        let b = &files[1].1;
+        assert!(pos(b, "body{") < pos(b, "p{") && pos(b, "p{") < pos(b, "em{"));
     }
 
     #[test]
