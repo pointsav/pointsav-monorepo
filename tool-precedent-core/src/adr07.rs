@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-//! SYS-ADR-07 gate: structured data does not go through AI. An AI-originated edit to a file
-//! whose extension marks it as structured data is refused; human-originated edits pass.
+//! SYS-ADR-07 gate (development wording): a model may read, prepare, check and propose, but never
+//! writes a record; a person approves each write. This gate answers "may this actor write this
+//! path?": an AI actor is refused on a file whose extension marks it as structured data, a human
+//! actor passes. `store::EditStore` lets a model *propose* anything and applies this gate to the
+//! approver at commit.
 //! The list errs toward blocking. `csv`/`tsv` are included because the precedent shards
 //! themselves (changes, terms, draws, versions) are CSV.
 
 use crate::error::{CoreError, Result};
 
-/// Who is asking for the edit.
+/// Who is acting: proposing an edit, or approving (committing) one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Origin {
     Human,
@@ -29,7 +32,7 @@ pub fn is_structured(path: &str) -> bool {
     }
 }
 
-/// `Err(StructuredBlocked)` if an AI-originated edit targets structured data.
+/// `Err(StructuredBlocked)` if an AI actor targets structured data.
 pub fn check(path: &str, origin: Origin) -> Result<()> {
     if origin == Origin::Ai && is_structured(path) {
         Err(CoreError::StructuredBlocked(path.to_string()))

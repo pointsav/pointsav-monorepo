@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! Proposal/commit edit store. An edit is first *proposed* (validated against the file as it is
-//! now, passed through the SYS-ADR-07 gate, and previewed) and only written when *committed*.
-//! A commit is refused if the file changed since the proposal. Nothing touches disk on propose.
+//! now and previewed) and only written when *committed*. Per SYS-ADR-07 (development) a model may
+//! propose any edit, but a write to structured data needs a human approver: `commit` takes who is
+//! approving and the gate refuses a non-human approver for structured files. A commit is refused if
+//! the file changed since the proposal. Nothing touches disk on propose.
 
 use crate::adr07::{self, Origin};
 use crate::error::{CoreError, Result};
@@ -43,7 +45,6 @@ impl EditStore {
 
     /// Validate and stage an edit; returns the proposal (including the preview). Writes nothing.
     pub fn propose(&mut self, path: &str, edit: Edit, origin: Origin) -> Result<&Proposal> {
-        adr07::check(path, origin)?;
         let (before, stamp) = self.root.read(path)?;
         let after = apply_edit(&before, &edit)?;
         let id = self.next_id;
@@ -60,16 +61,17 @@ impl EditStore {
         Ok(self.pending.last().expect("just pushed"))
     }
 
-    /// Write a proposal to disk. Fails with `Stale` if the file changed since it was proposed,
-    /// and re-runs the ADR-07 gate. On failure the proposal stays pending.
-    pub fn commit(&mut self, id: u64) -> Result<Stamp> {
+    /// Write a proposal to disk on `approver`'s authority, whoever proposed it. Fails with
+    /// `StructuredBlocked` if the target is structured data and `approver` is not human, and with
+    /// `Stale` if the file changed since it was proposed. On failure the proposal stays pending.
+    pub fn commit(&mut self, id: u64, approver: Origin) -> Result<Stamp> {
         let i = self
             .pending
             .iter()
             .position(|p| p.id == id)
             .ok_or(CoreError::NoProposal(id))?;
         let p = &self.pending[i];
-        adr07::check(&p.path, p.origin)?;
+        adr07::check(&p.path, approver)?;
         let stamp = self.root.write_atomic(&p.path, &p.after, Some(p.stamp))?;
         self.pending.remove(i);
         Ok(stamp)
@@ -115,10 +117,10 @@ mod tests {
             .id;
         assert_eq!(s.pending()[0].after, "hello there");
         assert_eq!(fs::read_to_string(d.join("a.md")).unwrap(), "hello world");
-        s.commit(id).unwrap();
+        s.commit(id, Origin::Ai).unwrap();
         assert_eq!(fs::read_to_string(d.join("a.md")).unwrap(), "hello there");
         assert!(s.pending().is_empty());
-        assert_eq!(s.commit(id), Err(CoreError::NoProposal(id)));
+        assert_eq!(s.commit(id, Origin::Human), Err(CoreError::NoProposal(id)));
         let _ = fs::remove_dir_all(d);
     }
 
@@ -131,7 +133,10 @@ mod tests {
             .unwrap()
             .id;
         fs::write(d.join("a.md"), "changed underneath").unwrap();
-        assert_eq!(s.commit(id), Err(CoreError::Stale("a.md".into())));
+        assert_eq!(
+            s.commit(id, Origin::Human),
+            Err(CoreError::Stale("a.md".into()))
+        );
         assert_eq!(
             fs::read_to_string(d.join("a.md")).unwrap(),
             "changed underneath"
@@ -143,18 +148,32 @@ mod tests {
     }
 
     #[test]
-    fn gate_and_validation_apply_at_propose() {
+    fn ai_may_propose_structured_but_only_a_human_commits() {
         let (mut s, d) = store();
         fs::write(d.join("a.json"), "{}").unwrap();
-        fs::write(d.join("a.md"), "abc").unwrap();
+        let id = s
+            .propose("a.json", Edit::new(Span::new(1, 1), " "), Origin::Ai)
+            .unwrap()
+            .id;
+        assert_eq!(s.pending()[0].after, "{ }");
+        assert_eq!(fs::read_to_string(d.join("a.json")).unwrap(), "{}");
+        // the proposing model cannot approve its own structured write
         assert_eq!(
-            s.propose("a.json", Edit::new(Span::new(0, 0), " "), Origin::Ai)
-                .unwrap_err(),
-            CoreError::StructuredBlocked("a.json".into())
+            s.commit(id, Origin::Ai),
+            Err(CoreError::StructuredBlocked("a.json".into()))
         );
-        assert!(s
-            .propose("a.json", Edit::new(Span::new(0, 0), " "), Origin::Human)
-            .is_ok());
+        assert_eq!(fs::read_to_string(d.join("a.json")).unwrap(), "{}");
+        assert_eq!(s.pending().len(), 1);
+        // a person approving the model's proposal writes it
+        s.commit(id, Origin::Human).unwrap();
+        assert_eq!(fs::read_to_string(d.join("a.json")).unwrap(), "{ }");
+        let _ = fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn validation_applies_at_propose() {
+        let (mut s, d) = store();
+        fs::write(d.join("a.md"), "abc").unwrap();
         assert!(matches!(
             s.propose("a.md", Edit::new(Span::new(2, 9), "x"), Origin::Ai),
             Err(CoreError::OutOfRange { .. })
@@ -163,7 +182,7 @@ mod tests {
             s.propose("../a.md", Edit::new(Span::new(0, 0), "x"), Origin::Ai),
             Err(CoreError::OutsideRoot(_))
         ));
-        assert_eq!(s.pending().len(), 1);
+        assert!(s.pending().is_empty());
         let _ = fs::remove_dir_all(d);
     }
 }

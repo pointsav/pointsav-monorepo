@@ -8241,6 +8241,9 @@ version = "0.1.0"
 [[package]]
 name = "tool-precedent-drawings"
 version = "0.1.0"
+dependencies = [
+ "tool-precedent-core",
+]
 
 [[package]]
 name = "tool-precedent-schedule"

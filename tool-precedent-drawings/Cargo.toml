@@ -21,6 +21,8 @@ description = "Drawing-capture engine for the tool-precedent-* Platform-shaped p
 # os-totebox) with a proprietary dependency. Flagged to project-dogfood
 # separately rather than silently worked around.
 [dependencies]
+# First-party, same workspace; the shared CSV helpers live in the core (one set of code).
+tool-precedent-core = { path = "../tool-precedent-core" }
 
 [[bin]]
 name = "tool-precedent-drawings"

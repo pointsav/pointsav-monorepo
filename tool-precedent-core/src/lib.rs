@@ -9,6 +9,7 @@ pub mod csv;
 pub mod draws;
 pub mod error;
 pub mod fence;
+pub mod prose;
 pub mod registry;
 pub mod span;
 pub mod store;

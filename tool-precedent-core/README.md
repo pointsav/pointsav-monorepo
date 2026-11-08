@@ -8,7 +8,7 @@ Commands (all take `--root DIR`, default `.`, and `--file` to name another CSV):
 
 Sibling: `tool-forecasting-core` (project-proforma) carries the same six modules (changes, csv, draws, fence, terms, versions), copied. `shared-hash` prints the FNV-1a 64 of each; the two lists must match line for line. When a shared module changes, copy it to the other core and compare.
 
-Status: tool-precedent-documents and tool-precedent-orgcharts still carry their own copies of these modules. Moving them onto this core is a follow-up for project-precedent.
+Status: tool-precedent-documents (2026-10-29) and tool-precedent-orgcharts (2026-11-01) depend on this core and have deleted their copies of these modules; so does tool-precedent-drawings. tool-forecasting-core (project-proforma) still carries its own byte-identical copies until it is renamed onto the core.
 
 ## registry module (2026-11-06)
 

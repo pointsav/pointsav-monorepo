@@ -15,6 +15,8 @@ pub enum CoreError {
     },
     /// A span or edit boundary falls inside a multi-byte UTF-8 character.
     NotCharBoundary(usize),
+    /// Two edits in one batch touch overlapping byte ranges.
+    OverlappingEdits,
     /// A path resolves outside the configured root.
     OutsideRoot(String),
     /// The file changed on disk since it was read.
@@ -36,6 +38,7 @@ impl fmt::Display for CoreError {
                 write!(f, "range {start}..{end} outside source of {len} bytes")
             }
             CoreError::NotCharBoundary(i) => write!(f, "offset {i} is not on a character boundary"),
+            CoreError::OverlappingEdits => write!(f, "edits overlap"),
             CoreError::OutsideRoot(p) => write!(f, "path escapes root: {p}"),
             CoreError::Stale(p) => write!(f, "file changed since read: {p}"),
             CoreError::StructuredBlocked(p) => write!(

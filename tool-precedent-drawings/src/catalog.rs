@@ -14,6 +14,7 @@
 
 use std::collections::BTreeMap;
 use std::path::Path;
+use tool_precedent_core::csv;
 
 const KNOWN_CATEGORIES: &[&str] = &[
     "KeyPlan",
@@ -138,22 +139,14 @@ pub fn write_csv(rows: &[DrawingRow], out_path: &Path) -> std::io::Result<()> {
             .join("|");
         out.push_str(&format!(
             "{},{},{},{},{}\n",
-            csv_escape(&row.drawing),
-            csv_escape(&row.category),
+            csv::field(&row.drawing),
+            csv::field(&row.category),
             row.sample_count,
-            csv_escape(&row.sample_file),
-            csv_escape(&entity_summary),
+            csv::field(&row.sample_file),
+            csv::field(&entity_summary),
         ));
     }
     std::fs::write(out_path, out)
-}
-
-fn csv_escape(s: &str) -> String {
-    if s.contains(',') || s.contains('"') {
-        format!("\"{}\"", s.replace('"', "\"\""))
-    } else {
-        s.to_string()
-    }
 }
 
 #[cfg(test)]
@@ -250,6 +243,29 @@ mod tests {
         write_csv(&[row], &out_path).unwrap();
         let content = fs::read_to_string(&out_path).unwrap();
         assert!(content.contains("\"has, a comma.ifc\""));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn write_csv_quotes_a_newline_in_a_field() {
+        let dir = temp_dir("csv-newline");
+        let row = DrawingRow {
+            drawing: "plan".into(),
+            category: "Uncategorized".into(),
+            sample_count: 1,
+            sample_file: "a\nb.ifc".into(),
+            entity_counts: BTreeMap::new(),
+        };
+        let out_path = dir.join("catalog.csv");
+        write_csv(&[row], &out_path).unwrap();
+        let text = fs::read_to_string(&out_path).unwrap();
+        let rows = csv::parse(&text);
+        assert_eq!(
+            rows.len(),
+            2,
+            "header plus one row, not split by the newline"
+        );
+        assert_eq!(rows[1][3], "a\nb.ifc");
         let _ = fs::remove_dir_all(&dir);
     }
 }
