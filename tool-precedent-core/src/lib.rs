@@ -5,14 +5,19 @@
 pub mod adr07;
 pub mod catalog;
 pub mod changes;
+pub mod commands;
 pub mod csv;
 pub mod draws;
 pub mod error;
 pub mod fence;
+pub mod find;
+pub mod language;
+pub mod lineage;
 pub mod prose;
 pub mod registry;
 pub mod span;
 pub mod store;
+pub mod survey;
 pub mod terms;
 pub mod tree;
 pub mod versions;
@@ -24,7 +29,7 @@ const VALUE_FLAGS: &[&str] = &[
     "--root",
     "--file",
     "--date",
-    "--doc",
+    "--instrument",
     "--version",
     "--baseline",
     "--section",
@@ -35,14 +40,21 @@ const VALUE_FLAGS: &[&str] = &[
     "--term",
     "--replaces",
     "--status",
-    "--project",
+    "--context",
     "--from",
     "--from-version",
     "--note",
     "--dir",
     "--out",
+    "--initials",
+    "--min-words",
+    "--entity",
+    "--text",
+    "--min-docs",
+    "--entities",
+    "--parties-file",
+    "--near",
 ];
-const USAGE: &str = "usage: changes-add | changes | versions [--dir outputs] | terms | terms-add | draws | draw-add | apply <file.html> [--check] | catalog [--dir precedent] | registry check|classes|css|dtcg|lint | shared-hash   (all take --root DIR)";
 
 fn flag(args: &[String], name: &str) -> Option<String> {
     args.iter()
@@ -82,15 +94,52 @@ fn file(args: &[String], root: &Path, default: &str) -> PathBuf {
 
 pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
     let Some(cmd) = args.first().cloned() else {
-        return fail(USAGE);
+        eprint!("{}", commands::help_all());
+        return ExitCode::FAILURE;
     };
     let rest = &args[1..];
+    if matches!(cmd.as_str(), "help" | "--help" | "-h") {
+        return match rest.first().filter(|a| !a.starts_with('-')) {
+            Some(c) => match commands::help_one(c) {
+                Some(t) => {
+                    print!("{t}");
+                    ExitCode::SUCCESS
+                }
+                None => fail(&format!("no command named {c}; try: help")),
+            },
+            None => {
+                print!("{}", commands::help_all());
+                ExitCode::SUCCESS
+            }
+        };
+    }
+    if rest.iter().any(|a| a == "--help" || a == "-h") {
+        if let Some(t) = commands::help_one(&cmd) {
+            print!("{t}");
+            return ExitCode::SUCCESS;
+        }
+    }
+    if cmd == "describe" {
+        print!(
+            "{}",
+            if rest.iter().any(|a| a == "--markdown") {
+                commands::describe_markdown()
+            } else {
+                commands::describe_json()
+            }
+        );
+        return ExitCode::SUCCESS;
+    }
+    if cmd == "man" {
+        print!("{}", commands::man_page());
+        return ExitCode::SUCCESS;
+    }
     let root = PathBuf::from(flag(rest, "--root").unwrap_or_else(|| default_root.into()));
     let g = |n: &str| flag(rest, n).unwrap_or_default();
     match cmd.as_str() {
         "changes-add" => {
             let row = changes::ChangeRow {
-                doc_id: g("--doc"),
+                instrument: g("--instrument"),
                 version: g("--version"),
                 baseline: g("--baseline"),
                 section: g("--section"),
@@ -101,7 +150,7 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
                 date: g("--date"),
             };
             if [
-                &row.doc_id,
+                &row.instrument,
                 &row.version,
                 &row.baseline,
                 &row.section,
@@ -111,7 +160,7 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
             .iter()
             .any(|v| v.is_empty())
             {
-                return fail("changes-add requires --doc --version --baseline --section --old --new --tag --decision");
+                return fail("changes-add requires --instrument --version --baseline --section --old --new --tag --decision");
             }
             let f = file(rest, &root, "precedent/changes.csv");
             match changes::append_change(&f, &row) {
@@ -125,14 +174,16 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
         "changes" => match changes::read_changes(&file(rest, &root, "precedent/changes.csv")) {
             Ok(rows) => {
                 for r in rows.iter().filter(|r| {
-                    flag(rest, "--doc").map(|d| r.doc_id == d).unwrap_or(true)
+                    flag(rest, "--instrument")
+                        .map(|d| r.instrument == d)
+                        .unwrap_or(true)
                         && flag(rest, "--version")
                             .map(|v| r.version == v)
                             .unwrap_or(true)
                 }) {
                     println!(
                         "{} {}  {}  [{}]  {}  ->  {}",
-                        r.doc_id, r.version, r.section, r.tag, r.baseline_text, r.new_text
+                        r.instrument, r.version, r.section, r.tag, r.baseline_text, r.new_text
                     );
                 }
                 ExitCode::SUCCESS
@@ -159,12 +210,12 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
             Ok(rows) => {
                 for r in terms::select(
                     &rows,
-                    flag(rest, "--doc").as_deref(),
+                    flag(rest, "--instrument").as_deref(),
                     flag(rest, "--term").as_deref(),
                 ) {
                     println!(
                         "{} {}  {}  [{}]{}",
-                        r.doc_id,
+                        r.instrument,
                         r.version,
                         r.term,
                         r.status,
@@ -181,12 +232,13 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
         },
         "terms-add" => {
             let row = terms::TermRow {
-                doc_id: g("--doc"),
+                instrument: g("--instrument"),
                 version: g("--version"),
                 term: g("--term"),
                 replaces: g("--replaces"),
                 status: flag(rest, "--status").unwrap_or_else(|| "live".into()),
                 date: g("--date"),
+                context: g("--context"),
             };
             let f = file(rest, &root, "precedent/terms.csv");
             match terms::append_term(&f, &row) {
@@ -199,15 +251,10 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
         }
         "draws" => match draws::read_draws(&file(rest, &root, "precedent/draws.csv")) {
             Ok(rows) => {
-                for r in draws::select(
-                    &rows,
-                    flag(rest, "--project").as_deref(),
-                    flag(rest, "--doc").as_deref(),
-                ) {
+                for r in draws::select(&rows, flag(rest, "--instrument").as_deref()) {
                     println!(
-                        "{}: {} {} drew from {} {}  {}{}",
-                        r.project,
-                        r.doc_id,
+                        "{} {} drew from {} {}  {}{}",
+                        r.instrument,
                         r.version,
                         r.drew_from,
                         r.drew_from_version,
@@ -225,8 +272,7 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
         },
         "draw-add" => {
             let row = draws::DrawRow {
-                project: g("--project"),
-                doc_id: g("--doc"),
+                instrument: g("--instrument"),
                 version: g("--version"),
                 drew_from: g("--from"),
                 drew_from_version: g("--from-version"),
@@ -244,7 +290,7 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
         }
         "apply" => match positionals(rest).first() {
             Some(f) => fence::apply(f, &root, rest),
-            None => fail(USAGE),
+            None => fail(&commands::usage()),
         },
         "catalog" => {
             let dir = flag(rest, "--dir").unwrap_or_else(|| catalog::DEFAULT_DIR.into());
@@ -269,13 +315,75 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
             }
         }
         "registry" => ExitCode::from(registry::run(rest, &root) as u8),
+        "lineage-report" | "language-report" => {
+            let dirs = flag(rest, "--dir").unwrap_or_else(|| "service-wip".into());
+            let ini = flag(rest, "--initials");
+            let out = tree::Root::new(&root).and_then(|r| {
+                if cmd == "lineage-report" {
+                    survey::lineage_report(&r, &dirs, ini)
+                } else {
+                    let mw = flag(rest, "--min-words")
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(12);
+                    let nr = flag(rest, "--near")
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(0.5);
+                    survey::language_report(&r, &dirs, ini, mw, nr)
+                }
+            });
+            match out {
+                Ok(text) => {
+                    print!("{text}");
+                    ExitCode::SUCCESS
+                }
+                Err(e) => fail(&e.to_string()),
+            }
+        }
+        "find" => {
+            let has = |f: &str| rest.iter().any(|a| a == f);
+            let q = if let Some(t) = flag(rest, "--term") {
+                survey::Query::Term(t)
+            } else if let Some(e) = flag(rest, "--entity") {
+                survey::Query::Entity(e)
+            } else if let Some(t) = flag(rest, "--text") {
+                survey::Query::Text(t)
+            } else if has("--parties") {
+                survey::Query::Parties
+            } else {
+                survey::Query::Glossary
+            };
+            let o = survey::FindOpts {
+                counts_only: has("--counts"),
+                show: has("--show"),
+                show_text: has("--show-text"),
+                entities: flag(rest, "--entities"),
+                parties_file: flag(rest, "--parties-file"),
+                all_versions: has("--all-versions"),
+                near: flag(rest, "--near")
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(0.5),
+                min_docs: flag(rest, "--min-docs")
+                    .and_then(|v| v.parse().ok())
+                    .unwrap_or(2),
+            };
+            let dirs = flag(rest, "--dir").unwrap_or_else(|| "service-wip".into());
+            match tree::Root::new(&root)
+                .and_then(|r| survey::find_report(&r, &dirs, flag(rest, "--initials"), q, &o))
+            {
+                Ok(text) => {
+                    print!("{text}");
+                    ExitCode::SUCCESS
+                }
+                Err(e) => fail(&e.to_string()),
+            }
+        }
         "shared-hash" => {
             for (n, h) in shared_hashes() {
                 println!("{h}  {n}");
             }
             ExitCode::SUCCESS
         }
-        _ => fail(USAGE),
+        _ => fail(&commands::usage()),
     }
 }
 

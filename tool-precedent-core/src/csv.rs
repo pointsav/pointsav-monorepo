@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! Minimal CSV: quoted fields, doubled quotes, newlines inside quotes, "\n" line ends.
 pub fn parse(s: &str) -> Vec<Vec<String>> {
     let mut rows = Vec::new();
@@ -37,6 +39,22 @@ pub fn parse(s: &str) -> Vec<Vec<String>> {
         rows.push(row);
     }
     rows
+}
+/// An existing shard file must carry the shared header before a row is appended to it
+/// (an older file, for example one still keyed `doc_id`, needs its one-time re-key first).
+pub fn check_header(path: &std::path::Path, expected: &str) -> Result<(), String> {
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return Ok(());
+    };
+    let first = text.lines().next().unwrap_or("").trim_end_matches('\r');
+    if first.is_empty() || first == expected {
+        Ok(())
+    } else {
+        Err(format!(
+            "{}: the header is not the shared one ({expected}); re-key the file before adding rows",
+            path.display()
+        ))
+    }
 }
 pub fn field(s: &str) -> String {
     if s.contains(',') || s.contains('"') || s.contains('\n') || s.contains('\r') {

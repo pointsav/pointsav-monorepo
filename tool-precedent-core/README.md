@@ -23,3 +23,34 @@ Status: tool-precedent-documents (2026-10-29) and tool-precedent-orgcharts (2026
 `registry.rs` is NOT one of the six shared modules (it is not copied to tool-forecasting-core; `shared-hash` still lists six and is unchanged). tool-precedent-documents uses it through its path dependency on this crate; it does not carry a copy.
 
 Tests: `tests/fixtures/registry` (a small real subset of the registry, a generated own-file component, and goldens made by the Python scripts: css per component, dtcg all / canada / letter) and `tests/registry_parity.rs` (live parity against the real project-documents registry and Python scripts when present; skips elsewhere). The workspace build (`cargo build -p tool-precedent-core` from the archive root) is the one that resolves offline-free.
+
+## Commands
+
+Generated from one table in `src/commands.rs` (`tool-precedent-core describe --markdown`); `help`, `<command> --help`, `man` and `describe --json` come from the same table, and a test keeps the table and the dispatcher in step. Every command takes `--root DIR`.
+
+| Command | Verb | What it does | Access |
+|---|---|---|---|
+| `find` | Find | Where is this used? A cross-document glossary of defined terms, one term, one entity code, or a phrase. Wordings are grouped and shown, never flagged. | read |
+| `lineage-report` | Find | How the files grow from each other, read from the version names (and draw rows when present): instruments, versions, authors, heads, forks, gaps. Counts only. | read |
+| `language-report` | Find | What language the current documents hold: headings, paragraphs, exact and near repeats, defined terms, entity codes. Counts only. | read |
+| `catalog` | Find | List the CSV registers (shards) in a folder with their columns and row counts. | read |
+| `changes` | Find | Show the change log: what text was replaced by what, in which version, under which decision. | read |
+| `terms` | Find | Show the defined-term register: which term each document version uses, what it replaced, live or retired. | read |
+| `draws` | Find | Show the draw register: which earlier version (of this or another document) each version grew from. | read |
+| `changes-add` | File | Record one change: the old text, the new text, the section, a tag, and the decision it follows. | append |
+| `terms-add` | File | Record that a document version uses a defined term, and which term it replaced. | append |
+| `draw-add` | File | Record that a version grew from an earlier one (in this or another document). | append |
+| `versions` |  | Rebuild the version index from the files present (it is an index, recomputed each time). | write |
+| `apply` |  | Bring a document's style block into line with its family token and components; --check only reports. | write |
+| `registry` |  | The typesetting registry: check it, list its classes, generate CSS or DTCG tokens from it, lint a document against it. | read |
+| `shared-hash` |  | Print a fingerprint of each shared module, to compare two copies of the code. | read |
+| `help` |  | Show the command list, or one command in full. | read |
+| `describe` |  | Describe every command for a program or an AI: names, flags, whether it reads or writes, and when it may run. | read |
+| `man` |  | Print the manual page (troff) for the whole tool. | read |
+
+- **read** never writes; **append** adds a row to a register under `precedent/`; **write** creates or rewrites a file. Note: `registry css` and `registry dtcg` write a file only when `--out` is given.
+- Customer verbs: **Find** (read what the files already say), **File** (record a row), and, once built, **Continue** (carry a document into its next version) and **Issue** (mark a version final, `_FIN`).
+
+## For an AI
+
+Run `tool-precedent-core describe --json` to read every command, its flags, and whether it only reads or also writes. Read commands may be run freely. Append and write commands are run at a person's instruction: the person instructing the session is the person acting. `lineage-report`, `language-report` and `find --counts` print counts only and are safe to show.

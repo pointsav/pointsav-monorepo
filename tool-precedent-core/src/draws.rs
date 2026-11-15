@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! The Draw Register (`precedent/draws.csv`): which earlier instrument and
 //! version a new document was drawn from. One row per draw, append-only, keyed
 //! like `changes.csv` and `terms.csv`; no master, no new file extension.
@@ -5,12 +7,11 @@
 use crate::csv::parse as parse_csv;
 use std::path::Path;
 
-pub const DRAWS_HEADER: &str = "project,doc_id,version,drew_from,drew_from_version,date,note";
+pub const DRAWS_HEADER: &str = "instrument,version,drew_from,drew_from_version,date,note";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DrawRow {
-    pub project: String,
-    pub doc_id: String,
+    pub instrument: String,
     pub version: String,
     pub drew_from: String,
     pub drew_from_version: String,
@@ -36,21 +37,20 @@ pub fn read_draws(path: &Path) -> Result<Vec<DrawRow>, String> {
     rows.into_iter()
         .filter(|r| r.iter().any(|c| !c.is_empty()))
         .map(|r| {
-            if r.len() != 7 {
+            if r.len() != 6 {
                 return Err(format!(
-                    "{}: a row has {} fields, expected 7",
+                    "{}: a row has {} fields, expected 6",
                     path.display(),
                     r.len()
                 ));
             }
             Ok(DrawRow {
-                project: r[0].clone(),
-                doc_id: r[1].clone(),
-                version: r[2].clone(),
-                drew_from: r[3].clone(),
-                drew_from_version: r[4].clone(),
-                date: r[5].clone(),
-                note: r[6].clone(),
+                instrument: r[0].clone(),
+                version: r[1].clone(),
+                drew_from: r[2].clone(),
+                drew_from_version: r[3].clone(),
+                date: r[4].clone(),
+                note: r[5].clone(),
             })
         })
         .collect()
@@ -58,8 +58,7 @@ pub fn read_draws(path: &Path) -> Result<Vec<DrawRow>, String> {
 
 pub fn append_draw(path: &Path, row: &DrawRow) -> Result<(), String> {
     for (n, v) in [
-        ("project", &row.project),
-        ("doc", &row.doc_id),
+        ("instrument", &row.instrument),
         ("version", &row.version),
         ("from", &row.drew_from),
         ("from-version", &row.drew_from_version),
@@ -68,14 +67,13 @@ pub fn append_draw(path: &Path, row: &DrawRow) -> Result<(), String> {
             return Err(format!("--{n} is required"));
         }
     }
-    if row.doc_id == row.drew_from && row.version == row.drew_from_version {
+    if row.instrument == row.drew_from && row.version == row.drew_from_version {
         return Err("a document cannot be drawn from itself".into());
     }
     if path.exists() {
         let existing = read_draws(path)?;
         if existing.iter().any(|r| {
-            r.project == row.project
-                && r.doc_id == row.doc_id
+            r.instrument == row.instrument
                 && r.version == row.version
                 && r.drew_from == row.drew_from
                 && r.drew_from_version == row.drew_from_version
@@ -83,6 +81,7 @@ pub fn append_draw(path: &Path, row: &DrawRow) -> Result<(), String> {
             return Err("this draw is already recorded; a recorded draw is never changed".into());
         }
     }
+    crate::csv::check_header(path, DRAWS_HEADER)?;
     use std::io::Write;
     let new_file = !path.exists();
     if let Some(parent) = path.parent() {
@@ -97,8 +96,7 @@ pub fn append_draw(path: &Path, row: &DrawRow) -> Result<(), String> {
         writeln!(f, "{DRAWS_HEADER}").map_err(|e| e.to_string())?;
     }
     let fields = [
-        &row.project,
-        &row.doc_id,
+        &row.instrument,
         &row.version,
         &row.drew_from,
         &row.drew_from_version,
@@ -117,18 +115,13 @@ pub fn append_draw(path: &Path, row: &DrawRow) -> Result<(), String> {
     .map_err(|e| e.to_string())
 }
 
-/// Draws for one project and/or one document (as the new document or as the source).
-pub fn select<'a>(
-    rows: &'a [DrawRow],
-    project: Option<&str>,
-    doc: Option<&str>,
-) -> Vec<&'a DrawRow> {
+/// Draws for one instrument (as the new document or as the source).
+pub fn select<'a>(rows: &'a [DrawRow], instrument: Option<&str>) -> Vec<&'a DrawRow> {
     rows.iter()
         .filter(|r| {
-            project.map(|p| r.project == p).unwrap_or(true)
-                && doc
-                    .map(|d| r.doc_id == d || r.drew_from == d)
-                    .unwrap_or(true)
+            instrument
+                .map(|d| r.instrument == d || r.drew_from == d)
+                .unwrap_or(true)
         })
         .collect()
 }
@@ -141,8 +134,7 @@ mod tests {
         let p = std::env::temp_dir().join(format!("draws-test-{}.csv", std::process::id()));
         let _ = std::fs::remove_file(&p);
         let r = DrawRow {
-            project: "P".into(),
-            doc_id: "NEW".into(),
+            instrument: "NEW".into(),
             version: "JW1".into(),
             drew_from: "OLD".into(),
             drew_from_version: "JW4".into(),
@@ -164,7 +156,7 @@ mod tests {
         assert!(append_draw(
             &p,
             &DrawRow {
-                project: "".into(),
+                instrument: "".into(),
                 ..r
             }
         )

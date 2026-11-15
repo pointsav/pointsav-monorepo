@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! The version lineage (`precedent/versions.csv`): every `<base>_JW<N>.html` in a folder.
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -34,10 +36,10 @@ pub fn write_versions(rows: &[(String, String, String, bool)], out: &Path) -> st
     if let Some(parent) = out.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let mut s = String::from("instrument,version,file,pdf_present\n");
+    let mut s = String::from("instrument,version,file,pdf_present,captured\n");
     for (b, v, f, p) in rows {
         s.push_str(&format!(
-            "{},{},{},{}\n",
+            "{},{},{},{},\n",
             crate::csv::field(b),
             v,
             crate::csv::field(f),
@@ -45,4 +47,23 @@ pub fn write_versions(rows: &[(String, String, String, bool)], out: &Path) -> st
         ));
     }
     std::fs::write(out, s)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn index_carries_a_blank_captured_column() {
+        let p = std::env::temp_dir().join(format!("versions-test-{}.csv", std::process::id()));
+        super::write_versions(
+            &[("A_B".into(), "JW1".into(), "A_B_JW1.html".into(), false)],
+            &p,
+        )
+        .unwrap();
+        let t = std::fs::read_to_string(&p).unwrap();
+        assert_eq!(
+            t,
+            "instrument,version,file,pdf_present,captured\nA_B,JW1,A_B_JW1.html,false,\n"
+        );
+        let _ = std::fs::remove_file(&p);
+    }
 }

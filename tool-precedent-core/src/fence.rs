@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! Hash-fenced CSS (family token plus components), same fence format and FNV-1a 64 hash as every tool-precedent-* sibling.
 use std::path::Path;
 use std::process::ExitCode;

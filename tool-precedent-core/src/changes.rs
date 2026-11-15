@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! The change log (`precedent/changes.csv`): one row per change per document
 //! version, append-only. Generic part only; the Annex generator is document
 //! specific and stays in tool-precedent-documents.
@@ -5,11 +7,11 @@
 use std::path::Path;
 
 pub const CHANGES_HEADER: &str =
-    "doc_id,version,baseline,section,baseline_text,new_text,tag,decision_ref,date";
+    "instrument,version,baseline,section,baseline_text,new_text,tag,decision_ref,date";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ChangeRow {
-    pub doc_id: String,
+    pub instrument: String,
     pub version: String,
     pub baseline: String,
     pub section: String,
@@ -54,7 +56,7 @@ pub fn read_changes(path: &Path) -> Result<Vec<ChangeRow>, String> {
             ));
         }
         out.push(ChangeRow {
-            doc_id: r[0].clone(),
+            instrument: r[0].clone(),
             version: r[1].clone(),
             baseline: r[2].clone(),
             section: r[3].clone(),
@@ -76,6 +78,7 @@ pub fn append_change(path: &Path, row: &ChangeRow) -> Result<(), String> {
             row.tag
         ));
     }
+    crate::csv::check_header(path, CHANGES_HEADER)?;
     use std::io::Write;
     let new_file = !path.exists();
     if let Some(parent) = path.parent() {
@@ -90,7 +93,7 @@ pub fn append_change(path: &Path, row: &ChangeRow) -> Result<(), String> {
         writeln!(f, "{CHANGES_HEADER}").map_err(|e| e.to_string())?;
     }
     let fields = [
-        &row.doc_id,
+        &row.instrument,
         &row.version,
         &row.baseline,
         &row.section,
