@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
-//! Lineage read from file names, read-only. A version file is named
-//! `<base>_<INITIALS><N>[_<INITIALS><N>...][_<VARIANT>...].<ext>`: the base, a chain of
-//! (who, that person's counter) segments in the order people touched the file, and optional
-//! variant words such as `_FIN`. This module only READS names (and optionally draw rows); it
+//! Lineage read from file names, read-only. The current rule (operator, 2026-11-15, confirmed by
+//! Command): a version file is `<base>_<INITIALS><N>.<ext>` with ONE running number per file shared
+//! by all people (`JW25`, then `MW26`, then `JW27`), initials 2 to 6 letters; a `_FIN` file has no
+//! marker (`<base>_FIN.<ext>`, a later date in the base for a later `_FIN`). The earlier chained form
+//! `<base>_<INITIALS><N>[_<INITIALS><N>...][_<VARIANT>...]` stays readable as history: a chain of
+//! (who, that person's counter) segments, and optional variant words such as `_FIN`. This module only READS names (and optionally draw rows); it
 //! never writes, renames or opens a document. The parent of a version is taken from a draw
 //! row when one exists, otherwise inferred from the name and marked inferred.
 
@@ -35,11 +37,14 @@ impl Parsed {
     }
     /// The author of this file: the initials of the last segment.
     pub fn author(&self) -> &str {
-        &self.chain[self.chain.len() - 1].who
+        self.chain.last().map(|s| s.who.as_str()).unwrap_or("")
     }
 }
 
 pub fn label_of(chain: &[Seg]) -> String {
+    if chain.is_empty() {
+        return "FIN".to_string();
+    }
     chain
         .iter()
         .map(|s| format!("{}{}", s.who, s.n))
@@ -50,7 +55,7 @@ pub fn label_of(chain: &[Seg]) -> String {
 fn seg_of(token: &str, initials: &[&str]) -> Option<Seg> {
     let split = token.find(|c: char| c.is_ascii_digit())?;
     let (who, digits) = token.split_at(split);
-    if !(2..=3).contains(&who.len())
+    if !(2..=6).contains(&who.len())
         || !who.bytes().all(|b| b.is_ascii_uppercase())
         || !initials.contains(&who)
         || digits.is_empty()
@@ -113,6 +118,22 @@ pub fn parse_name(file: &str, initials: &[&str]) -> Option<Parsed> {
     })
 }
 
+/// A marker-less `_FIN` file (`<base>_FIN.<ext>`): the person chose it from the drafts, so its
+/// parent is not in the name (a draw row can record it). Only tried when the name has no marker.
+fn parse_fin(file: &str) -> Option<Parsed> {
+    let (stem, ext) = file.split_once('.').filter(|(_, e)| !e.is_empty())?;
+    let base = stem.strip_suffix("_FIN")?;
+    if base.is_empty() {
+        return None;
+    }
+    Some(Parsed {
+        base: base.to_string(),
+        chain: Vec::new(),
+        variants: vec!["FIN".to_string()],
+        ext: ext.to_string(),
+    })
+}
+
 #[derive(Debug, Clone)]
 pub struct Version {
     pub chain: Vec<Seg>,
@@ -149,6 +170,28 @@ fn infer_parent(chain: &[Seg], have: &BTreeSet<String>) -> Option<String> {
             return Some(l);
         }
     }
+    // the running number: one counter shared by all people, so the parent is the highest single
+    // number below this one, whoever made it (JW25 -> MW26 -> JW27)
+    if chain.len() == 1 {
+        let mut best: Option<(u32, &String)> = None;
+        for l in have {
+            if l.contains('_') {
+                continue;
+            }
+            let Some(at) = l.find(|c: char| c.is_ascii_digit()) else {
+                continue;
+            };
+            let Ok(n) = l[at..].parse::<u32>() else {
+                continue;
+            };
+            if n < last.n && best.is_none_or(|(b, _)| n > b) {
+                best = Some((n, l));
+            }
+        }
+        if let Some((_, l)) = best {
+            return Some(l.clone());
+        }
+    }
     // a gap: the highest existing number below this one for the same person on the same prefix
     if last.n > 1 {
         let prefix = &chain[..chain.len() - 1];
@@ -182,7 +225,7 @@ pub fn build(
     let mut inst: BTreeMap<String, Instrument> = BTreeMap::new();
     let mut unparsed = 0;
     for f in files {
-        match parse_name(f, initials) {
+        match parse_name(f, initials).or_else(|| parse_fin(f)) {
             None => unparsed += 1,
             Some(p) => {
                 let v = inst
@@ -298,9 +341,9 @@ pub fn report(files: &[String], initials: &[&str], draws: &[Draw]) -> Report {
                 r.chained_versions += 1;
             }
             r.max_chain = r.max_chain.max(v.chain.len());
-            *r.by_author
-                .entry(v.chain[v.chain.len() - 1].who.clone())
-                .or_default() += 1;
+            if let Some(last) = v.chain.last() {
+                *r.by_author.entry(last.who.clone()).or_default() += 1;
+            }
             for w in &v.variants {
                 *r.variants.entry(w.clone()).or_default() += 1;
             }
@@ -325,7 +368,9 @@ pub fn report(files: &[String], initials: &[&str], draws: &[Draw]) -> Report {
         }
         if i.versions.values().any(|v| {
             v.parent.as_ref().is_some_and(|p| {
-                let last = &v.chain[v.chain.len() - 1];
+                let Some(last) = v.chain.last() else {
+                    return false;
+                };
                 let want = {
                     let mut c = v.chain.clone();
                     let n = c.len();
@@ -477,5 +522,46 @@ mod tests {
         assert_eq!(r.heads.get(&1), Some(&2));
         assert_eq!(r.forks, 0);
         assert_eq!(r.longest_spine, 2);
+    }
+
+    #[test]
+    fn running_number_links_people_in_order_and_fin_has_no_marker() {
+        let files: Vec<String> = [
+            "X_2026_11_15_Memo_JW25.html",
+            "X_2026_11_15_Memo_MW26.html",
+            "X_2026_11_15_Memo_JWB27.html",
+            "X_2026_11_20_Memo_FIN.pdf",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        let (inst, unparsed) = build(&files, &["JW", "MW", "JWB"], &[]);
+        assert_eq!(unparsed, 0);
+        let i = &inst["X_2026_11_15_Memo"];
+        assert_eq!(i.versions["MW26"].parent.as_deref(), Some("JW25"));
+        assert_eq!(i.versions["JWB27"].parent.as_deref(), Some("MW26"));
+        assert_eq!(i.heads(), vec!["JWB27"]);
+        let f = &inst["X_2026_11_20_Memo"].versions["FIN"];
+        assert_eq!((f.chain.len(), f.parent.clone()), (0, None));
+        let drawn = vec![(
+            "X_2026_11_20_Memo".to_string(),
+            "FIN".to_string(),
+            "JW25".to_string(),
+        )];
+        let (inst, _) = build(&files, &["JW", "MW", "JWB"], &drawn);
+        assert_eq!(
+            inst["X_2026_11_20_Memo"].versions["FIN"].parent.as_deref(),
+            Some("JW25")
+        );
+        assert!(
+            parse_name("Memo_ABCDEFG3.html", &["ABCDEFG"]).is_none(),
+            "7 letters is too long"
+        );
+        assert!(
+            report(&files, &["JW", "MW", "JWB"], &[])
+                .by_author
+                .get("MW")
+                == Some(&1)
+        );
     }
 }
