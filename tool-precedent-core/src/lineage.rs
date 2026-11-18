@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! Lineage read from file names, read-only. The current rule (operator, 2026-11-15, confirmed by
 //! Command): a version file is `<base>_<INITIALS><N>.<ext>` with ONE running number per file shared
-//! by all people (`JW25`, then `MW26`, then `JW27`), initials 2 to 6 letters; a `_FIN` file has no
-//! marker (`<base>_FIN.<ext>`, a later date in the base for a later `_FIN`). The earlier chained form
+//! by all people (`JW25`, then `MW26`, then `JW27`), initials 2 to 6 letters; a `_FIN`, `_EXE` or `_PUB`
+//! file has no number (`<base>_FIN.<ext>`, a later date in the base for a later one). The earlier chained form
 //! `<base>_<INITIALS><N>[_<INITIALS><N>...][_<VARIANT>...]` stays readable as history: a chain of
 //! (who, that person's counter) segments, and optional variant words such as `_FIN`. This module only READS names (and optionally draw rows); it
 //! never writes, renames or opens a document. The parent of a version is taken from a draw
@@ -33,7 +33,10 @@ pub struct Parsed {
 impl Parsed {
     /// The version label: the chain without its leading underscore, for example `JW3_MW1`.
     pub fn label(&self) -> String {
-        label_of(&self.chain)
+        match (self.chain.is_empty(), self.variants.first()) {
+            (true, Some(marker)) => marker.clone(),
+            _ => label_of(&self.chain),
+        }
     }
     /// The author of this file: the initials of the last segment.
     pub fn author(&self) -> &str {
@@ -118,18 +121,25 @@ pub fn parse_name(file: &str, initials: &[&str]) -> Option<Parsed> {
     })
 }
 
-/// A marker-less `_FIN` file (`<base>_FIN.<ext>`): the person chose it from the drafts, so its
-/// parent is not in the name (a draw row can record it). Only tried when the name has no marker.
-fn parse_fin(file: &str) -> Option<Parsed> {
+/// The final markers. Each is a copy made with the number dropped (`<base>_FIN.<ext>`), one per
+/// document per date, a later date in the base for a later one.
+const FINAL_MARKERS: [&str; 3] = ["FIN", "EXE", "PUB"];
+
+/// A marker-less final file (`<base>_FIN.<ext>`, also `_EXE` and `_PUB`): the person chose it from
+/// the drafts, so its parent is not in the name (the writer tool's record or a draw row can record
+/// it). Only tried when the name has no marker.
+fn parse_final(file: &str) -> Option<Parsed> {
     let (stem, ext) = file.split_once('.').filter(|(_, e)| !e.is_empty())?;
-    let base = stem.strip_suffix("_FIN")?;
+    let (base, marker) = FINAL_MARKERS
+        .iter()
+        .find_map(|m| stem.strip_suffix(&format!("_{m}")).map(|b| (b, *m)))?;
     if base.is_empty() {
         return None;
     }
     Some(Parsed {
         base: base.to_string(),
         chain: Vec::new(),
-        variants: vec!["FIN".to_string()],
+        variants: vec![marker.to_string()],
         ext: ext.to_string(),
     })
 }
@@ -225,7 +235,7 @@ pub fn build(
     let mut inst: BTreeMap<String, Instrument> = BTreeMap::new();
     let mut unparsed = 0;
     for f in files {
-        match parse_name(f, initials).or_else(|| parse_fin(f)) {
+        match parse_name(f, initials).or_else(|| parse_final(f)) {
             None => unparsed += 1,
             Some(p) => {
                 let v = inst
@@ -563,5 +573,26 @@ mod tests {
                 .get("MW")
                 == Some(&1)
         );
+    }
+
+    #[test]
+    fn exe_and_pub_read_like_fin_and_drf_is_not_a_marker() {
+        let files: Vec<String> = [
+            "X_2026_11_15_Memo_JW25.html",
+            "X_2026_11_20_Memo_FIN.pdf",
+            "X_2026_11_20_Memo_EXE.pdf",
+            "X_2026_11_21_Memo_PUB.pdf",
+            "X_2026_11_22_Memo_DRF.pdf",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
+        let (inst, unparsed) = build(&files, &["JW"], &[]);
+        assert_eq!(unparsed, 1, "_DRF is dropped, so it is not a version");
+        let i = &inst["X_2026_11_20_Memo"];
+        assert!(i.versions.contains_key("FIN") && i.versions.contains_key("EXE"));
+        assert_eq!(i.versions["EXE"].chain.len(), 0);
+        assert!(inst["X_2026_11_21_Memo"].versions.contains_key("PUB"));
+        assert!(!inst.contains_key("X_2026_11_22_Memo"));
     }
 }

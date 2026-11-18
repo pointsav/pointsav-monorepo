@@ -1,6 +1,6 @@
 ---
 schema: foundry-repo-manifest-v1
-source_version: 0.1.49
+source_version: 0.1.50
 ---
 
 # MANIFEST — pointsav-monorepo

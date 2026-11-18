@@ -21,6 +21,7 @@ pub mod survey;
 pub mod terms;
 pub mod tree;
 pub mod versions;
+pub mod walk;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;

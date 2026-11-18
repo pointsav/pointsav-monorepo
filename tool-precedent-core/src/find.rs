@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2026 Acme Holdings Inc.
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! Find: where is this used? Read-only views over documents already read once. The cross-document
 //! glossary lists every defined term with the documents that define it, the documents that merely
 //! use it, and how many distinct wordings its definition has. Wordings are grouped, never judged:

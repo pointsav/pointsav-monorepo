@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// SPDX-FileCopyrightText: 2026 Acme Holdings Inc.
+// SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! Language probe, read-only. Reads a document once and lists its language as small units
 //! (headings, paragraphs, table cells, defined terms) and classifies its file name
 //! (`AREA_ENTITY_YYYY_MM_DD_Type_Name`). Deterministic, no model. It never writes anything and
@@ -383,7 +383,7 @@ fn classify(s: &Scan) -> TermClass {
     let letters = t.chars().filter(|c| c.is_alphabetic()).count();
     let acronym =
         (2..=8).contains(&letters) && t.chars().all(|c| !c.is_alphabetic() || c.is_uppercase());
-    // the name ENDS with an entity word ("... Canada LP"), not merely contains one ("LP units")
+    // the name ENDS with an entity word ("... Example LP"), not merely contains one ("LP units")
     let in_term = t.split_whitespace().last().is_some_and(is_entity_word);
     let after_name = s.paren && !s.verb && {
         let upto = s.before.rfind('(').unwrap_or(s.before.len());
@@ -683,7 +683,7 @@ mod tests {
 
     #[test]
     fn separates_parties_from_defined_terms() {
-        let t = "Acme Holdings Inc. (the \u{201c}Acme\u{201d}) and the Comisi\u{f3}n (\"CNBV\") agree. \u{201c}Holder\u{201d} means a person. Professional Centres Canada LP (\u{201c}Professional Centres Canada LP\u{201d}) is a partnership. (the \u{201c}Closing\u{201d}) occurs later.";
+        let t = "Acme Holdings Inc. (the \u{201c}Acme\u{201d}) and the Comisi\u{f3}n (\"CNBV\") agree. \u{201c}Holder\u{201d} means a person. Example Partners LP (\u{201c}Example Partners LP\u{201d}) is a partnership. (the \u{201c}Closing\u{201d}) occurs later.";
         let d: std::collections::BTreeMap<String, TermClass> = defined_items(t)
             .into_iter()
             .map(|x| (x.term, x.class))
@@ -695,7 +695,7 @@ mod tests {
         );
         assert_eq!(d["cnbv"], TermClass::Party, "acronym");
         assert_eq!(
-            d["professional centres canada lp"],
+            d["example partners lp"],
             TermClass::Party,
             "entity word in the name"
         );
