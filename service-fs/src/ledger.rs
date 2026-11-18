@@ -387,8 +387,7 @@ pub fn verify_checkpoint_signature(
     let vk = ed25519_dalek::VerifyingKey::from_bytes(&vk_arr)
         .map_err(|e| LedgerError::InvalidKey(format!("invalid verifying key: {e}")))?;
     let sig = ed25519_dalek::Signature::from_bytes(&sig_arr);
-    use ed25519_dalek::Verifier as _;
-    Ok(vk.verify(body.as_bytes(), &sig).is_ok())
+    Ok(vk.verify_strict(body.as_bytes(), &sig).is_ok())
 }
 
 /// In-memory `LedgerBackend` implementation. Used today for unit
@@ -812,6 +811,34 @@ mod tests {
         assert!(
             !verify_checkpoint_signature(&cp, &vk_bytes).unwrap(),
             "signature must NOT verify after tampering with tree_size"
+        );
+    }
+
+    #[test]
+    fn checkpoint_signature_rejects_a_small_order_key() {
+        // The identity point as a public key with R = identity, S = 0 is a
+        // signature that plain `verify` accepts for every message;
+        // `verify_strict` rejects it. A caller-supplied key must not be able
+        // to make a checkpoint pass this way.
+        use ed25519_dalek::Verifier as _;
+        let mut identity = [0u8; 32];
+        identity[0] = 1;
+        let mut sig_bytes = [0u8; 64];
+        sig_bytes[0] = 1; // R = identity, S = 0
+        let l = InMemoryLedger::open(tmpdir(), "foundry").unwrap();
+        l.append("a", &serde_json::json!({"x": 1})).unwrap();
+        let mut cp = l.checkpoint().unwrap();
+        cp.signature = Some(sig_bytes.to_vec());
+        let body = signed_note_body(&cp.origin, cp.tree_size, &cp.root_hash).unwrap();
+        let vk = ed25519_dalek::VerifyingKey::from_bytes(&identity).unwrap();
+        let sig = ed25519_dalek::Signature::from_bytes(&sig_bytes);
+        assert!(
+            vk.verify(body.as_bytes(), &sig).is_ok(),
+            "premise: plain verify accepts this signature"
+        );
+        assert!(
+            !verify_checkpoint_signature(&cp, &identity).unwrap(),
+            "a small-order key signature must be rejected"
         );
     }
 
