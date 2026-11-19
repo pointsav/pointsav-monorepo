@@ -104,6 +104,12 @@ use tracing::{info, warn};
 /// by a bundling binary — see `BRIEF-os-totebox-platform.md` §8/§10 (Phase 2).
 pub async fn run() -> anyhow::Result<()> {
     init_tracing();
+    // D6 fix (Fable bug-hunt audit, Session 24): this was previously never
+    // called anywhere — the recorder module existed but was orphaned dead
+    // code (see `lib.rs`'s `pub mod metrics` doc comment). `init()` itself
+    // is best-effort/non-fatal by design (see its own doc comment) so this
+    // can't regress startup.
+    let _ = crate::metrics::init();
 
     let bind_addr: SocketAddr = std::env::var("SLM_BIND_ADDR")
         .unwrap_or_else(|_| "127.0.0.1:9080".to_string())
@@ -760,7 +766,11 @@ pub async fn run() -> anyhow::Result<()> {
     }
     // ────────────────────────────────────────────────────────────────────
 
-    let app = http::router(state);
+    let app = http::router(state.clone());
+    let app = match crate::jobs_http::build_from_env(state.clone())? {
+        Some(jobs) => app.merge(jobs),
+        None => app,
+    };
     let listener = tokio::net::TcpListener::bind(bind_addr)
         .await
         .with_context(|| format!("failed to bind {bind_addr}"))?;
@@ -781,7 +791,30 @@ pub async fn run() -> anyhow::Result<()> {
 /// mechanism). tokio's "signal" feature is already required here (build
 /// fails without it — this crate has depended on it since the Tier 0
 /// registration code was added), so this adds no new dependency.
+///
+/// FOUNDRY_NO_UNIX_SIGNAL: the os-totebox seL4/Microkit guest's minimal
+/// Linux kernel lacks AF_UNIX support (confirmed live 2026-09-01). tokio::signal::unix::signal()'s
+/// internal self-pipe setup PANICS (not a catchable Err) when
+/// socket(AF_UNIX, ...) returns EAFNOSUPPORT, and the workspace's
+/// `panic = "abort"` release profile turns that into an immediate process
+/// abort — the match below never runs. This guest environment isn't
+/// load-bearing on graceful SIGTERM anyway (the appliance's own restart path
+/// is a hard QMP/process kill, see write-guest-config.sh), so
+/// build-guest-rootfs.sh's /init exports this var to skip the call entirely
+/// rather than risk the panic.
+///
+/// NOTE (2026-09-01, bisected via 6 real boot cycles): the actual, PRIMARY
+/// fix for this bug is in os-totebox/src/main.rs's doorman-thread Runtime
+/// construction — `tokio::runtime::Runtime::new()`'s eager signal-driver
+/// setup panics during runtime CONSTRUCTION itself, before this function is
+/// ever reached, regardless of this guard. This env-var check remains as
+/// defense in depth against any explicit tokio::signal::* call once the
+/// runtime is built without the signal driver.
 async fn shutdown_signal() {
+    if std::env::var("FOUNDRY_NO_UNIX_SIGNAL").is_ok() {
+        tracing::info!("FOUNDRY_NO_UNIX_SIGNAL set — skipping SIGTERM handler install, graceful shutdown unavailable, server will only stop on abrupt termination");
+        std::future::pending::<()>().await;
+    }
     match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
         Ok(mut sigterm) => {
             sigterm.recv().await;
@@ -1024,10 +1057,22 @@ async fn register_tier_0(
     };
 
     let doorman_endpoint = std::env::var("SLM_DOORMAN_ADVERTISE_ENDPOINT").unwrap_or_default();
+    // Found live (Session 24): OrchestrationTierConfig previously had no
+    // tier_b_subscribed field at all, and register() hardcoded false in the
+    // wire body — so SLM_TIER_B_SUBSCRIBED=true had zero effect on this,
+    // the actual Tier 0 registration path (as opposed to the separate
+    // best-effort discovery-ping block above, which reads the env var
+    // correctly but is always skipped once Tier 0 has registered). Every
+    // inference call 402'd even with a valid chassis license and a
+    // genuinely successful registration until this was wired through.
+    let tier_b_subscribed = std::env::var("SLM_TIER_B_SUBSCRIBED")
+        .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+        .unwrap_or(false);
     info!(
         endpoint = %orchestration_endpoint,
         %module_id,
         %archive_id,
+        tier_b_subscribed,
         "SLM_TIER=0: registering with orchestration chassis as this Doorman's compute source"
     );
     let client = slm_doorman::tier::OrchestrationTierClient::new(
@@ -1037,6 +1082,7 @@ async fn register_tier_0(
             archive_id,
             doorman_endpoint,
             registration_token: registration_token.map(str::to_string),
+            tier_b_subscribed,
         },
     );
     client
@@ -1107,7 +1153,15 @@ async fn build_doorman() -> anyhow::Result<Doorman> {
         local_concurrent,
         background_concurrent, tier_b_concurrent, "admission control semaphores initialised"
     );
-    let total_sem = Arc::new(tokio::sync::Semaphore::new(local_concurrent));
+    // P0/P1/P2 priority scheduler — see crate `slm_doorman::scheduler` for why
+    // this lives in slm-doorman (not here): `Doorman::route()` can resolve to
+    // Tier A, B, or C, so admission has to gate at the point Tier A dispatch
+    // actually happens (`LocalTierClient::complete*`), not the generic HTTP
+    // handler layer. Same capacity as the old `total_sem` it replaces — P0/P1
+    // admission is behaviorally identical ("admit if any slot free"); P2 is
+    // the new capability (training/proof-run calls, admitted only when
+    // genuinely idle) that motivated wiring this in.
+    let scheduler = Arc::new(slm_doorman::RequestScheduler::new(local_concurrent));
     let background_sem = Arc::new(tokio::sync::Semaphore::new(background_concurrent));
     let tier_b_sem = Arc::new(tokio::sync::Semaphore::new(tier_b_concurrent));
 
@@ -1160,7 +1214,8 @@ async fn build_doorman() -> anyhow::Result<Doorman> {
     //                                    (SLM_BIND_ADDR is typically loopback-only and
     //                                    not usefully advertisable as-is).
     let tier_0_mode = slm_tier_is_zero();
-    let orchestration_endpoint_raw = std::env::var("SLM_ORCHESTRATION_ENDPOINT").unwrap_or_default();
+    let orchestration_endpoint_raw =
+        std::env::var("SLM_ORCHESTRATION_ENDPOINT").unwrap_or_default();
     let orchestration_endpoint_configured = !orchestration_endpoint_raw.trim().is_empty();
 
     let local = if tier_0_mode && orchestration_endpoint_configured {
@@ -1229,7 +1284,7 @@ async fn build_doorman() -> anyhow::Result<Doorman> {
                 endpoint: local_endpoint,
                 default_model: local_default_model,
             })
-            .with_semaphores(Arc::clone(&total_sem), Arc::clone(&background_sem)),
+            .with_semaphores(Arc::clone(&scheduler), Arc::clone(&background_sem)),
         ))
     };
 
@@ -1411,6 +1466,22 @@ fn build_yoyo_client(
                 Arc::new(MetadataBearer::new(&endpoint))
             } else {
                 let bearer_token = std::env::var(env_bearer).unwrap_or_default();
+                // Fail-closed, not fail-open (a review finding): an unset/empty bearer env var used to
+                // silently become an empty-string token -- StaticBearer performs zero
+                // validation, so the Tier B (GPU-burst) path would start and serve with
+                // no real authentication rather than refuse to boot. A misconfigured
+                // deployment (env var simply never set) is exactly the case this must
+                // catch, since that's indistinguishable from "intentionally disabled"
+                // without this check.
+                if bearer_token.is_empty() {
+                    eprintln!(
+                        "[FATAL] {env_bearer} is unset or empty, but {env_endpoint} is configured \
+                         (Tier B/GPU-burst enabled) and SLM_YOYO_GCP_AUTH is not true -- refusing to \
+                         start with an unauthenticated Tier B path. Set {env_bearer}, or set \
+                         SLM_YOYO_GCP_AUTH=true to use metadata-based auth instead."
+                    );
+                    std::process::exit(1);
+                }
                 Arc::new(StaticBearer::new(bearer_token))
             };
             let yoyo_hourly_usd = std::env::var(env_hourly)

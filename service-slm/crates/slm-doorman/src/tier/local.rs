@@ -18,6 +18,15 @@ use tokio::sync::{watch, OwnedSemaphorePermit, Semaphore};
 use tracing::debug;
 
 use crate::error::{DoormanError, Result};
+use crate::scheduler::{InfightPriority, RequestScheduler, SchedulerPermit};
+
+/// In-process Tier A admission-control snapshot — see `LocalTierClient::admission_status`.
+#[derive(Clone, Debug, Serialize)]
+pub struct LocalAdmissionStatus {
+    pub total_permits_available: Option<usize>,
+    pub background_permits_available: Option<usize>,
+    pub active_interactive: usize,
+}
 
 #[derive(Clone, Debug)]
 pub struct LocalTierConfig {
@@ -36,6 +45,13 @@ pub struct LocalTierConfig {
 struct InteractiveGuard {
     active_interactive: Arc<AtomicUsize>,
     interactive_tx: Arc<watch::Sender<bool>>,
+    // Production-readiness roadmap Tier 0.3: carried purely for the acquire/
+    // release log pair below, so a stuck-permit incident is diagnosable from
+    // the journal (request_id + available_permits at each transition)
+    // instead of requiring a restart to even confirm what happened.
+    request_id: String,
+    scheduler: Option<Arc<RequestScheduler>>,
+    acquired_at: Instant,
 }
 
 impl Drop for InteractiveGuard {
@@ -44,21 +60,35 @@ impl Drop for InteractiveGuard {
         if remaining == 1 {
             let _ = self.interactive_tx.send(false);
         }
+        debug!(
+            request_id = %self.request_id,
+            held_ms = self.acquired_at.elapsed().as_millis() as u64,
+            total_permits_available = self.scheduler.as_ref().map(|s| s.available_permits()),
+            "interactive Tier A permit released"
+        );
     }
 }
 
 pub struct LocalTierClient {
     config: LocalTierConfig,
     http: reqwest::Client,
-    /// Total concurrent OLMo slots (SLM_LOCAL_CONCURRENT, default 2).
-    /// Held by all callers — interactive and background alike. When full,
-    /// the caller receives LocalSaturated immediately instead of queuing
-    /// inside llama-server for up to 1 800 s.
-    total_sem: Option<Arc<Semaphore>>,
+    /// Total concurrent OLMo slots (SLM_LOCAL_CONCURRENT, default 2) — the
+    /// single source of truth for "is Tier A busy," shared by all three
+    /// priority classes (P0 interactive, P1 background, P2 training). When
+    /// full, the caller receives LocalSaturated immediately instead of
+    /// queuing inside llama-server for up to 1 800 s.
+    ///
+    /// This used to be a bare `Arc<Semaphore>` with no priority awareness.
+    /// Replaced 2026-09-21 with `RequestScheduler` (same underlying
+    /// semaphore/capacity, so P0/P1 admission is behaviorally identical —
+    /// "admit if any slot free") so `complete_p2()` can ask "are ALL slots
+    /// free" using the *same* semaphore P0/P1 already acquire, rather than a
+    /// second, independent counter that could drift from the real state.
+    scheduler: Option<Arc<RequestScheduler>>,
     /// Background-only semaphore (SLM_BACKGROUND_CONCURRENT, default 1).
-    /// Acquired BEFORE total_sem by extraction fallback and drain dispatch.
-    /// Ensures at least one total slot remains free for interactive callers
-    /// even when background work is in flight.
+    /// Acquired BEFORE the scheduler slot by extraction fallback and drain
+    /// dispatch. Ensures at least one total slot remains free for interactive
+    /// callers even when background work is in flight.
     background_sem: Option<Arc<Semaphore>>,
     /// Count of in-flight interactive requests. Background callers watch this
     /// via `interactive_rx`; when it goes non-zero they abort their in-progress
@@ -92,7 +122,7 @@ impl LocalTierClient {
                 .connect_timeout(std::time::Duration::from_secs(10))
                 .build()
                 .expect("failed to build Tier A HTTP client"),
-            total_sem: None,
+            scheduler: None,
             background_sem: None,
             active_interactive: Arc::new(AtomicUsize::new(0)),
             interactive_tx: Arc::new(interactive_tx),
@@ -100,40 +130,70 @@ impl LocalTierClient {
         }
     }
 
-    /// Attach priority admission-control semaphores (production only).
-    /// Called once after `new()` in the server startup path; tests call
-    /// `new()` alone and pass `None` implicitly (no cap applied).
-    pub fn with_semaphores(mut self, total: Arc<Semaphore>, background: Arc<Semaphore>) -> Self {
-        self.total_sem = Some(total);
+    /// Attach priority admission control (production only). `scheduler`'s
+    /// capacity should equal `SLM_LOCAL_CONCURRENT`; `background` should
+    /// equal `SLM_BACKGROUND_CONCURRENT`. Tests call `new()` alone and pass
+    /// `None` implicitly (no cap applied).
+    pub fn with_semaphores(
+        mut self,
+        scheduler: Arc<RequestScheduler>,
+        background: Arc<Semaphore>,
+    ) -> Self {
+        self.scheduler = Some(scheduler);
         self.background_sem = Some(background);
         self
+    }
+
+    /// Production-readiness roadmap Tier 0.5: expose in-process admission-
+    /// control state so `/v1/status/tier-a` can report it alongside
+    /// llama-server's own `/metrics`, and a caller can detect the divergence
+    /// (permits exhausted while llama-server itself is idle) that previously
+    /// required a `systemctl restart` to even confirm, let alone clear.
+    pub fn admission_status(&self) -> LocalAdmissionStatus {
+        LocalAdmissionStatus {
+            total_permits_available: self.scheduler.as_ref().map(|s| s.available_permits()),
+            background_permits_available: self
+                .background_sem
+                .as_ref()
+                .map(|s| s.available_permits()),
+            active_interactive: self.active_interactive.load(Ordering::SeqCst),
+        }
     }
 
     pub fn endpoint(&self) -> &str {
         &self.config.endpoint
     }
 
-    /// Interactive path: acquires one slot from `total_sem` only.
-    /// Returns LocalSaturated immediately when the semaphore is full.
-    fn try_acquire_interactive(&self) -> Result<Option<OwnedSemaphorePermit>> {
-        match &self.total_sem {
+    /// Non-blocking P2 (idle-only) admission against the shared scheduler,
+    /// for callers that make their own request to the llama-server (the
+    /// `/v1/jobs` engines). `None` when saturated or no scheduler configured
+    /// (fail closed).
+    pub fn try_admit_p2(&self) -> Option<SchedulerPermit> {
+        self.scheduler.as_ref()?.try_admit(InfightPriority::P2)
+    }
+
+    /// Interactive path (P0): admit if any scheduler slot is free.
+    /// Returns LocalSaturated immediately when none are.
+    fn try_acquire_interactive(&self) -> Result<Option<SchedulerPermit>> {
+        match &self.scheduler {
             None => Ok(None),
-            Some(sem) => sem
-                .clone()
-                .try_acquire_owned()
+            Some(s) => s
+                .try_admit(InfightPriority::P0)
+                .ok_or(())
                 .map(Some)
                 .map_err(|_| DoormanError::LocalSaturated),
         }
     }
 
-    /// Background path: acquires `background_sem` first (caps background
-    /// concurrency), then `total_sem` (caps total OLMo load).
-    /// If either semaphore is full, returns LocalSaturated immediately.
-    /// When `background_sem` succeeds but `total_sem` fails, the background
-    /// permit is dropped automatically before returning the error.
+    /// Background path (P1): acquires `background_sem` first (caps
+    /// background concurrency), then a scheduler slot (caps total OLMo
+    /// load, shared with P0/P2). If either is full, returns LocalSaturated
+    /// immediately. When `background_sem` succeeds but the scheduler
+    /// doesn't, the background permit is dropped automatically before
+    /// returning the error.
     fn try_acquire_background(
         &self,
-    ) -> Result<(Option<OwnedSemaphorePermit>, Option<OwnedSemaphorePermit>)> {
+    ) -> Result<(Option<OwnedSemaphorePermit>, Option<SchedulerPermit>)> {
         let bg = match &self.background_sem {
             None => None,
             Some(sem) => match sem.clone().try_acquire_owned() {
@@ -141,14 +201,38 @@ impl LocalTierClient {
                 Err(_) => return Err(DoormanError::LocalSaturated),
             },
         };
-        let total = match &self.total_sem {
+        let total = match &self.scheduler {
             None => None,
-            Some(sem) => match sem.clone().try_acquire_owned() {
-                Ok(p) => Some(p),
-                Err(_) => return Err(DoormanError::LocalSaturated),
+            Some(s) => match s.try_admit(InfightPriority::P1) {
+                Some(p) => Some(p),
+                None => return Err(DoormanError::LocalSaturated),
             },
         };
         Ok((bg, total))
+    }
+
+    /// Training/proof-run path (P2): admit ONLY when every scheduler slot is
+    /// free — no interactive, no background work in flight. Fails closed:
+    /// `None` scheduler (not configured) is refused, never treated as
+    /// "always idle." Unlike `complete_background()`, this does not race
+    /// against a live preemption signal — by construction P2 only starts
+    /// once nothing else is running, so there is nothing to preempt it
+    /// mid-flight beyond the scheduler's own admission check for the *next*
+    /// P0/P1 caller (which correctly returns LocalSaturated to them, not to
+    /// this already-admitted P2 call).
+    pub async fn complete_p2(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        let scheduler = self
+            .scheduler
+            .as_ref()
+            .ok_or(DoormanError::LocalSaturated)?;
+        let _permit = scheduler
+            .try_admit(InfightPriority::P2)
+            .ok_or(DoormanError::LocalSaturated)?;
+        debug!(
+            request_id = %req.request_id,
+            "P2 (training/proof-run) Tier A permit acquired — backend was idle"
+        );
+        self.complete_inner(req).await
     }
 
     /// Poll `GET /slots` on the local llama-server until all slots report
@@ -162,13 +246,26 @@ impl LocalTierClient {
     /// connection, which only happens between batch iterations (≤ 5 s on this
     /// hardware).
     async fn wait_for_olmo_slots_free(&self, timeout: Duration) {
+        let start = Instant::now();
+        // Production-readiness roadmap Tier 0.2: this whole poll used to check
+        // its deadline only *between* iterations, while each `self.http` call
+        // reused the 1800s inference-request timeout — so a single slow GET
+        // (e.g. llama-server at ~100% CPU under contention) could block far
+        // past `timeout` while the caller still holds a total_sem permit and
+        // active_interactive is already incremented. Wrap the whole loop in a
+        // real, enforced timeout so this can never exceed the stated budget.
+        let _ = tokio::time::timeout(timeout, self.poll_olmo_slots_free_inner()).await;
+        debug!(
+            elapsed_ms = start.elapsed().as_millis() as u64,
+            budget_ms = timeout.as_millis() as u64,
+            "wait_for_olmo_slots_free finished"
+        );
+    }
+
+    async fn poll_olmo_slots_free_inner(&self) {
         let url = format!("{}/slots", self.config.endpoint.trim_end_matches('/'));
-        let deadline = tokio::time::Instant::now() + timeout;
         loop {
             tokio::time::sleep(Duration::from_millis(75)).await;
-            if tokio::time::Instant::now() >= deadline {
-                break;
-            }
             match self.http.get(&url).send().await {
                 Ok(resp) => match resp.json::<Vec<serde_json::Value>>().await {
                     Ok(slots) => {
@@ -181,9 +278,9 @@ impl LocalTierClient {
                             return;
                         }
                     }
-                    Err(_) => break, // parsing error; proceed
+                    Err(_) => return, // parsing error; proceed
                 },
-                Err(_) => break, // OLMo unreachable; proceed
+                Err(_) => return, // OLMo unreachable; proceed
             }
         }
     }
@@ -201,10 +298,18 @@ impl LocalTierClient {
     /// batching, which would add 2–15 s of latency even after preemption.
     pub async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         let _permit = self.try_acquire_interactive()?;
+        debug!(
+            request_id = %req.request_id,
+            total_permits_available = self.scheduler.as_ref().map(|s| s.available_permits()),
+            "interactive Tier A permit acquired"
+        );
         let prev = self.active_interactive.fetch_add(1, Ordering::SeqCst);
         let _guard = InteractiveGuard {
             active_interactive: Arc::clone(&self.active_interactive),
             interactive_tx: Arc::clone(&self.interactive_tx),
+            request_id: req.request_id.to_string(),
+            scheduler: self.scheduler.clone(),
+            acquired_at: Instant::now(),
         };
         if prev == 0 {
             let _ = self.interactive_tx.send(true);
@@ -388,7 +493,21 @@ impl LocalTierClient {
             json_schema: json_schema_field,
             stop: req.stop_sequences.clone(),
             tools: req.tools.as_ref().map(super::anthropic_tools_to_openai),
-            cache_prompt: false,
+            // Production-readiness roadmap Tier 1.7: re-enabled for the
+            // interactive path now that `local-slm.service` runs
+            // `--swa-full` (cures the 26x-reprocess-on-cache-miss
+            // pathology this field's own doc comment describes -- that
+            // was the reason it was false, not a general objection to
+            // caching) plus q8_0 K/V quantization to keep the larger
+            // full-size SWA cache's memory cost down. Left `false` in
+            // `complete_inner_streaming` (the background/extraction
+            // path) -- that traffic varies too widely turn-to-turn for
+            // prefix reuse to help, per Fable's research pass. Live
+            // evidence this was worth doing: a production host's own logs
+            // already showed llama-server finding a reusable cached
+            // prefix (`sim_best = 0.999`) on a same-session follow-up
+            // turn, then discarding it because caching was off.
+            cache_prompt: true,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -457,11 +576,18 @@ struct OpenAiChatRequest {
     /// `anthropic_tools_to_openai`). Absent when `None`.
     #[serde(skip_serializing_if = "Option::is_none")]
     tools: Option<serde_json::Value>,
-    /// Disable llama-server slot KV-cache reuse across requests.
-    /// OLMo-3 SWA (Sliding Window Attention) causes 26× slower prefill when
-    /// a slot's cached prefix doesn't match the new prompt. Setting this to
-    /// false forces a fresh slot state per request, eliminating the pathology
-    /// at the cost of no cross-request caching (acceptable: requests vary widely).
+    /// Whether llama-server may reuse a slot's cached KV state across
+    /// requests. OLMo-3 SWA (Sliding Window Attention) causes 26× slower
+    /// prefill when a slot's cached prefix doesn't match the new prompt on
+    /// a `--swa-full`-less server, which is why this used to be
+    /// unconditionally `false`. Tier 1.7 (production-readiness roadmap)
+    /// fixed the actual pathology at the source (`--swa-full` on
+    /// `local-slm.service`) instead of avoiding it here, and re-enabled
+    /// this for the interactive path (`complete_inner`) — a same-session
+    /// follow-up turn's largely-unchanged system prompt + growing history
+    /// now gets real prefix reuse. Still `false` in
+    /// `complete_inner_streaming` (the background/extraction path):
+    /// that traffic varies too widely turn-to-turn for reuse to help.
     cache_prompt: bool,
 }
 
@@ -830,5 +956,56 @@ mod tests {
              wiremock received {} request(s)",
             received.len()
         );
+    }
+
+    // ── P2 (training/proof-run) admission tests ────────────────────────────
+
+    /// `complete_p2` must fail closed when no scheduler is attached — "not
+    /// configured" must never be silently read as "always idle."
+    #[tokio::test]
+    async fn complete_p2_refuses_when_scheduler_unconfigured() {
+        let server = MockServer::start().await;
+        // No mock registered — a network call here would be the bug.
+        let client = client(server.uri());
+        let err = client
+            .complete_p2(&req())
+            .await
+            .expect_err("must refuse without a scheduler");
+        assert!(matches!(err, DoormanError::LocalSaturated));
+        assert!(server.received_requests().await.unwrap().is_empty());
+    }
+
+    /// `complete_p2` admits when the shared scheduler is genuinely idle, and
+    /// is rejected while a P0 (interactive) call holds the same slot —
+    /// proving idle-detection is real, not a separate/independent counter.
+    #[tokio::test]
+    async fn complete_p2_admits_when_idle_rejects_when_interactive_in_flight() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .mount(&server)
+            .await;
+
+        let scheduler = Arc::new(RequestScheduler::new(1));
+        let background = Arc::new(Semaphore::new(1));
+        let client = client(server.uri()).with_semaphores(scheduler.clone(), background);
+
+        // Idle: P2 admitted.
+        client
+            .complete_p2(&req())
+            .await
+            .expect("idle backend must admit P2");
+
+        // Occupy the one shared slot directly on the scheduler (simulating an
+        // in-flight P0 interactive call without needing a slow real request).
+        let _held = scheduler
+            .try_admit(InfightPriority::P0)
+            .expect("first slot");
+        let err = client
+            .complete_p2(&req())
+            .await
+            .expect_err("P2 must be rejected while any slot is held");
+        assert!(matches!(err, DoormanError::LocalSaturated));
     }
 }

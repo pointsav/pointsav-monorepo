@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 [package]
@@ -57,8 +57,13 @@ sha2 = "0.10"
 
 # Observability
 tracing = { workspace = true }
+# D6 fix (Fable bug-hunt audit, found 2026-08-14): metrics recorder was wired
+# in slm-doorman-server (metrics.rs) but the actual instrumentation call
+# sites live here — write_audit, corpus_gate::check — which never depended
+# on this crate. Same version/features as slm-doorman-server's own dep.
+metrics = { version = "0.24.6", default-features = false }
 
 [dev-dependencies]
 # Mock HTTP server for Yo-Yo client unit tests (B2)
 wiremock = "0.6"
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["test-util"] }

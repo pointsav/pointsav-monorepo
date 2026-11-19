@@ -26,12 +26,14 @@ pub mod flow_policy;
 pub mod gcp;
 pub mod grammar_validation;
 pub mod graph;
+pub mod jobs;
 pub mod ledger;
 pub mod mesh;
 pub mod priority_queue;
 pub mod promotion_ledger;
 pub mod redact;
 pub mod router;
+pub mod scheduler;
 pub mod tier;
 pub mod verdict;
 pub mod vm_lifecycle;
@@ -62,12 +64,13 @@ pub use grammar_validation::LarkValidator;
 pub use graph::GraphContextClient;
 pub use ledger::{
     AuditCaptureEntry, AuditEntry, AuditLedger, AuditProxyEntry, AuditProxyStubEntry,
-    ExtractionAuditEntry,
+    ExtractionAuditEntry, JobAuditEntry,
 };
 pub use priority_queue::{Priority, PriorityQueue, QueueDepth};
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
 pub use router::{Doorman, DoormanConfig, LocalBackend, TierBInfo};
+pub use scheduler::{InfightPriority, RequestScheduler, SchedulerPermit};
 pub use tier::{
     BearerTokenProvider, ExternalAllowlist, ExternalTierClient, ExternalTierConfig,
     LocalTierClient, PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient,

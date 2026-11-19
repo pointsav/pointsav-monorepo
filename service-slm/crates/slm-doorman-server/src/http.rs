@@ -53,10 +53,11 @@ use slm_doorman::ledger::{
 use slm_doorman::{
     ApprenticeshipConfig, ApprenticeshipDispatcher, AuditCaptureEntry, AuditProxyClient,
     AuditProxyEntry, AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman,
-    DoormanError, ExpressLane, ExpressSlot, ExtractionAuditEntry, VerdictDispatchOutcome,
-    VerdictDispatcher, VerdictWireBody,
+    DoormanError, ExpressLane, ExpressSlot, ExtractionAuditEntry, InfightPriority,
+    VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
 };
 use tokio::sync::Semaphore;
+use tower_http::timeout::TimeoutLayer;
 
 use crate::queue::QueueConfig;
 
@@ -124,6 +125,16 @@ pub struct AppState {
     pub express_lane: Arc<ExpressLane>,
 }
 
+/// 2026-09-11 robustness pass: an earlier audit found zero server-side HTTP
+/// request timeouts anywhere in this router — a request that hangs (a
+/// wedged downstream connection, a stuck upstream) would hold its worker
+/// indefinitely with no server-side backstop. Set deliberately ABOVE
+/// `local.rs`'s own 1800s (30 min) Tier A inference timeout — that value is
+/// a legitimate, real call duration (OLMo 7B Q4_K_M CPU inference at
+/// max_tokens=2048), not something to cut off. This is a safety net for
+/// genuinely-hung requests, not a fast-fail for slow-but-real ones.
+const REQUEST_TIMEOUT_SECS: u64 = 1900;
+
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
@@ -149,7 +160,256 @@ pub fn router(state: Arc<AppState>) -> Router {
         // Sprint 6 — cost + tier-a status
         .route("/v1/status/cost", get(status_cost))
         .route("/v1/status/tier-a", get(status_tier_a))
+        // D6 fix (Fable bug-hunt audit, Session 24): the Prometheus recorder
+        // module existed but was never routed — see `lib.rs`'s `pub mod
+        // metrics` doc comment for the full history.
+        .route("/metrics", get(metrics_handler))
+        // Phase 3 (Session 24 live flow test): adapter weight-return path.
+        // Real, scoped feature work per operator instruction — the literal
+        // "weights end up back on os-totebox" claim needed bytes actually
+        // landing on this guest's own persistent /data disk, not just a
+        // metadata listing (the chassis's GET /v1/adapters only ever
+        // listed). `/v1/adapters/local/<job_id>` is a plain read-back for
+        // verification and future real consumers of a pulled adapter.
+        .route("/v1/adapters/pull", post(pull_adapter))
+        .route("/v1/adapters/local/{job_id}", get(get_local_adapter))
+        .layer(TimeoutLayer::with_status_code(
+            axum::http::StatusCode::REQUEST_TIMEOUT,
+            std::time::Duration::from_secs(REQUEST_TIMEOUT_SECS),
+        ))
         .with_state(state)
+}
+
+/// Root directory for pulled adapter archives on this guest's persistent
+/// disk. `ADAPTER_STORAGE_DIR` env var, defaulting to a sibling of
+/// `SERVICE_CONTENT_BASE_DIR` (`/data/weights/adapters`) — same `/data`
+/// mount already confirmed to survive a guest restart (see the DataGraph
+/// persistence fix earlier this session), same `weights/adapters/...`
+/// naming convention `yoyo-daily-cycle.sh` already uses on the real
+/// (remote, GPU) training path, for consistency.
+fn adapter_storage_dir() -> std::path::PathBuf {
+    std::env::var("ADAPTER_STORAGE_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|_| std::path::PathBuf::from("/data/weights/adapters"))
+}
+
+/// A `job_id` becomes a filename component, so it must not be able to carry
+/// a path separator, `..`, or an absolute path. Allow-list rather than
+/// deny-list: ASCII alphanumerics, `_` and `-` only, bounded length.
+fn valid_adapter_job_id(job_id: &str) -> bool {
+    !job_id.is_empty()
+        && job_id.len() <= 128
+        && job_id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+}
+
+fn adapter_max_bytes() -> u64 {
+    std::env::var("ADAPTER_MAX_BYTES")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(512 * 1024 * 1024)
+}
+
+/// True when `url` starts with one of the comma-separated allow-list
+/// prefixes and the match ends on a path boundary (so `http://h:9000` does not
+/// admit `http://h:9000.evil.example/`). An empty list admits nothing.
+fn source_allowed(url: &str, allowlist: &str) -> bool {
+    allowlist
+        .split(',')
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+        .any(|prefix| {
+            url.strip_prefix(prefix).is_some_and(|rest| {
+                prefix.ends_with('/') || rest.is_empty() || rest.starts_with(['/', '?'])
+            })
+        })
+}
+
+fn bad_job_id() -> Response {
+    (
+        StatusCode::BAD_REQUEST,
+        Json(serde_json::json!({"error": "job_id must be 1-128 chars of [A-Za-z0-9_-]"})),
+    )
+        .into_response()
+}
+
+#[derive(Debug, Deserialize)]
+struct PullAdapterRequest {
+    job_id: String,
+    source_url: String,
+}
+
+#[derive(Debug, Serialize)]
+struct PullAdapterResponse {
+    job_id: String,
+    bytes_written: u64,
+    path: String,
+}
+
+/// `POST /v1/adapters/pull` — fetch a completed adapter archive from a
+/// trainer/shim `.../download` URL and write it to this guest's own
+/// persistent disk. Deliberately stores the raw `.tar.gz` bytes rather than
+/// extracting (no `tar`/`flate2` dependency needed for this proof-of-
+/// mechanism pass) — real consumers extracting on read is a natural,
+/// small follow-up, not done here to keep this change minimal and
+/// reviewable.
+async fn pull_adapter(Json(req): Json<PullAdapterRequest>) -> Response {
+    if !valid_adapter_job_id(&req.job_id) {
+        return bad_job_id();
+    }
+    if !(req.source_url.starts_with("http://") || req.source_url.starts_with("https://")) {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "source_url must be http or https"})),
+        )
+            .into_response();
+    }
+    let allowlist = std::env::var("ADAPTER_SOURCE_ALLOWLIST").unwrap_or_default();
+    if !source_allowed(&req.source_url, &allowlist) {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(serde_json::json!({
+                "error": "source_url is not on ADAPTER_SOURCE_ALLOWLIST (unset = all refused)"
+            })),
+        )
+            .into_response();
+    }
+    let client = match ReqwestClient::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": format!("client build failed: {e}")})),
+            )
+                .into_response();
+        }
+    };
+    let mut resp = match client.get(&req.source_url).send().await {
+        Ok(r) => r,
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                Json(serde_json::json!({"error": format!("fetch failed: {e}")})),
+            )
+                .into_response();
+        }
+    };
+    if !resp.status().is_success() {
+        return (
+            StatusCode::BAD_GATEWAY,
+            Json(serde_json::json!({"error": format!("source returned {}", resp.status())})),
+        )
+            .into_response();
+    }
+    let max_bytes = adapter_max_bytes();
+    let mut bytes: Vec<u8> = Vec::new();
+    loop {
+        match resp.chunk().await {
+            Ok(Some(chunk)) => {
+                if bytes.len() as u64 + chunk.len() as u64 > max_bytes {
+                    return (
+                        StatusCode::PAYLOAD_TOO_LARGE,
+                        Json(serde_json::json!({"error": format!("adapter exceeds {max_bytes} bytes")})),
+                    )
+                        .into_response();
+                }
+                bytes.extend_from_slice(&chunk);
+            }
+            Ok(None) => break,
+            Err(e) => {
+                return (
+                    StatusCode::BAD_GATEWAY,
+                    Json(serde_json::json!({"error": format!("body read failed: {e}")})),
+                )
+                    .into_response();
+            }
+        }
+    }
+    let dir = adapter_storage_dir();
+    if let Err(e) = tokio::fs::create_dir_all(&dir).await {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("mkdir failed: {e}")})),
+        )
+            .into_response();
+    }
+    let path = dir.join(format!("{}.tar.gz", req.job_id));
+    let tmp_path = dir.join(format!("{}.tar.gz.tmp", req.job_id));
+    let write_result = match tokio::fs::write(&tmp_path, &bytes).await {
+        Ok(()) => tokio::fs::rename(&tmp_path, &path).await,
+        Err(e) => Err(e),
+    };
+    if let Err(e) = write_result {
+        let _ = tokio::fs::remove_file(&tmp_path).await;
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("write failed: {e}")})),
+        )
+            .into_response();
+    }
+    tracing::info!(
+        job_id = %req.job_id,
+        bytes = bytes.len(),
+        path = %path.display(),
+        "adapter pulled to persistent disk"
+    );
+    Json(PullAdapterResponse {
+        job_id: req.job_id,
+        bytes_written: bytes.len() as u64,
+        path: path.display().to_string(),
+    })
+    .into_response()
+}
+
+/// `GET /v1/adapters/local/{job_id}` — read back a previously pulled
+/// adapter archive from this guest's persistent disk. Verification-only
+/// for this phase (lets an external caller `sha256sum` what actually
+/// landed on `/data` against the source), but a real, reusable read path
+/// for any future consumer too.
+async fn get_local_adapter(axum::extract::Path(job_id): axum::extract::Path<String>) -> Response {
+    if !valid_adapter_job_id(&job_id) {
+        return bad_job_id();
+    }
+    let path = adapter_storage_dir().join(format!("{job_id}.tar.gz"));
+    match tokio::fs::read(&path).await {
+        Ok(bytes) => (
+            StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "application/gzip")],
+            bytes,
+        )
+            .into_response(),
+        Err(_) => (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({"error": "no locally pulled adapter for that job_id"})),
+        )
+            .into_response(),
+    }
+}
+
+/// `GET /metrics` — Prometheus textual-format scrape endpoint.
+///
+/// Renders whatever the process-global recorder has captured so far.
+/// D6 fix (Fable bug-hunt audit, 2026-08-14): 6 of the 8 documented metrics
+/// now have real call sites (slm-doorman's `router::write_audit` +
+/// `corpus_gate::check`, this crate's `readyz` + `audit_proxy`). The other
+/// two (`slm_yoyo_dispatch_age_seconds`, `slm_contamination_guard_total`)
+/// still emit nothing — both need new supporting state/modules built first,
+/// not just a missing call (see `metrics.rs`'s module doc comment). Always
+/// returns 200 with `text/plain` even in degraded mode (recorder not
+/// installed), matching `metrics::render()`'s own documented contract.
+async fn metrics_handler() -> impl IntoResponse {
+    (
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "text/plain; version=0.0.4",
+        )],
+        crate::metrics::render(),
+    )
 }
 
 async fn healthz() -> &'static str {
@@ -171,6 +431,13 @@ async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
             .unwrap_or(0)
     };
     let queue_pending = count_dir(base.join("queue"));
+    // D6 fix (Fable bug-hunt audit, found 2026-08-14): slm_apprenticeship_
+    // queue_depth was documented as sourced from the drain worker in
+    // entrypoint.rs, but that loop only ever sees one dequeued item at a
+    // time — it has no view of total queue depth. This directory-count
+    // value readyz already computes for the dashboard IS that depth, so
+    // record it here instead of inventing new state in the drain loop.
+    metrics::gauge!("slm_apprenticeship_queue_depth").set(queue_pending as f64);
     let queue_done = count_dir(base.join("queue-done"));
     let queue_poison = count_dir(base.join("queue-poison"));
     // Q8: surfaced here so callers don't need a separate /v1/status/queue poll.
@@ -335,6 +602,33 @@ async fn chat_completions(
         stop_sequences: None,
         session_context: body.session_context,
     };
+
+    // P2 (training/proof-run) hint — production-readiness roadmap 2026-09,
+    // slm_doorman::scheduler. Distinct from is_background: P2 requires the
+    // backend to be genuinely idle (no P0 AND no P1 in flight), not just a
+    // free background_sem slot, and is local-only by construction (never
+    // routes to Tier B/C) — this exists so a CPU training/proof-run call can
+    // never contend with live interactive or background traffic on the
+    // single Tier A slot. Checked before is_background/express-lane since it
+    // is a separate admission path entirely.
+    let priority = InfightPriority::from_header(
+        headers
+            .get("x-foundry-priority")
+            .and_then(|v| v.to_str().ok()),
+    );
+    if priority == InfightPriority::P2 {
+        let dispatch_result = state.doorman.route_local_p2(&req).await;
+        state
+            .doorman
+            .write_audit_entry(&req, InferenceRoute::Local, &dispatch_result);
+        let resp = dispatch_result.map_err(ApiError::from)?;
+        let tier_str = resp.tier_used.as_str().to_string();
+        let mut resp_headers = HeaderMap::new();
+        if let Ok(v) = tier_str.parse() {
+            resp_headers.insert("x-foundry-tier-used", v);
+        }
+        return Ok((resp_headers, Json(resp)));
+    }
 
     // Background extraction callers bypass the express-lane gate and graph
     // context injection; they route directly to complete_background() which
@@ -792,13 +1086,8 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             } else {
                 strip_think_blocks(&compute_resp.content)
             };
-            // For Tier A fallback: model output begins mid-array (after pre-fill `[{"`).
-            // Prepend the pre-fill prefix back so the JSON is parseable.
             let content_raw = if used_tier_label == "tier_a_fallback" {
-                format!(
-                    "[{{\"{}",
-                    content_no_think.trim().trim_start_matches("[{\"")
-                )
+                repair_tier_a_fallback_json(&content_no_think)
             } else {
                 content_no_think.trim().to_string()
             };
@@ -1321,6 +1610,8 @@ async fn audit_proxy(State(state): State<Arc<AppState>>, raw: Bytes) -> impl Int
         let err: ApiError = e.into();
         return err.into_response();
     }
+    metrics::counter!("slm_audit_writes_total", "entry_type" => ENTRY_TYPE_AUDIT_PROXY_STUB)
+        .increment(1);
 
     // 4. Relay or return unconfigured 503.
     let client = match &state.audit_proxy_client {
@@ -1373,6 +1664,8 @@ async fn audit_proxy(State(state): State<Arc<AppState>>, raw: Bytes) -> impl Int
                 let err: ApiError = e.into();
                 return err.into_response();
             }
+            metrics::counter!("slm_audit_writes_total", "entry_type" => ENTRY_TYPE_AUDIT_PROXY)
+                .increment(1);
             (
                 StatusCode::OK,
                 Json(serde_json::to_value(resp).expect("AuditProxyResponse is serialisable")),
@@ -1405,6 +1698,9 @@ async fn audit_proxy(State(state): State<Arc<AppState>>, raw: Bytes) -> impl Int
                     error = %ledger_err,
                     "failed to append final audit_proxy entry after upstream error"
                 );
+            } else {
+                metrics::counter!("slm_audit_writes_total", "entry_type" => ENTRY_TYPE_AUDIT_PROXY)
+                    .increment(1);
             }
             let api_err: ApiError = DoormanError::UpstreamShape(e.to_string()).into();
             api_err.into_response()
@@ -1792,6 +2088,66 @@ fn strip_think_blocks(s: &str) -> String {
     }
 }
 
+/// Repair a Tier A fallback completion into parseable JSON.
+///
+/// The Tier A fallback prompt pre-fills the model with `[{"` and the model
+/// normally continues from there (e.g. completing to
+/// `entity_name": "Foo", ...}]`), so the raw completion is missing that
+/// prefix and needs it re-prepended to parse as a JSON array.
+///
+/// C1 fix (Fable bug-hunt audit, Session 24): a genuinely-empty extraction
+/// result completes directly to `[]` — the pre-fill assumption doesn't hold
+/// for that case, and blindly re-prepending the prefix turned a valid,
+/// correctly-empty result into invalid JSON (`[{"[]`), which then looked
+/// like a parse failure to the caller, got deferred, retried, and
+/// eventually dead-lettered a document that had actually been processed
+/// correctly. Only re-prepend when the raw completion doesn't already parse
+/// as a JSON array on its own.
+fn repair_tier_a_fallback_json(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if serde_json::from_str::<Vec<serde_json::Value>>(trimmed).is_ok() {
+        trimmed.to_string()
+    } else {
+        format!("[{{\"{}", trimmed.trim_start_matches("[{\""))
+    }
+}
+
+#[cfg(test)]
+mod repair_tier_a_fallback_json_tests {
+    use super::repair_tier_a_fallback_json;
+
+    #[test]
+    fn genuinely_empty_result_is_left_as_valid_json_not_corrupted() {
+        // Before the C1 fix this produced `[{"[]` — invalid JSON.
+        assert_eq!(repair_tier_a_fallback_json("[]"), "[]");
+    }
+
+    #[test]
+    fn empty_result_with_whitespace_is_left_as_valid_json() {
+        assert_eq!(repair_tier_a_fallback_json("  []  \n"), "[]");
+    }
+
+    #[test]
+    fn normal_mid_array_continuation_still_gets_prefix_re_prepended() {
+        let raw = r#"entity_name": "Woodfine Capital", "classification": "Company"}]"#;
+        let repaired = repair_tier_a_fallback_json(raw);
+        assert!(
+            serde_json::from_str::<Vec<serde_json::Value>>(&repaired).is_ok(),
+            "repaired output must be valid JSON: {repaired:?}"
+        );
+        assert_eq!(
+            repaired,
+            r#"[{"entity_name": "Woodfine Capital", "classification": "Company"}]"#
+        );
+    }
+
+    #[test]
+    fn already_complete_multi_entity_array_is_left_as_is() {
+        let raw = r#"[{"entity_name": "A"}, {"entity_name": "B"}]"#;
+        assert_eq!(repair_tier_a_fallback_json(raw), raw);
+    }
+}
+
 /// Simple percent-encoding for URL query parameters (encodes spaces, special chars).
 fn urlencoding_encode(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
@@ -1816,10 +2172,18 @@ fn urlencoding_encode(s: &str) -> String {
 // streaming lands in Sprint 0b.
 //
 // Model → tier routing:
-//   claude-haiku-*  → Complexity::Low   → Tier A (local, always-on)
-//   claude-sonnet-* → Complexity::High  → Tier B "trainer" (Yo-Yo #1)
-//   claude-opus-*   → Complexity::High  → Tier C passthrough
+//   doorman-tier-a  → Complexity::Low   → Tier A (local, always-on)
+//   claude-haiku-*  → Complexity::Low   → Tier A (local, always-on) [deprecated alias, kept for back-compat]
+//   claude-sonnet-* → Complexity::High  → Tier B "trainer" (Yo-Yo #1) [deprecated alias, kept for back-compat]
+//   claude-opus-*   → Complexity::High  → Tier C passthrough [deprecated alias, kept for back-compat]
 //   anything else   → Complexity::Medium → Tier B "trainer" fallback
+//
+// `doorman-tier-a` is Doorman's own, non-Claude-branded model-name prefix for
+// explicit low-complexity/Tier-A routing (added 2026-09 after a naming
+// defect report: `claude-haiku-*` naming is misleading — it isn't real
+// Anthropic Claude, just Doorman's internal routing convention for Tier A).
+// The `claude-*` prefixes above are NOT removed — other callers may still
+// reference them — but new callers should prefer `doorman-tier-a`.
 //
 // graph_context_enabled: Some(false) on all requests — DataGraph entity rows
 // must not bloat Claude Code prompts (the shim is the routing boundary).
@@ -1959,15 +2323,16 @@ fn anthropic_to_compute_request(
         });
     }
 
-    let (complexity, yoyo_label) = if body.model.starts_with("claude-haiku") {
-        (Complexity::Low, None)
-    } else if body.model.starts_with("claude-sonnet") {
-        (Complexity::High, Some("trainer".to_string()))
-    } else if body.model.starts_with("claude-opus") {
-        (Complexity::High, None)
-    } else {
-        (Complexity::Medium, Some("trainer".to_string()))
-    };
+    let (complexity, yoyo_label) =
+        if body.model.starts_with("doorman-tier-a") || body.model.starts_with("claude-haiku") {
+            (Complexity::Low, None)
+        } else if body.model.starts_with("claude-sonnet") {
+            (Complexity::High, Some("trainer".to_string()))
+        } else if body.model.starts_with("claude-opus") {
+            (Complexity::High, None)
+        } else {
+            (Complexity::Medium, Some("trainer".to_string()))
+        };
 
     ComputeRequest {
         request_id,
@@ -1988,6 +2353,84 @@ fn anthropic_to_compute_request(
         tools: body.tools,
         stop_sequences: None,
         session_context: None,
+    }
+}
+
+#[cfg(test)]
+mod anthropic_model_routing_tests {
+    use super::*;
+
+    fn body_with_model(model: &str) -> AnthropicMessagesBody {
+        AnthropicMessagesBody {
+            model: model.to_string(),
+            system: None,
+            messages: vec![],
+            max_tokens: 100,
+            stream: false,
+            temperature: None,
+            top_p: None,
+            top_k: None,
+            metadata: None,
+            stop_sequences: None,
+            tools: None,
+            tool_choice: None,
+        }
+    }
+
+    /// `doorman-tier-a` — Doorman's own, non-Claude-branded Tier A prefix
+    /// (added for the Tier A naming fix) — must route
+    /// identically to the legacy `claude-haiku-*` alias: Low complexity,
+    /// no yoyo_label.
+    #[test]
+    fn doorman_tier_a_routes_to_low_complexity_tier_a() {
+        let req = anthropic_to_compute_request(
+            body_with_model("doorman-tier-a"),
+            ModuleId::from_str("foundry").unwrap(),
+            RequestId::new(),
+        );
+        assert_eq!(req.complexity, Complexity::Low);
+        assert_eq!(req.yoyo_label, None);
+    }
+
+    /// Deprecated alias, kept for back-compat — must keep routing exactly as
+    /// before this change.
+    #[test]
+    fn claude_haiku_alias_still_routes_to_low_complexity_tier_a() {
+        let req = anthropic_to_compute_request(
+            body_with_model("claude-haiku-4-5-20251001"),
+            ModuleId::from_str("foundry").unwrap(),
+            RequestId::new(),
+        );
+        assert_eq!(req.complexity, Complexity::Low);
+        assert_eq!(req.yoyo_label, None);
+    }
+
+    /// Deprecated alias, kept for back-compat — Tier B "trainer" routing
+    /// must be unaffected by the new `doorman-tier-a` arm.
+    #[test]
+    fn claude_sonnet_alias_still_routes_to_high_complexity_trainer() {
+        let req = anthropic_to_compute_request(
+            body_with_model("claude-sonnet-4-6"),
+            ModuleId::from_str("foundry").unwrap(),
+            RequestId::new(),
+        );
+        assert_eq!(req.complexity, Complexity::High);
+        assert_eq!(req.yoyo_label, Some("trainer".to_string()));
+    }
+
+    /// An unrecognized model name must keep falling through to the
+    /// pre-existing Medium/"trainer" default — this is the exact
+    /// misrouting risk Bug B identified (a client renaming its model
+    /// string to something Doorman doesn't recognize silently loses Tier A).
+    #[test]
+    fn unrecognized_model_name_falls_through_to_medium_trainer_default() {
+        let req = anthropic_to_compute_request(
+            body_with_model("some-other-model-name"),
+            ModuleId::from_str("foundry").unwrap(),
+            RequestId::new(),
+        );
+        assert_eq!(req.complexity, Complexity::Medium);
+        assert_eq!(req.yoyo_label, Some("trainer".to_string()));
     }
 }
 
@@ -2157,14 +2600,16 @@ async fn anthropic_count_tokens(body: axum::body::Bytes) -> impl IntoResponse {
 }
 
 /// `GET /v1/models` — model list expected by Anthropic SDK clients.
-/// Returns the two model IDs used by Doorman routing:
-/// - `claude-haiku-4-5-20251001` → Tier A (OLMo 7B, local)
-/// - `claude-sonnet-4-6` → Tier B (Yo-Yo OLMo-3-32B-Think) with Tier A fallback
+/// Returns the model IDs used by Doorman routing:
+/// - `doorman-tier-a` → Tier A (OLMo 7B, local) — preferred, non-Claude-branded
+/// - `claude-haiku-4-5-20251001` → Tier A (OLMo 7B, local) — deprecated alias, kept for back-compat
+/// - `claude-sonnet-4-6` → Tier B (Yo-Yo OLMo-3-32B-Think) with Tier A fallback — deprecated alias, kept for back-compat
 async fn anthropic_models() -> impl IntoResponse {
     (
         StatusCode::OK,
         Json(serde_json::json!({
             "data": [
+                {"id": "doorman-tier-a",            "object": "model", "created": 0},
                 {"id": "claude-haiku-4-5-20251001", "object": "model", "created": 0},
                 {"id": "claude-sonnet-4-6",         "object": "model", "created": 0}
             ]
@@ -2469,7 +2914,13 @@ async fn status_cost() -> Json<serde_json::Value> {
 /// - `llamacpp:predicted_tokens_seconds` → `tok_per_s`
 /// - `llamacpp:requests_processing` → `requests_processing`
 /// - `llamacpp:prompt_tokens_total` → `prompt_tokens_total`
-async fn status_tier_a() -> Json<serde_json::Value> {
+async fn status_tier_a(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    // Production-readiness roadmap Tier 0.5: report Doorman's own in-process
+    // admission-control state alongside llama-server's, and flag the
+    // divergence (permits exhausted while llama-server reports itself idle)
+    // that previously could only be confirmed by restarting the service.
+    let admission = state.doorman.local_admission_status();
+
     let client = ReqwestClient::builder()
         .timeout(std::time::Duration::from_secs(2))
         .build()
@@ -2478,13 +2929,21 @@ async fn status_tier_a() -> Json<serde_json::Value> {
     let resp = match client.get("http://127.0.0.1:8080/metrics").send().await {
         Ok(r) => r,
         Err(e) => {
-            return Json(serde_json::json!({ "reachable": false, "error": e.to_string() }));
+            return Json(serde_json::json!({
+                "reachable": false,
+                "error": e.to_string(),
+                "admission": admission,
+            }));
         }
     };
     let body = match resp.text().await {
         Ok(t) => t,
         Err(e) => {
-            return Json(serde_json::json!({ "reachable": false, "error": e.to_string() }));
+            return Json(serde_json::json!({
+                "reachable": false,
+                "error": e.to_string(),
+                "admission": admission,
+            }));
         }
     };
 
@@ -2493,37 +2952,180 @@ async fn status_tier_a() -> Json<serde_json::Value> {
     let mut prompt_tokens_total: Option<u64> = None;
 
     for line in body.lines() {
-        if line.starts_with('#') {
+        let Some((name, val)) = parse_prometheus_line(line) else {
             continue;
-        }
-        // Prometheus text: `metric_name value` (no labels on these counters)
-        let mut parts = line.splitn(2, ' ');
-        let name = match parts.next() {
-            Some(n) => n,
-            None => continue,
-        };
-        let val = match parts.next() {
-            Some(v) => v.trim(),
-            None => continue,
         };
         match name {
             "llamacpp:predicted_tokens_seconds" => {
-                tok_per_s = val.parse::<f64>().ok();
+                tok_per_s = Some(val);
             }
             "llamacpp:requests_processing" => {
-                requests_processing = val.parse::<f64>().ok().map(|v| v as u64);
+                requests_processing = Some(val as u64);
             }
             "llamacpp:prompt_tokens_total" => {
-                prompt_tokens_total = val.parse::<f64>().ok().map(|v| v as u64);
+                prompt_tokens_total = Some(val as u64);
             }
             _ => {}
         }
     }
+
+    // Divergence alarm: Doorman thinks Tier A is fully saturated (0 permits
+    // available on the total semaphore) but llama-server itself reports no
+    // in-flight requests. This is the exact signature of the stuck-permit
+    // incident this metric was added to catch — previously only detectable
+    // by noticing "no available inference slots" errors against an
+    // apparently-idle backend, with no way to confirm short of a restart.
+    let admission_diverged = matches!(
+        (
+            admission.as_ref().and_then(|a| a.total_permits_available),
+            requests_processing
+        ),
+        (Some(0), Some(0))
+    );
 
     Json(serde_json::json!({
         "reachable":           true,
         "tok_per_s":           tok_per_s,
         "requests_processing": requests_processing,
         "prompt_tokens_total": prompt_tokens_total,
+        "admission":           admission,
+        "admission_diverged":  admission_diverged,
     }))
+}
+
+/// Parse one line of Prometheus text-exposition format into `(metric_name,
+/// value)`, or `None` for comments/blank lines/unparseable lines.
+///
+/// D5 fix (Fable bug-hunt audit, Session 24): the prior parser used
+/// `line.splitn(2, ' ')` and treated everything after the first space as the
+/// value verbatim. That breaks on two real, spec-legal Prometheus shapes:
+/// - **Labeled metrics** (`name{label="x"} value`) — the value token
+///   `parse::<f64>()` would be attempted against `{label="x"} value` as one
+///   string and fail, silently dropping the metric (returned as `null`, not
+///   surfaced as an error) rather than skipping past the label block.
+/// - **A trailing timestamp** (`name value 1395066363000`, valid per the
+///   Prometheus exposition format spec) — `splitn(2, ' ')` leaves `val =
+///   "value 1395066363000"` as one string with an embedded space, which
+///   `.trim().parse::<f64>()` also silently fails on.
+///
+/// Neither of llama.cpp's three metrics this function reads is documented to
+/// carry labels today, but a llama.cpp upgrade emitting either shape would
+/// have silently zeroed out `/v1/status/tier-a`'s throughput fields with no
+/// error surfaced anywhere — this makes the parse robust to both instead of
+/// relying on llama.cpp never changing its output shape.
+pub(crate) fn parse_prometheus_line(line: &str) -> Option<(&str, f64)> {
+    let line = line.trim();
+    if line.is_empty() || line.starts_with('#') {
+        return None;
+    }
+    // Metric name ends at the first '{' (labeled) or whitespace (unlabeled).
+    let name_end = line
+        .find(|c: char| c == '{' || c.is_whitespace())
+        .unwrap_or(line.len());
+    let name = &line[..name_end];
+    if name.is_empty() {
+        return None;
+    }
+    // If labeled, skip past the matching '}' before looking for the value.
+    let after_name = &line[name_end..];
+    let rest = if let Some(stripped) = after_name.strip_prefix('{') {
+        let close = stripped.find('}')?;
+        &stripped[close + 1..]
+    } else {
+        after_name
+    };
+    // Value is the first whitespace-delimited token — ignores any trailing
+    // timestamp field.
+    let value_token = rest.split_whitespace().next()?;
+    let value = value_token.parse::<f64>().ok()?;
+    Some((name, value))
+}
+
+#[cfg(test)]
+mod prometheus_line_tests {
+    use super::*;
+
+    #[test]
+    fn unlabeled_metric_parses() {
+        assert_eq!(
+            parse_prometheus_line("llamacpp:predicted_tokens_seconds 12.345"),
+            Some(("llamacpp:predicted_tokens_seconds", 12.345))
+        );
+    }
+
+    #[test]
+    fn comment_and_blank_lines_are_skipped() {
+        assert_eq!(parse_prometheus_line("# HELP llamacpp:foo bar"), None);
+        assert_eq!(parse_prometheus_line("# TYPE llamacpp:foo gauge"), None);
+        assert_eq!(parse_prometheus_line(""), None);
+        assert_eq!(parse_prometheus_line("   "), None);
+    }
+
+    #[test]
+    fn labeled_metric_skips_the_label_block() {
+        assert_eq!(
+            parse_prometheus_line(r#"http_requests_total{method="post",code="200"} 1027"#),
+            Some(("http_requests_total", 1027.0))
+        );
+    }
+
+    #[test]
+    fn trailing_timestamp_is_ignored_not_fatal() {
+        // Pre-fix this silently dropped the metric entirely (val.parse failed on
+        // "1027 1395066363000" as one string with an embedded space).
+        assert_eq!(
+            parse_prometheus_line("llamacpp:requests_processing 3 1395066363000"),
+            Some(("llamacpp:requests_processing", 3.0))
+        );
+    }
+
+    #[test]
+    fn labeled_metric_with_trailing_timestamp_parses() {
+        assert_eq!(
+            parse_prometheus_line(r#"http_requests_total{code="200"} 1027 1395066363000"#),
+            Some(("http_requests_total", 1027.0))
+        );
+    }
+
+    #[test]
+    fn unparseable_value_returns_none() {
+        assert_eq!(parse_prometheus_line("llamacpp:foo not_a_number"), None);
+    }
+
+    #[test]
+    fn missing_closing_brace_returns_none_not_panic() {
+        assert_eq!(
+            parse_prometheus_line(r#"http_requests_total{method="post" 1027"#),
+            None
+        );
+    }
+}
+
+#[cfg(test)]
+mod adapter_source_allowlist_tests {
+    use super::source_allowed;
+
+    #[test]
+    fn empty_or_unset_allowlist_admits_nothing() {
+        assert!(!source_allowed("http://10.0.0.5:9000/x", ""));
+        assert!(!source_allowed("http://10.0.0.5:9000/x", " , "));
+    }
+
+    #[test]
+    fn matches_prefix_on_a_path_boundary_only() {
+        let list = "http://10.0.0.5:9000, https://trainer.internal/api/";
+        assert!(source_allowed("http://10.0.0.5:9000", list));
+        assert!(source_allowed(
+            "http://10.0.0.5:9000/v1/jobs/1/download",
+            list
+        ));
+        assert!(source_allowed("https://trainer.internal/api/jobs/9", list));
+        assert!(!source_allowed("http://10.0.0.5:9000.evil.example/x", list));
+        assert!(!source_allowed("http://10.0.0.5:90001/x", list));
+        assert!(!source_allowed(
+            "http://169.254.169.254/latest/meta-data",
+            list
+        ));
+        assert!(!source_allowed("https://trainer.internal/other", list));
+    }
 }

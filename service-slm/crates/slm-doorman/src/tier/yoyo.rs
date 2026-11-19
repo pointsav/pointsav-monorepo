@@ -241,6 +241,15 @@ pub struct YoYoTierClient {
     /// returning TierUnavailable so the router falls back to Tier A rather
     /// than queuing indefinitely inside the remote Ollama process.
     concurrency_sem: Option<Arc<tokio::sync::Semaphore>>,
+    /// Never sent to explicitly — held only to keep the watch channel open.
+    /// 2026-09-11 robustness fix: `run_health_probe`'s background task used
+    /// to run in an unconditional `loop { sleep; ... }` with its `JoinHandle`
+    /// discarded, so it never stopped when this client was dropped (forced
+    /// SIGKILL on shutdown, not clean stop — real gap found in an earlier
+    /// audit). Dropping this sender closes the channel, which the probe's
+    /// `select!` observes via `shutdown_rx.changed()` returning `Err`,
+    /// ending the loop cleanly.
+    _shutdown_tx: tokio::sync::watch::Sender<()>,
 }
 
 impl YoYoTierClient {
@@ -256,6 +265,7 @@ impl YoYoTierClient {
         // (discovered running this fix's own test suite — 12 unrelated tests
         // failed with TierBCircuitOpen until this was made opt-in).
         let circuit = Arc::new(CircuitBreaker::new());
+        let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(());
 
         // Spawn background health probe if a tokio runtime is available.
         // guard with try_current() so unit tests that call new() outside
@@ -271,6 +281,7 @@ impl YoYoTierClient {
                 health_up_clone,
                 health_down_clone,
                 bearer.clone(),
+                shutdown_rx,
             ));
         }
 
@@ -288,6 +299,7 @@ impl YoYoTierClient {
             circuit,
             zone,
             concurrency_sem: None,
+            _shutdown_tx: shutdown_tx,
         }
     }
 
@@ -622,6 +634,7 @@ async fn run_health_probe(
     health_up: Arc<AtomicBool>,
     health_down_since_secs: Arc<AtomicU64>,
     bearer: Arc<dyn BearerTokenProvider>,
+    mut shutdown_rx: tokio::sync::watch::Receiver<()>,
 ) {
     let http = reqwest::Client::builder()
         .timeout(HEALTH_PROBE_TIMEOUT)
@@ -640,7 +653,17 @@ async fn run_health_probe(
     );
 
     loop {
-        tokio::time::sleep(HEALTH_PROBE_INTERVAL).await;
+        tokio::select! {
+            _ = tokio::time::sleep(HEALTH_PROBE_INTERVAL) => {}
+            _ = shutdown_rx.changed() => {
+                info!(
+                    target: "slm_doorman::tier::yoyo",
+                    %url,
+                    "health probe stopping: YoYoTierClient dropped"
+                );
+                return;
+            }
+        }
 
         let mut req = http.get(&url);
         if let Ok(token) = bearer.token().await {

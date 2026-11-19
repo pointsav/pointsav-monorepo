@@ -55,6 +55,8 @@ pub const ENTRY_TYPE_AUDIT_PROXY: &str = "audit-proxy";
 pub const ENTRY_TYPE_AUDIT_CAPTURE: &str = "audit-capture";
 /// Canonical `entry_type` string for `ExtractionAuditEntry` (`POST /v1/extract`).
 pub const ENTRY_TYPE_EXTRACT: &str = "extract";
+/// Canonical `entry_type` string for `JobAuditEntry` (`/v1/jobs` family).
+pub const ENTRY_TYPE_JOB: &str = "job";
 
 // Serde default fns — used in `#[serde(default = "...")]` on each struct's
 // `entry_type` field so that old JSONL entries that pre-date contract v0.2.0
@@ -73,6 +75,9 @@ fn default_entry_type_audit_capture() -> String {
 }
 fn default_entry_type_extract() -> String {
     ENTRY_TYPE_EXTRACT.to_string()
+}
+fn default_entry_type_job() -> String {
+    ENTRY_TYPE_JOB.to_string()
 }
 
 // ---------------------------------------------------------------------------
@@ -110,6 +115,17 @@ pub enum CompletionStatus {
     UpstreamError,
     PolicyDenied,
     TierUnavailable,
+}
+
+impl CompletionStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            CompletionStatus::Ok => "ok",
+            CompletionStatus::UpstreamError => "upstream_error",
+            CompletionStatus::PolicyDenied => "policy_denied",
+            CompletionStatus::TierUnavailable => "tier_unavailable",
+        }
+    }
 }
 
 /// Append-only ledger writer. One process owns one `AuditLedger`; the
@@ -329,7 +345,51 @@ pub struct ExtractionAuditEntry {
     pub error_message: Option<String>,
 }
 
+/// One finished (or deferred/failed) job from the `/v1/jobs` family.
+///
+/// Carries identifiers, hashes, counts and timings only — never input or
+/// output content (SYS-ADR-10: audit is mandatory; no content
+/// logging).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct JobAuditEntry {
+    /// Explicit discriminator field. Always `"job"`.
+    #[serde(default = "default_entry_type_job")]
+    pub entry_type: String,
+    pub timestamp_utc: DateTime<Utc>,
+    pub job_id: String,
+    pub module_id: ModuleId,
+    pub engine_id: String,
+    pub model_id: String,
+    pub weights_sha256: String,
+    pub prompt_sha256: String,
+    pub schema_sha256: String,
+    pub input_sha256: String,
+    /// Empty when the job produced no output (deferred/failed/unreadable).
+    pub output_sha256: String,
+    /// Kebab-case outcome: `done|empty|not-applicable|unreadable|deferred|failed`.
+    pub outcome: String,
+    pub latency_ms: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub defer_reason: Option<String>,
+    /// Set when the staged input and result were deleted (ack or TTL).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub buffer_deleted_at: Option<DateTime<Utc>>,
+}
+
 impl AuditLedger {
+    /// Append a `job` entry. Same single-writer JSONL path as the other
+    /// entry types; `entry_type` is forced to `"job"`.
+    pub fn append_job_entry(&self, entry: &JobAuditEntry) -> Result<()> {
+        let mut entry = entry.clone();
+        entry.entry_type = ENTRY_TYPE_JOB.to_string();
+        let path = self.path_for(&entry.timestamp_utc);
+        let line = serde_json::to_vec(&entry)?;
+        let _guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
+        let mut writer = BufWriter::new(file);
+        write_with_hash(&mut writer, &line)
+    }
+
     /// Write a stub entry for a `POST /v1/audit/proxy` call. This is the
     /// PS.4 step 1 paper trail: we capture the inbound request shape before
     /// attempting (or declining) the upstream call.
@@ -406,6 +466,39 @@ impl AuditLedger {
 mod tests {
     use super::*;
     use std::str::FromStr;
+
+    #[test]
+    fn append_job_entry_survives_a_poisoned_mutex() {
+        let tmp = tempdir();
+        let ledger = std::sync::Arc::new(AuditLedger::new(tmp).unwrap());
+        let l2 = ledger.clone();
+        let _ = std::thread::spawn(move || {
+            let _g = l2.inner.lock().unwrap();
+            panic!("poison the ledger mutex");
+        })
+        .join();
+        assert!(ledger.inner.is_poisoned());
+        let entry = JobAuditEntry {
+            entry_type: String::new(),
+            timestamp_utc: Utc::now(),
+            job_id: "j1".into(),
+            module_id: ModuleId::from_str("foundry").unwrap(),
+            engine_id: "e1".into(),
+            model_id: "m".into(),
+            weights_sha256: String::new(),
+            prompt_sha256: String::new(),
+            schema_sha256: String::new(),
+            input_sha256: "i".into(),
+            output_sha256: String::new(),
+            outcome: "done".into(),
+            latency_ms: 1,
+            defer_reason: None,
+            buffer_deleted_at: None,
+        };
+        ledger.append_job_entry(&entry).unwrap();
+        let path = ledger.path_for(&entry.timestamp_utc);
+        assert_eq!(std::fs::read_to_string(path).unwrap().lines().count(), 1);
+    }
 
     #[test]
     fn appends_round_trips_via_jsonl() {

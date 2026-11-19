@@ -6,23 +6,31 @@
 //! Installs a global Prometheus recorder at process startup and exposes
 //! the `/metrics` endpoint that returns the textual format.
 //!
-//! Metric inventory:
+//! Metric inventory — corrected 2026-08-14 (D6 fix, Fable bug-hunt audit):
+//! this table previously listed all 8 rows as if implemented, but only the
+//! recorder/route wiring existed — zero call sites recorded anything. 6 of
+//! 8 are now real; the remaining 2 need new supporting state/modules built
+//! first, not just a missing call (see their own rows below).
 //!
 //! | Metric | Type | Labels | Source |
 //! |---|---|---|---|
-//! | `slm_requests_total` | counter | tier, model, adapter_version, completion_status | router::write_audit |
-//! | `slm_cost_usd_total` | counter (float) | tier, model | router::write_audit |
-//! | `slm_latency_ms` | histogram | tier, model | router::write_audit |
-//! | `slm_yoyo_dispatch_age_seconds` | gauge | (none) | http::readyz |
-//! | `slm_audit_writes_total` | counter | entry_type | router + http audit_proxy |
-//! | `slm_corpus_gate_rejections_total` | counter | reason | corpus_gate::check |
-//! | `slm_contamination_guard_total` | counter | layer | contamination_guard tracing-target call sites |
-//! | `slm_apprenticeship_queue_depth` | gauge | (none) | main.rs drain worker |
+//! | `slm_requests_total` | counter | tier, model, completion_status | router::write_audit — `adapter_version` dropped from the original inventory, no such field exists on `AuditEntry` at this call site |
+//! | `slm_cost_usd_total` | gauge (monotonic, never decremented) | tier, model | router::write_audit — `metrics::Counter` is u64-only; this is fractional USD, so `Gauge::increment(f64)` is used instead to avoid lossy integer conversion |
+//! | `slm_latency_ms` | histogram | tier, model | router::write_audit (`CompletionStatus::Ok` only — error responses have no real inference_ms) |
+//! | `slm_yoyo_dispatch_age_seconds` | gauge | (none) | **still unimplemented** — no "dispatch age" concept exists anywhere in the codebase yet; needs a new tracked timestamp before `http::readyz` has anything to report |
+//! | `slm_audit_writes_total` | counter | entry_type | router::write_audit + http::audit_proxy (stub + final entry, both success and error paths) |
+//! | `slm_corpus_gate_rejections_total` | counter | reason | corpus_gate::check (all 4 reject points: diff_too_large, do_not_use_term_brief, do_not_use_term_diff, dedup) |
+//! | `slm_contamination_guard_total` | counter | layer | **still unimplemented** — no `contamination_guard` module/concept exists anywhere in the codebase; this row was aspirational, describing a guard that was never built |
+//! | `slm_apprenticeship_queue_depth` | gauge | (none) | http::readyz — reuses the directory-count already computed there for the console dashboard, rather than tracking depth inside the single-item-at-a-time drain worker |
 //!
 //! All metrics are emitted via the `metrics` facade crate — call sites
 //! use `metrics::counter!()`, `metrics::histogram!()`, `metrics::gauge!()`
 //! directly, no wrappers. Labels are passed inline. The recorder
-//! installed by `init()` is the global sink.
+//! installed by `init()` is the global sink. `slm-doorman` (where most call
+//! sites live) has its own direct `metrics` dependency — added 2026-08-14 —
+//! since it's a dependency of this crate, not the reverse, so it can't
+//! import the `names` module below; its call sites use string literals
+//! that must be kept in sync with these constants by hand.
 
 use metrics_exporter_prometheus::PrometheusHandle;
 use std::sync::OnceLock;

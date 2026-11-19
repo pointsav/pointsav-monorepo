@@ -366,6 +366,11 @@ pub fn check(
 ) -> Result<CorpusGateOutcome> {
     // 1. Size cap on diff.
     if diff.len() > MAX_DIFF_CHARS {
+        // D6 fix (Fable bug-hunt audit, found 2026-08-14): slm_corpus_gate_
+        // rejections_total was documented as sourced from this function but
+        // never actually recorded at any of its 4 reject points.
+        metrics::counter!("slm_corpus_gate_rejections_total", "reason" => "diff_too_large")
+            .increment(1);
         return Err(CorpusGateReject::DiffTooLarge {
             len: diff.len(),
             max: MAX_DIFF_CHARS,
@@ -378,6 +383,11 @@ pub fn check(
     let diff_lc = diff.to_lowercase();
     for term in DO_NOT_USE_TERMS {
         if brief_lc.contains(term) {
+            metrics::counter!(
+                "slm_corpus_gate_rejections_total",
+                "reason" => "do_not_use_term_brief"
+            )
+            .increment(1);
             return Err(CorpusGateReject::DoNotUseTerm {
                 term: (*term).to_string(),
                 where_found: WhereFound::BriefBody,
@@ -385,6 +395,11 @@ pub fn check(
             .into());
         }
         if diff_lc.contains(term) {
+            metrics::counter!(
+                "slm_corpus_gate_rejections_total",
+                "reason" => "do_not_use_term_diff"
+            )
+            .increment(1);
             return Err(CorpusGateReject::DoNotUseTerm {
                 term: (*term).to_string(),
                 where_found: WhereFound::Diff,
@@ -400,7 +415,10 @@ pub fn check(
     // 4. Dedup by (brief_hash, diff_hash).
     let brief_hash = sha256_hex(brief_body);
     let diff_hash = sha256_hex(diff);
-    index.contains_or_insert(&brief_hash, &diff_hash, brief_id)?;
+    if let Err(e) = index.contains_or_insert(&brief_hash, &diff_hash, brief_id) {
+        metrics::counter!("slm_corpus_gate_rejections_total", "reason" => "dedup").increment(1);
+        return Err(e.into());
+    }
 
     Ok(CorpusGateOutcome {
         brief_hash,

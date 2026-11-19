@@ -33,6 +33,16 @@ pub struct AdapterEntry {
     /// Base model the adapter was trained against
     /// (e.g. `OLMo-2-1124-7B-Instruct-Q4_K_M`).
     pub base_model: String,
+    /// SHA-256 (hex) of the base model GGUF file itself — `base_model` above is a
+    /// free-text name, not a content-addressed identifier; a rejected adapter is
+    /// hard to diagnose without knowing exactly which base weights it was trained
+    /// against (an open item from the training-connector review, a
+    /// research-recommended field). `None` for entries written before this field
+    /// existed — not backfillable after the fact without re-hashing the exact
+    /// weights used at training time, which for historical entries may no longer
+    /// be recoverable.
+    #[serde(default)]
+    pub base_model_sha: Option<String>,
     /// SHA-256 (hex) of the corpus snapshot tarball used for training.
     /// Cross-reference with `data/training-corpus/snapshots/<date>/manifest.json`.
     pub corpus_sha: String,
@@ -75,6 +85,28 @@ pub struct AdapterEntry {
     /// by P3-3.4-followup once key setup lands.
     #[serde(default)]
     pub signature: String,
+    /// Git commit of the training script(s) (`run-sft-training.py`/
+    /// `run-dpo-training.py`) used to produce this adapter — without it, a
+    /// rejected/stale adapter can't be reproduced or diffed against the current
+    /// script (open item #7, research-recommended field).
+    #[serde(default)]
+    pub training_script_commit: Option<String>,
+    /// Free-form key-value hyperparameter record (e.g. `lora_r`, `lora_alpha`,
+    /// `learning_rate`, `max_steps`) — a map rather than a fixed struct so new
+    /// hyperparameters don't require a schema migration every time the training
+    /// scripts add one (open item #7).
+    #[serde(default)]
+    pub hyperparameters: HashMap<String, String>,
+    /// MLflow-style aliases (e.g. `"champion"`, `"challenger"`, `"canary"`),
+    /// independent of `stage` — `stage` is the adapter's own lifecycle state
+    /// (eval_pending/eval_ok/promoted/retired/rejected); aliases are separate
+    /// operator-assigned tags for "which adapter is currently serving which
+    /// role," so a `rejected` adapter can still be re-evaluated and re-tagged
+    /// without the stage machinery treating that as a lifecycle transition
+    /// (open item #7, research finding: MLflow itself deprecated a pure linear
+    /// stage model for this same reason).
+    #[serde(default)]
+    pub aliases: Vec<String>,
 }
 
 fn default_eval_pending() -> String {
@@ -282,6 +314,7 @@ mod tests {
         r.append(AdapterEntry {
             id: "coding-lora-v1".to_string(),
             base_model: "OLMo-2-7B".to_string(),
+            base_model_sha: None,
             corpus_sha: "abc123".to_string(),
             doctrine_version: "0.0.13".to_string(),
             trained_at: "2026-05-18T10:00:00Z".to_string(),
@@ -293,6 +326,9 @@ mod tests {
             stage_changed_at: String::new(),
             notes: String::new(),
             signature: String::new(),
+            training_script_commit: None,
+            hyperparameters: HashMap::new(),
+            aliases: Vec::new(),
         })
         .unwrap();
 
@@ -318,6 +354,7 @@ mod tests {
         r.append(AdapterEntry {
             id: "lora-v2".to_string(),
             base_model: "OLMo".to_string(),
+            base_model_sha: None,
             corpus_sha: "def".to_string(),
             doctrine_version: "0.0.13".to_string(),
             trained_at: "2026-05-18T11:00:00Z".to_string(),
@@ -329,6 +366,9 @@ mod tests {
             stage_changed_at: String::new(),
             notes: String::new(),
             signature: String::new(),
+            training_script_commit: None,
+            hyperparameters: HashMap::new(),
+            aliases: Vec::new(),
         })
         .unwrap();
 
@@ -356,6 +396,7 @@ mod tests {
             r.append(AdapterEntry {
                 id: id.to_string(),
                 base_model: "OLMo".to_string(),
+                base_model_sha: None,
                 corpus_sha: id.to_string(),
                 doctrine_version: "0.0.13".to_string(),
                 trained_at: ts.to_string(),
@@ -367,6 +408,9 @@ mod tests {
                 stage_changed_at: String::new(),
                 notes: String::new(),
                 signature: String::new(),
+                training_script_commit: None,
+                hyperparameters: HashMap::new(),
+                aliases: Vec::new(),
             })
             .unwrap();
         }

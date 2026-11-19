@@ -25,7 +25,9 @@ use crate::tier::{ExternalTierClient, LocalTierClient, OrchestrationTierClient, 
 
 use serde::Serialize;
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Runtime observability snapshot for a single Tier B node.
 /// Serialized into `GET /readyz` under the `tier_b` key.
@@ -133,6 +135,27 @@ impl LocalBackend {
             LocalBackend::Orchestrated(c) => c.complete(req).await,
         }
     }
+
+    /// P2 (training/proof-run): only `Direct` has a local slot to idle-gate.
+    /// `Orchestrated` has no local slot to protect — same rationale as
+    /// `complete_background` above — so it routes through the regular
+    /// `complete` path rather than refusing outright.
+    pub async fn complete_p2(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        match self {
+            LocalBackend::Direct(c) => c.complete_p2(req).await,
+            LocalBackend::Orchestrated(c) => c.complete(req).await,
+        }
+    }
+
+    /// Production-readiness roadmap Tier 0.5. `None` for `Orchestrated` —
+    /// there's no local semaphore to report, the remote chassis manages its
+    /// own admission control.
+    pub fn admission_status(&self) -> Option<crate::tier::LocalAdmissionStatus> {
+        match self {
+            LocalBackend::Direct(c) => Some(c.admission_status()),
+            LocalBackend::Orchestrated(_) => None,
+        }
+    }
 }
 
 pub struct Doorman {
@@ -146,6 +169,14 @@ pub struct Doorman {
     tier_a_first: bool,
     daily_yoyo_cap_usd: Option<f64>,
     cost_ledger: Option<Arc<CostLedger>>,
+    /// Production-readiness roadmap Tier 2.1: rate-limits
+    /// `confirm_tier_with_req`'s "tier not configured" `warn!` (see that
+    /// method). Milliseconds since `UNIX_EPOCH`, `0` meaning "never
+    /// logged" — an `AtomicU64` rather than `should_log_hold`'s
+    /// `Option<Instant>` pattern (`slm-doorman-server/src/entrypoint.rs`)
+    /// because `Doorman` is shared via `Arc` across concurrent request
+    /// handlers, not owned by a single-threaded loop.
+    tier_unavailable_warn_last_logged_ms: AtomicU64,
 }
 
 impl Doorman {
@@ -161,7 +192,14 @@ impl Doorman {
             tier_a_first: config.tier_a_first,
             daily_yoyo_cap_usd: config.daily_yoyo_cap_usd,
             cost_ledger: config.cost_ledger,
+            tier_unavailable_warn_last_logged_ms: AtomicU64::new(0),
         }
+    }
+
+    /// Production-readiness roadmap Tier 0.5. `None` when Tier A isn't
+    /// configured at all.
+    pub fn local_admission_status(&self) -> Option<crate::tier::LocalAdmissionStatus> {
+        self.local.as_ref().and_then(|l| l.admission_status())
     }
 
     pub async fn route_async(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
@@ -438,12 +476,23 @@ impl Doorman {
         if configured {
             Ok(tier)
         } else {
-            warn!(
-                target: "slm_doorman::router",
-                ?tier,
-                yoyo_label = ?req.yoyo_label,
-                "tier not configured — community-tier mode may be active"
-            );
+            // Production-readiness roadmap Tier 2.1: real, live impact —
+            // an inner, guest-local Doorman instance on a seL4/QEMU guest
+            // appliance has no tier configured and hammers this exact request path,
+            // pegging one core near 100% for days (matches a
+            // never-root-caused "72% CPU for 30 days" flag from a prior
+            // audit). This line previously had no rate limiting at all.
+            if should_log_tier_unavailable(
+                &self.tier_unavailable_warn_last_logged_ms,
+                TIER_UNAVAILABLE_WARN_INTERVAL,
+            ) {
+                warn!(
+                    target: "slm_doorman::router",
+                    ?tier,
+                    yoyo_label = ?req.yoyo_label,
+                    "tier not configured — community-tier mode may be active"
+                );
+            }
             Err(DoormanError::TierUnavailable(tier))
         }
     }
@@ -596,6 +645,48 @@ impl Doorman {
                     .map(|sc| sc.archive_name.clone()),
             },
         };
+
+        // D6 fix (Fable bug-hunt audit, found 2026-08-14): metrics recorder
+        // was wired in slm-doorman-server (metrics.rs) but this call site —
+        // the metrics module's own documented source for slm_requests_total/
+        // slm_cost_usd_total/slm_latency_ms/slm_audit_writes_total — never
+        // actually recorded anything. Names here are string literals (this
+        // crate is a dependency of slm-doorman-server, not the reverse, so
+        // it can't import that crate's `metrics::names` constants) — keep in
+        // sync with slm-doorman-server/src/metrics.rs's `names` module.
+        // `adapter_version` was dropped from slm_requests_total's labels vs.
+        // the module docstring's original inventory: AuditEntry has no such
+        // field at this call site, and no real value was available to put
+        // there without fabricating one.
+        metrics::counter!(
+            "slm_requests_total",
+            "tier" => entry.tier.as_str(),
+            "model" => entry.model.clone(),
+            "completion_status" => entry.completion_status.as_str(),
+        )
+        .increment(1);
+        // metrics::Counter is u64-only; cost is fractional dollars, so this
+        // uses Gauge::increment(f64) instead — a monotonic (never
+        // decremented) float accumulator, not a true Prometheus counter
+        // type, but the only way to preserve real cent/sub-cent precision
+        // without a lossy micro-dollar integer conversion.
+        metrics::gauge!(
+            "slm_cost_usd_total",
+            "tier" => entry.tier.as_str(),
+            "model" => entry.model.clone(),
+        )
+        .increment(entry.cost_usd.max(0.0));
+        if entry.completion_status == CompletionStatus::Ok {
+            metrics::histogram!(
+                "slm_latency_ms",
+                "tier" => entry.tier.as_str(),
+                "model" => entry.model.clone(),
+            )
+            .record(entry.inference_ms as f64);
+        }
+        metrics::counter!("slm_audit_writes_total", "entry_type" => entry.entry_type.clone())
+            .increment(1);
+
         if let Err(write_err) = self.ledger.append(&entry) {
             // Audit failure must never silently drop. Surface to logs;
             // upstream observability picks it up.
@@ -732,6 +823,37 @@ impl Doorman {
             None => Err(DoormanError::TierUnavailable(InferenceRoute::Local)),
         }
     }
+
+    /// Route a P2 (training/proof-run) request directly to Tier A, admitted
+    /// only when the backend is genuinely idle — see `RequestScheduler`
+    /// (`crate::scheduler`) and `LocalTierClient::complete_p2`. Skips
+    /// graph-context injection, same as `route_local_background`. This is
+    /// the entry point the production-readiness roadmap's CPU training-loop
+    /// proof (2026-09) uses so a bounded proof run cannot contend with live
+    /// interactive or background traffic on the single Tier A slot.
+    /// Non-blocking P2 admission on Tier A (see `LocalTierClient::try_admit_p2`).
+    /// `None` when Tier A is absent, orchestrated, saturated or has no scheduler.
+    pub fn try_admit_local_p2(&self) -> Option<crate::scheduler::SchedulerPermit> {
+        match &self.local {
+            Some(LocalBackend::Direct(c)) => c.try_admit_p2(),
+            _ => None,
+        }
+    }
+
+    /// Tier A llama-server endpoint, when Tier A is a direct backend.
+    pub fn local_endpoint(&self) -> Option<&str> {
+        match &self.local {
+            Some(LocalBackend::Direct(c)) => Some(c.endpoint()),
+            _ => None,
+        }
+    }
+
+    pub async fn route_local_p2(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        match &self.local {
+            Some(local) => local.complete_p2(req).await,
+            None => Err(DoormanError::TierUnavailable(InferenceRoute::Local)),
+        }
+    }
 }
 
 fn is_transient_tier_b_failure(e: &DoormanError) -> bool {
@@ -849,6 +971,40 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
     }
 }
 
+/// Rate-limit interval for `confirm_tier_with_req`'s "tier not
+/// configured" `warn!` — see that method's doc comment (production-
+/// readiness roadmap Tier 2.1). A misconfigured caller retrying in a
+/// tight loop would otherwise log this line as fast as it can dispatch
+/// requests; 60s keeps the condition visible without amplifying the
+/// underlying CPU cost.
+const TIER_UNAVAILABLE_WARN_INTERVAL: Duration = Duration::from_secs(60);
+
+/// Same rate-limiting shape as `slm-doorman-server/src/entrypoint.rs`'s
+/// `should_log_hold`, adapted for concurrent, `Arc`-shared access:
+/// `Doorman` is called from many concurrent request-handling tasks, so
+/// the "last logged" timestamp is an `AtomicU64` (milliseconds since
+/// `UNIX_EPOCH`) rather than a plain `Option<Instant>` local a single
+/// owner could hold `&mut` to. A benign, accepted race: two concurrent
+/// callers can both observe "interval elapsed" and both log once before
+/// either stores the new timestamp — at most a handful of duplicate
+/// lines under heavy concurrency, nowhere near the unbounded per-request
+/// spam this replaces. Returns `true` (and records `now`) when this is
+/// the first call ever (`last_logged_ms` is `0`) or `interval` has
+/// elapsed since the last logged call; `false` otherwise.
+fn should_log_tier_unavailable(last_logged_ms: &AtomicU64, interval: Duration) -> bool {
+    let now_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64;
+    let last = last_logged_ms.load(Ordering::Relaxed);
+    if last == 0 || now_ms.saturating_sub(last) >= interval.as_millis() as u64 {
+        last_logged_ms.store(now_ms, Ordering::Relaxed);
+        true
+    } else {
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -930,6 +1086,13 @@ mod tests {
                 archive_id: "project-totebox".to_string(),
                 doorman_endpoint: "http://127.0.0.1:9080".to_string(),
                 registration_token: None,
+                // Pre-existing test-compile bug, found + fixed 2026-08-14:
+                // this literal was never updated when tier_b_subscribed was
+                // added to the real struct (Session 24) — E0063 missing-field,
+                // blocking `cargo test --workspace` from compiling at all
+                // (unrelated to this test's actual purpose, which only
+                // exercises the background-call routing path below).
+                tier_b_subscribed: false,
             });
         client
             .register()
@@ -1489,5 +1652,83 @@ mod tests {
                 label: "some-label".to_string(),
             }
         ));
+    }
+
+    // --- should_log_tier_unavailable — production-readiness roadmap Tier
+    // 2.1. Confirms the rate-limiting shape directly against a synthetic
+    // `AtomicU64`, without depending on real wall-clock sleeps.
+
+    #[test]
+    fn should_log_tier_unavailable_logs_on_first_call() {
+        let last_logged = AtomicU64::new(0);
+        assert!(should_log_tier_unavailable(
+            &last_logged,
+            Duration::from_secs(60)
+        ));
+        // First call must have recorded a non-zero timestamp.
+        assert_ne!(last_logged.load(Ordering::Relaxed), 0);
+    }
+
+    #[test]
+    fn should_log_tier_unavailable_suppresses_within_the_interval() {
+        let last_logged = AtomicU64::new(0);
+        assert!(should_log_tier_unavailable(
+            &last_logged,
+            Duration::from_secs(60)
+        ));
+        // A second call immediately after must be suppressed — real
+        // elapsed time here is microseconds, nowhere near 60s.
+        assert!(!should_log_tier_unavailable(
+            &last_logged,
+            Duration::from_secs(60)
+        ));
+    }
+
+    #[test]
+    fn should_log_tier_unavailable_logs_again_once_interval_elapses() {
+        let last_logged = AtomicU64::new(0);
+        assert!(should_log_tier_unavailable(
+            &last_logged,
+            Duration::from_secs(60)
+        ));
+        // Simulate "60s already elapsed" by back-dating the stored
+        // timestamp directly, rather than a real sleep in a unit test.
+        let backdated =
+            last_logged.load(Ordering::Relaxed) - Duration::from_secs(61).as_millis() as u64;
+        last_logged.store(backdated, Ordering::Relaxed);
+        assert!(should_log_tier_unavailable(
+            &last_logged,
+            Duration::from_secs(60)
+        ));
+    }
+
+    #[test]
+    fn confirm_tier_with_req_still_errors_every_call_even_though_logging_is_rate_limited() {
+        // The rate limiter must only gate the warn! line, never the
+        // returned Result — every unconfigured-tier call still fails,
+        // logged or not. Uses the real DoormanConfig-based constructor
+        // (see doorman() helper above in this module) with no local tier
+        // configured.
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: HashMap::new(),
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+                tier_a_first: false,
+                daily_yoyo_cap_usd: None,
+                cost_ledger: None,
+            },
+            ledger(),
+        );
+        for _ in 0..3 {
+            match doorman
+                .confirm_tier_with_req(InferenceRoute::Local, &req(Complexity::Low, None, None))
+            {
+                Err(DoormanError::TierUnavailable(InferenceRoute::Local)) => {}
+                other => panic!("expected TierUnavailable(Local) on every call, got {other:?}"),
+            }
+        }
     }
 }

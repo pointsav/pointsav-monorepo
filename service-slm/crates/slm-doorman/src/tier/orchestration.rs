@@ -43,6 +43,7 @@ use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, InferenceRoute};
+use tracing::{info, warn};
 
 use crate::error::{DoormanError, Result};
 
@@ -63,6 +64,16 @@ pub struct OrchestrationTierConfig {
     /// `ORCHESTRATION_REGISTRATION_TOKEN` is unset) — registration proceeds
     /// unauthenticated, matching that side's backward-compatible default.
     pub registration_token: Option<String>,
+    /// Self-claimed Tier B subscription flag, sent as-is to the chassis at
+    /// registration time and baked into the signed membership token it
+    /// returns — the chassis's own `/v1/inference` gate reads this claim
+    /// back from the token, not from a live lookup. Found live (Session 24)
+    /// that `register()` below hardcoded this to `false` regardless of what
+    /// the caller wanted, so `SLM_TIER_B_SUBSCRIBED=true` had no effect at
+    /// all for the Tier 0 registration path (`register_tier_0()` in
+    /// `entrypoint.rs`) — every inference call 402'd even with a valid
+    /// chassis license and a genuinely successful registration.
+    pub tier_b_subscribed: bool,
 }
 
 pub struct OrchestrationTierClient {
@@ -74,11 +85,25 @@ pub struct OrchestrationTierClient {
 const MAX_RETRIES: u32 = 2;
 const RETRY_BACKOFF: Duration = Duration::from_secs(2);
 
+// Matches the chassis's own `YoyoProxyClient` budget
+// (`orchestration-slm/src/yoyo_proxy.rs`) — this client previously had NO
+// timeout at all (`reqwest::Client::new()`), which meant a stuck downstream
+// hop (chassis, Yo-Yo relay, or a lower-level network blackhole) hung this
+// client indefinitely rather than surfacing a diagnosable error. Confirmed
+// live 2026-08-22: a real
+// `/v1/inference` call from a production host hung past 150s with zero
+// response — well beyond the chassis's own claimed 90s budget, proving the
+// hang wasn't just "waiting out the chassis's timeout."
+const ORCHESTRATION_HTTP_TIMEOUT: Duration = Duration::from_secs(90);
+
 impl OrchestrationTierClient {
     pub fn new(config: OrchestrationTierConfig) -> Self {
         Self {
             config,
-            http: reqwest::Client::new(),
+            http: reqwest::Client::builder()
+                .timeout(ORCHESTRATION_HTTP_TIMEOUT)
+                .build()
+                .unwrap_or_else(|_| reqwest::Client::new()),
             membership_token: RwLock::new(None),
         }
     }
@@ -100,7 +125,7 @@ impl OrchestrationTierClient {
             module_id: self.config.module_id.clone(),
             archive_id: self.config.archive_id.clone(),
             doorman_endpoint: self.config.doorman_endpoint.clone(),
-            tier_b_subscribed: false,
+            tier_b_subscribed: self.config.tier_b_subscribed,
         };
         let mut req = self.http.post(&url).json(&body);
         if let Some(token) = &self.config.registration_token {
@@ -171,14 +196,33 @@ impl OrchestrationTierClient {
             self.config.endpoint.trim_end_matches('/')
         );
         let started = Instant::now();
-        let resp = self
+        info!(%url, "orchestration tier: sending /v1/inference request");
+        let resp = match self
             .http
             .post(&url)
             .bearer_auth(&token)
             .json(&body)
             .send()
             .await
-            .map_err(DoormanError::Upstream)?;
+        {
+            Ok(r) => r,
+            Err(e) => {
+                warn!(
+                    %url,
+                    elapsed_ms = started.elapsed().as_millis() as u64,
+                    is_timeout = e.is_timeout(),
+                    error = %e,
+                    "orchestration tier: request failed"
+                );
+                return Err(DoormanError::Upstream(e));
+            }
+        };
+        info!(
+            %url,
+            elapsed_ms = started.elapsed().as_millis() as u64,
+            status = %resp.status(),
+            "orchestration tier: response received"
+        );
 
         if resp.status() == reqwest::StatusCode::UNAUTHORIZED {
             return Err(DoormanError::UpstreamShape("401 Unauthorized".into()));
@@ -321,6 +365,7 @@ mod tests {
             archive_id: "project-totebox".to_string(),
             doorman_endpoint: "http://127.0.0.1:9080".to_string(),
             registration_token: None,
+            tier_b_subscribed: false,
         })
     }
 
@@ -446,6 +491,7 @@ mod tests {
             archive_id: "project-totebox".to_string(),
             doorman_endpoint: "http://127.0.0.1:9080".to_string(),
             registration_token: Some("secret-reg-token".to_string()),
+            tier_b_subscribed: false,
         });
         // wiremock's header() matcher rejects any request lacking the exact
         // header/value — a missing or wrong token 404s (no mock matched),
@@ -559,6 +605,7 @@ mod tests {
             archive_id: "project-totebox".to_string(),
             doorman_endpoint: "http://127.0.0.1:9080".to_string(),
             registration_token: None,
+            tier_b_subscribed: false,
         });
         *c.membership_token.write().unwrap() = Some("tok.sig".to_string());
         let err = c

@@ -4,13 +4,31 @@
 //!
 //! Polls the Yo-Yo VM `/metrics` endpoint every 5 minutes for an active-request
 //! counter. When the VM has been idle (zero active requests) longer than
-//! `SLM_YOYO_IDLE_MINUTES` (default 30), sends a GCP `instances.delete` request
-//! via the Compute Engine API using the workspace Service Account ADC token from
-//! the GCE metadata server. The boot disk survives — it's attached with
-//! auto-delete disabled by the nightly create call (see `yoyo-daily-cycle.sh`),
-//! so a plain instance delete preserves it. Delete (not stop) matches the
-//! delete+create nightly pattern: GCE only documents capacity-queue behavior for
-//! `instances.create`, not for restarting an already-created FLEX_START VM.
+//! `SLM_YOYO_IDLE_MINUTES` (default 30), sends a GCP `instances.stop` request
+//! via [`slm_doorman::GcpComputeClient`] (workspace Service Account ADC token
+//! from the GCE metadata server, same auth path `scripts/start-yoyo.sh` and
+//! `nightly-run.sh` already rely on for the *other* real recovery path —
+//! GCP-side preemption).
+//!
+//! Production-readiness roadmap Tier 1.1 (2026-09-14): this previously sent
+//! `instances.delete` via a hand-rolled request, reasoning that a nightly
+//! `yoyo-daily-cycle.sh` `instances.create` call would recreate the VM (GCE's
+//! documented capacity-queue behavior only applies to `create`, not `start`).
+//! Verified live: `yoyo-daily-cycle.sh` does not exist anywhere in this repo
+//! despite extensive prior development history referencing it (real drift,
+//! not this file's mistake) — the actual nightly automation
+//! (`scripts/nightly-run.sh` → `scripts/start-yoyo.sh`) can only `start` an
+//! already-existing instance; `start-yoyo.sh`'s own header explicitly treats
+//! the VM as "TERMINATED (preempted)" and recovers it in-zone with its own
+//! stockout-retry loop (`--retry-cycles`/`--retry-wait-seconds`) — i.e. this
+//! codebase already has a proven, working capacity-queue substitute for
+//! `instances.start`, it just was never connected to *this* idle-shutdown
+//! path. `delete` left nothing able to bring Tier B back — this is very
+//! plausibly the root cause of prior multi-hour, human-intervention-required
+//! Tier B outages. `stop` (not `delete`) is the correct action here: the
+//! boot disk is untouched either way (a stopped instance keeps its disks
+//! regardless of `autoDelete`), and `start-yoyo.sh` already knows exactly
+//! how to recover a stopped instance.
 //!
 //! The monitor is spawned as a background tokio task in `main.rs` only when all
 //! four GCP env vars are set (`SLM_YOYO_GCP_PROJECT`, `SLM_YOYO_GCP_ZONE`,
@@ -29,12 +47,13 @@
 
 use std::time::{Duration, Instant};
 
+use slm_doorman::GcpComputeClient;
 use tracing::{info, warn};
+
+use crate::http::parse_prometheus_line;
 
 const POLL_INTERVAL: Duration = Duration::from_secs(300); // 5 minutes
 const HTTP_TIMEOUT: Duration = Duration::from_secs(10);
-const GCP_METADATA_TOKEN_URL: &str =
-    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token";
 
 #[derive(Clone, Debug)]
 pub struct IdleMonitorConfig {
@@ -89,8 +108,13 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     // Start the idle clock at task-spawn time so a cold VM doesn't get stopped
     // before its first request within the threshold window.
     let mut last_active = Instant::now();
-    // Guard against sending repeated delete requests for the same idle period.
-    let mut delete_sent = false;
+    // Guard against sending repeated stop requests for the same idle period.
+    let mut stop_sent = false;
+    let gcp = GcpComputeClient::new(
+        config.gcp_project.clone(),
+        config.gcp_zone.clone(),
+        config.gcp_instance.clone(),
+    );
 
     info!(
         target: "slm_doorman::idle_monitor",
@@ -115,29 +139,29 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                 // Metrics reachable, zero active slots — VM is up but idle.
                 // Let the idle clock run; fire stop if threshold exceeded.
                 let idle_secs = last_active.elapsed().as_secs();
-                if !delete_sent && last_active.elapsed() >= config.idle_threshold {
+                if !stop_sent && last_active.elapsed() >= config.idle_threshold {
                     warn!(
                         target: "slm_doorman::idle_monitor",
                         idle_secs,
                         project = %config.gcp_project,
                         zone = %config.gcp_zone,
                         instance = %config.gcp_instance,
-                        "Yo-Yo idle threshold reached; sending GCP delete request (boot disk preserved)"
+                        "Yo-Yo idle threshold reached; sending GCP stop request (boot disk preserved; start-yoyo.sh recovers a stopped instance)"
                     );
-                    match delete_gcp_instance(&client, &config).await {
-                        Ok(()) => {
+                    match gcp.stop_instance().await {
+                        Ok(_op_name) => {
                             info!(
                                 target: "slm_doorman::idle_monitor",
                                 instance = %config.gcp_instance,
-                                "GCP delete request accepted"
+                                "GCP stop request accepted"
                             );
-                            delete_sent = true;
+                            stop_sent = true;
                         }
                         Err(reason) => {
                             warn!(
                                 target: "slm_doorman::idle_monitor",
                                 %reason,
-                                "GCP delete request failed; will retry next cycle"
+                                "GCP stop request failed; will retry next cycle"
                             );
                         }
                     }
@@ -146,7 +170,7 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
             Some(n) => {
                 // VM is serving (n > 0) — reset idle clock.
                 last_active = Instant::now();
-                delete_sent = false;
+                stop_sent = false;
                 info!(
                     target: "slm_doorman::idle_monitor",
                     active_slots = n,
@@ -154,12 +178,12 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                 );
             }
             None => {
-                // Metrics unreachable — VM is booting, deleted, or llama-server not
-                // yet loaded. Reset the idle clock so we don't delete a VM that was
+                // Metrics unreachable — VM is booting, stopped, or llama-server not
+                // yet loaded. Reset the idle clock so we don't stop a VM that was
                 // never serving. The nightly cycle's own hard-stop (Phase 8) is the
                 // fallback when the VM is unreachable.
                 last_active = Instant::now();
-                delete_sent = false;
+                stop_sent = false;
             }
         }
     }
@@ -184,65 +208,37 @@ async fn poll_active_slots(
         return None;
     }
     let text = resp.text().await.ok()?;
+    find_metric_value(&text, metrics_key)
+}
+
+/// Scan Prometheus text-exposition output for `metrics_key`'s value.
+///
+/// D5 fix (Fable bug-hunt audit, Session 24): this had the same naive-
+/// Prometheus-parsing bug already fixed in `http.rs::status_tier_a` (see
+/// `parse_prometheus_line`'s own doc comment for the full failure-mode
+/// rationale — labeled metrics and a trailing timestamp field both broke
+/// it), plus a second, distinct issue: the old code matched via
+/// `line.starts_with(metrics_key)`, a *prefix* match rather than an exact
+/// metric-name match — a metric sharing `metrics_key` as a literal prefix
+/// (e.g. a hypothetical `requests_processing_total` when `metrics_key` is
+/// `requests_processing`) would have matched wrongly, and it returned
+/// immediately on the first prefix-matching line regardless of whether it
+/// actually parsed, so it never fell through to check a later line for the
+/// same key. Reusing the shared parser fixes both: exact name match, and
+/// the loop keeps scanning past a line it can't parse instead of giving up
+/// on the first (possibly wrong) match. Extracted as its own sync,
+/// non-`reqwest`-dependent function so it's directly unit-testable — the
+/// pre-fix test for this reimplemented the (buggy) matching logic inline
+/// rather than exercising the real code path at all.
+fn find_metric_value(text: &str, metrics_key: &str) -> Option<u64> {
     for line in text.lines() {
-        if line.starts_with(metrics_key) && !line.starts_with('#') {
-            if let Some(val) = line.split_once(' ').map(|x| x.1) {
-                return val.trim().parse::<f64>().ok().map(|f| f as u64);
+        if let Some((name, val)) = parse_prometheus_line(line) {
+            if name == metrics_key {
+                return Some(val as u64);
             }
         }
     }
     None
-}
-
-/// Fetch an ADC bearer token from the GCE metadata server.
-async fn fetch_gcp_adc_token(client: &reqwest::Client) -> Result<String, String> {
-    #[derive(serde::Deserialize)]
-    struct TokenResp {
-        access_token: String,
-    }
-    let resp = client
-        .get(GCP_METADATA_TOKEN_URL)
-        .header("Metadata-Flavor", "Google")
-        .send()
-        .await
-        .map_err(|e| format!("metadata server unreachable: {e}"))?;
-    if !resp.status().is_success() {
-        return Err(format!("metadata server HTTP {}", resp.status()));
-    }
-    let t: TokenResp = resp
-        .json()
-        .await
-        .map_err(|e| format!("token JSON parse failed: {e}"))?;
-    Ok(t.access_token)
-}
-
-/// DELETE the Yo-Yo instance via the GCP Compute Engine API. The boot disk is
-/// attached with auto-delete disabled (set by the nightly `instances create`
-/// call — see `yoyo-daily-cycle.sh`), so this preserves the persistent disk
-/// (weights, venv) without needing a `keepDisks` request parameter.
-async fn delete_gcp_instance(
-    client: &reqwest::Client,
-    config: &IdleMonitorConfig,
-) -> Result<(), String> {
-    let token = fetch_gcp_adc_token(client).await?;
-    let url = format!(
-        "https://compute.googleapis.com/compute/v1/projects/{}/zones/{}/instances/{}",
-        config.gcp_project, config.gcp_zone, config.gcp_instance
-    );
-    let resp = client
-        .delete(&url)
-        .bearer_auth(&token)
-        .send()
-        .await
-        .map_err(|e| format!("GCP API request failed: {e}"))?;
-    if resp.status().is_success() {
-        Ok(())
-    } else {
-        Err(format!(
-            "GCP instances.delete returned HTTP {}",
-            resp.status()
-        ))
-    }
 }
 
 #[cfg(test)]
@@ -310,18 +306,52 @@ mod tests {
 
     #[test]
     fn poll_active_slots_parses_prometheus_line() {
-        // Simulate the parse logic directly — no network call needed.
+        // Exercises the real matching/parsing function directly (no network
+        // call needed) rather than reimplementing the logic inline — the
+        // pre-D5-fix version of this test did the latter, which meant it
+        // kept "passing" even when the real function's matching logic had
+        // the prefix-match and trailing-timestamp bugs described on
+        // `find_metric_value`'s doc comment.
         let metrics_text = "# HELP llama_active_slots_total Active slots\n\
                             # TYPE llama_active_slots_total gauge\n\
                             llama_active_slots_total 3\n";
-        let mut result: Option<u64> = None;
-        for line in metrics_text.lines() {
-            if line.starts_with("llama_active_slots_total") && !line.starts_with('#') {
-                if let Some(val) = line.split_once(' ').map(|x| x.1) {
-                    result = val.trim().parse::<f64>().ok().map(|f| f as u64);
-                }
-            }
-        }
-        assert_eq!(result, Some(3));
+        assert_eq!(
+            find_metric_value(metrics_text, "llama_active_slots_total"),
+            Some(3)
+        );
+    }
+
+    #[test]
+    fn find_metric_value_does_not_prefix_match_a_different_metric() {
+        // Regression for the D5 fix: the old `line.starts_with(metrics_key)`
+        // would have wrongly matched this line when asked for
+        // "requests_processing" alone.
+        let metrics_text = "requests_processing_total 42\n";
+        assert_eq!(find_metric_value(metrics_text, "requests_processing"), None);
+    }
+
+    #[test]
+    fn find_metric_value_ignores_trailing_timestamp() {
+        // Regression for the D5 fix: `line.split_once(' ')` left the value
+        // token as "3 1395066363000" (one string with an embedded space),
+        // which failed to parse and returned None pre-fix.
+        let metrics_text = "llama_active_slots_total 3 1395066363000\n";
+        assert_eq!(
+            find_metric_value(metrics_text, "llama_active_slots_total"),
+            Some(3)
+        );
+    }
+
+    #[test]
+    fn find_metric_value_keeps_scanning_past_an_unparseable_line() {
+        // Regression for the D5 fix: the old code returned immediately on
+        // the first prefix-matching line even if that line failed to parse,
+        // never checking a later line for the same key.
+        let metrics_text = "llama_active_slots_total not_a_number\n\
+                            llama_active_slots_total 5\n";
+        assert_eq!(
+            find_metric_value(metrics_text, "llama_active_slots_total"),
+            Some(5)
+        );
     }
 }

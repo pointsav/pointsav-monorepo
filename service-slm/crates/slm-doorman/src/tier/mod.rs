@@ -22,7 +22,7 @@ pub use external::{
     ExternalAllowlist, ExternalTierClient, ExternalTierConfig, TierCPricing, TierCProvider,
     FOUNDRY_DEFAULT_ALLOWLIST,
 };
-pub use local::{LocalTierClient, LocalTierConfig};
+pub use local::{LocalAdmissionStatus, LocalTierClient, LocalTierConfig};
 pub use orchestration::{allocate_identity, OrchestrationTierClient, OrchestrationTierConfig};
 pub use yoyo::{
     BearerTokenProvider, MetadataBearer, PricingConfig, StaticBearer, YoYoTierClient,

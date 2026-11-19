@@ -3073,7 +3073,7 @@ async fn anthropic_count_tokens_estimates_from_body_length() {
 }
 
 #[tokio::test]
-async fn anthropic_models_lists_the_two_tier_routed_ids() {
+async fn anthropic_models_lists_the_tier_routed_ids() {
     let state = app_state_no_tiers();
     let app = router(state);
     let req = Request::builder()
@@ -3092,8 +3092,48 @@ async fn anthropic_models_lists_the_two_tier_routed_ids() {
         .iter()
         .map(|m| m["id"].as_str().unwrap())
         .collect();
+    // `doorman-tier-a` is the preferred, non-Claude-branded Tier A model
+    // name (the Tier A naming fix); the `claude-*` ids are kept as
+    // deprecated back-compat aliases, not removed.
+    assert!(ids.contains(&"doorman-tier-a"));
     assert!(ids.contains(&"claude-haiku-4-5-20251001"));
     assert!(ids.contains(&"claude-sonnet-4-6"));
+}
+
+/// A real request with `{"model": "doorman-tier-a"}` gets routed through the
+/// same Tier A local path as `claude-haiku-*` — this is the exact live
+/// misroute Bug B identified (before this fix, this model name fell through
+/// to the Medium/"trainer" default instead of Tier A).
+#[tokio::test]
+async fn anthropic_messages_doorman_tier_a_routes_through_tier_a_local() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [
+                { "message": { "role": "assistant", "content": "tier-a response" } }
+            ]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let state = app_state_with_local(server.uri());
+    let app = router(state);
+
+    let req_body = json!({
+        "model": "doorman-tier-a",
+        "messages": [{"role": "user", "content": "ping"}],
+        "max_tokens": 100
+    });
+    let resp = app
+        .oneshot(post_json("/v1/messages", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = body_json(resp).await;
+    assert_eq!(body["content"][0]["text"], "tier-a response");
 }
 
 #[tokio::test]

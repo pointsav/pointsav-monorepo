@@ -22,6 +22,19 @@ pub mod drain;
 pub mod entrypoint;
 pub mod http;
 pub mod idle_monitor;
+pub mod jobs_http;
+/// Prometheus metrics recorder + `/metrics` render surface (D6 fix, Fable
+/// bug-hunt audit, Session 24). The module existed on disk since the
+/// original P3-3.1 scaffold but was never declared here — it was dead code,
+/// not even compiled into the crate, and its own dependencies
+/// (`metrics`/`metrics-exporter-prometheus`) were never added to
+/// `Cargo.toml` either. `entrypoint::run()` now calls `metrics::init()` at
+/// boot and `http::router()` serves `GET /metrics`. The metric call sites
+/// this module's own doc comment table describes (`slm_requests_total` etc.)
+/// remain unimplemented — `/metrics` will render empty/near-empty until
+/// those are wired in; that instrumentation work is a separate, larger
+/// follow-up, not part of this fix.
+pub mod metrics;
 /// Brief Queue Substrate (apprenticeship-substrate.md §7C).
 ///
 /// File-backed durable queue that decouples brief acceptance from
@@ -29,11 +42,12 @@ pub mod idle_monitor;
 /// Yo-Yo idle-shutdown preemption. See `queue.rs` module-level docs for
 /// the full design.
 pub mod queue;
-/// Three-priority in-flight request scheduler (P0/P1/P2 slot reservation).
-/// P2 (training) is admitted only when ALL inference slots are free, preventing
-/// training requests from competing with extraction. Wire into `AppState` when
-/// GRPO training requests begin routing through the Doorman.
-pub mod scheduler;
+// The three-priority in-flight request scheduler (P0/P1/P2 slot reservation)
+// moved to `slm_doorman::scheduler` 2026-09-21 — the correct integration
+// point is inside `LocalTierClient`/`Doorman::route_local_p2` (slm-doorman),
+// not this HTTP crate. See that module's doc comment for why. Re-exported
+// here (`slm_doorman::{InfightPriority, RequestScheduler}`) for `http.rs`/
+// `entrypoint.rs` to construct and read status from.
 
 pub use entrypoint::run;
 

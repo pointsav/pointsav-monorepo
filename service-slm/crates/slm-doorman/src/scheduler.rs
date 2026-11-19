@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! In-flight request scheduler — priority slot reservation for the Doorman.
+//! In-flight request scheduler — priority slot reservation for Tier A.
 //!
-//! The Doorman's llama.cpp backend runs with `--parallel 2` (two concurrent
-//! inference slots). This module controls which in-flight HTTP requests get
+//! Tier A (`LocalTierClient`) runs with `SLM_LOCAL_CONCURRENT` concurrent
+//! inference slots (production: `1`, per the production-readiness roadmap's
+//! contention-bug fix). This module controls which in-flight requests get
 //! those slots based on three priority classes, mapping to the
 //! `X-Foundry-Priority` header values:
 //!
@@ -16,7 +17,21 @@
 //! P2 runs only when the backend is otherwise idle. This prevents training
 //! requests from competing with extraction during a drain burst. The 300-second
 //! escape valve (caller-side `Retry-After` countdown) is the responsibility
-//! of the HTTP layer — see `http.rs`.
+//! of the HTTP layer — see `slm-doorman-server`'s `http.rs`.
+//!
+//! ## Where this lives, and why
+//!
+//! Originally sketched to live in `slm-doorman-server` (the HTTP crate) and
+//! wire into `AppState`. Moved here (`slm-doorman`, the crate `LocalTierClient`
+//! itself lives in) 2026-09-21 when actually wiring it in: `Doorman::route()`
+//! can resolve to Tier A, Tier B, or Tier C depending on the request, so
+//! gating the whole HTTP call at the `AppState` layer would incorrectly
+//! throttle Tier B/C traffic against Tier A's local-only capacity once Tier B
+//! (Yo-Yo) comes online. The correct integration point is inside
+//! `LocalTierClient` itself — see `complete_p2()` in `tier/local.rs` and
+//! `Doorman::route_local_p2()` in `router.rs`, which admit only Tier
+//! A-bound dispatch through this scheduler, mirroring the existing
+//! `route_local_background()` pattern.
 //!
 //! ## Starvation properties
 //!
@@ -32,7 +47,7 @@ use std::sync::Arc;
 
 use tokio::sync::{OwnedSemaphorePermit, Semaphore, TryAcquireError};
 
-/// The three in-flight priority classes for Doorman request scheduling.
+/// The three in-flight priority classes for Tier A request scheduling.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InfightPriority {
     /// Interactive chat or editorial — highest priority.
@@ -65,7 +80,7 @@ pub struct SchedulerPermit {
 
 /// Three-priority in-flight request scheduler backed by a shared `Semaphore`.
 ///
-/// Create once at server startup and clone the `Arc` into handler state.
+/// Create once at server startup and clone the `Arc` into `LocalTierClient`.
 #[derive(Debug)]
 pub struct RequestScheduler {
     slots: Arc<Semaphore>,
@@ -74,7 +89,9 @@ pub struct RequestScheduler {
 
 impl RequestScheduler {
     /// Create a new scheduler with `capacity` concurrent inference slots.
-    /// Set `capacity` to match llama.cpp's `--parallel` value (typically 2).
+    /// Set `capacity` to match `SLM_LOCAL_CONCURRENT` (the same value
+    /// `LocalTierClient`'s own `total_sem` uses), so this scheduler's notion
+    /// of "idle" never drifts from the real backend's.
     pub fn new(capacity: usize) -> Self {
         Self {
             slots: Arc::new(Semaphore::new(capacity.max(1))),
@@ -166,5 +183,20 @@ mod tests {
         let _p2 = s.try_admit(InfightPriority::P2).expect("idle");
         // P0 can still get the remaining slot
         assert!(s.try_admit(InfightPriority::P0).is_some());
+    }
+
+    #[tokio::test]
+    async fn capacity_one_serialises_everything() {
+        // Production today runs SLM_LOCAL_CONCURRENT=1 (the contention-bug
+        // fix) — verify the scheduler degrades to strict serialization
+        // rather than assuming capacity >= 2 anywhere in its own logic.
+        let s = RequestScheduler::new(1);
+        let p0 = s.try_admit(InfightPriority::P0).expect("only slot");
+        assert!(s.try_admit(InfightPriority::P1).is_none());
+        assert!(s.try_admit(InfightPriority::P2).is_none());
+        drop(p0);
+        let p2 = s.try_admit(InfightPriority::P2).expect("idle now");
+        assert!(s.try_admit(InfightPriority::P0).is_none());
+        drop(p2);
     }
 }

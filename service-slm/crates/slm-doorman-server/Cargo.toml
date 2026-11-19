@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 [package]
@@ -23,6 +23,10 @@ slm-doorman = { workspace = true }
 
 tokio = { workspace = true }
 axum = { workspace = true }
+# Server-side outer request timeout (2026-09-11 robustness pass — see
+# http.rs's router() doc comment for why this is set well above any known
+# legitimate call duration, not a fast-fail value).
+tower-http = { version = "0.6", features = ["timeout"] }
 
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -42,6 +46,8 @@ anyhow = { workspace = true }
 # re-declared here explicitly so the server crate does not rely on
 # transitive resolution for a direct dependency.
 fs2 = { version = "0.4" }
+metrics = { version = "0.24.6", default-features = false }
+metrics-exporter-prometheus = { version = "0.18.3", default-features = false }
 
 [dev-dependencies]
 # Integration test framework — test axum routes without binding a port.
