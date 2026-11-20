@@ -513,7 +513,7 @@ impl Registry {
                     Some((t, n)) => (t, n),
                     None => ("", al),
                 };
-                if !tag.is_empty() && !(class_first.contains(&name) || name == c) {
+                if !tag.is_empty() && !class_first.contains(&name) && name != c {
                     err(format!(
                         "ts-classes.csv: '{c}' alias '{al}' names an unknown class"
                     ));
