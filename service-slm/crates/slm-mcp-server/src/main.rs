@@ -257,19 +257,34 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_msg_id ON messages(msg_id)
 CREATE INDEX IF NOT EXISTS idx_archive_status ON messages(archive, status);
 ";
 
-fn mailbox_db_insert(
-    db_path: &std::path::Path,
-    archive: &str,
-    mailbox: &str,
-    msg_id: &str,
-    from: &str,
-    to: &str,
-    re: &str,
-    priority: &str,
-    status: &str,
-    created: &str,
-    body: &str,
-) -> rusqlite::Result<()> {
+/// One row of the SQLite mailbox index, grouped so the insert takes a single
+/// argument instead of ten strings.
+struct MailboxRow<'a> {
+    archive: &'a str,
+    mailbox: &'a str,
+    msg_id: &'a str,
+    from: &'a str,
+    to: &'a str,
+    re: &'a str,
+    priority: &'a str,
+    status: &'a str,
+    created: &'a str,
+    body: &'a str,
+}
+
+fn mailbox_db_insert(db_path: &std::path::Path, row: &MailboxRow) -> rusqlite::Result<()> {
+    let MailboxRow {
+        archive,
+        mailbox,
+        msg_id,
+        from,
+        to,
+        re,
+        priority,
+        status,
+        created,
+        body,
+    } = *row;
     let conn = rusqlite::Connection::open(db_path)?;
     conn.execute_batch(MAILBOX_DB_SCHEMA)?;
     let now = chrono::Utc::now().to_rfc3339();
@@ -826,16 +841,18 @@ impl FoundryServer {
                             match tokio::task::spawn_blocking(move || {
                                 mailbox_db_insert(
                                     &db_path,
-                                    &archive_name,
-                                    "inbox",
-                                    &msg_id_c,
-                                    "",
-                                    &to_c,
-                                    &re_c,
-                                    &priority_c,
-                                    "pending",
-                                    &created_c,
-                                    &body_c,
+                                    &MailboxRow {
+                                        archive: &archive_name,
+                                        mailbox: "inbox",
+                                        msg_id: &msg_id_c,
+                                        from: "",
+                                        to: &to_c,
+                                        re: &re_c,
+                                        priority: &priority_c,
+                                        status: "pending",
+                                        created: &created_c,
+                                        body: &body_c,
+                                    },
                                 )
                             })
                             .await
@@ -1121,8 +1138,19 @@ impl FoundryServer {
                 let _ = tokio::task::spawn_blocking(move || {
                     for row in &rows {
                         let _ = mailbox_db_insert(
-                            &db_path, &row[1], &row[2], &row[0], &row[3], &row[4], &row[5],
-                            &row[6], &row[7], &row[8], "",
+                            &db_path,
+                            &MailboxRow {
+                                archive: &row[1],
+                                mailbox: &row[2],
+                                msg_id: &row[0],
+                                from: &row[3],
+                                to: &row[4],
+                                re: &row[5],
+                                priority: &row[6],
+                                status: &row[7],
+                                created: &row[8],
+                                body: "",
+                            },
                         );
                     }
                 })
