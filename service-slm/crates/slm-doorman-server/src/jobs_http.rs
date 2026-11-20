@@ -259,6 +259,7 @@ async fn list_engines(State(ctx): State<Ctx>, Extension(cred): Extension<Credent
                 "nice": e.nice,
                 "max_job_secs": e.max_job_secs,
                 "max_input_bytes": e.max_input_bytes,
+                "declared": e.declared,
             })
         })
         .collect();

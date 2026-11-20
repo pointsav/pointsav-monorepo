@@ -55,6 +55,87 @@ pub struct EngineSpec {
     /// Must be absent or null: there is no fallback between engines.
     #[serde(default)]
     pub fallback: Option<String>,
+    /// Declared descriptive metadata. Reported by `GET /v1/engines`; nothing
+    /// here is enforced or verified by the Doorman.
+    #[serde(default)]
+    pub declared: Option<EngineDeclared>,
+}
+
+/// What an operator declares about an engine. Every field is optional text;
+/// the Doorman records and reports it and acts on none of it.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EngineDeclared {
+    /// What the engine does, e.g. `entity-spans` or `ocr`.
+    #[serde(default)]
+    pub capability: Option<String>,
+    /// Where calls to it travel, e.g. `local` or `gateway`.
+    #[serde(default)]
+    pub route: Option<String>,
+    /// The machine or service that runs it.
+    #[serde(default)]
+    pub host: Option<String>,
+    #[serde(default)]
+    pub owner: Option<String>,
+    /// What leaves the machine when it is called, in words.
+    #[serde(default)]
+    pub egress: Option<String>,
+    /// The engine software version someone last checked.
+    #[serde(default)]
+    pub verified_version: Option<String>,
+    /// Who cleared the engine's licence, and the date (`YYYY-MM-DD`).
+    #[serde(default)]
+    pub licence_cleared_by: Option<String>,
+    #[serde(default)]
+    pub licence_cleared_on: Option<String>,
+    /// Whether the engine moves with the archive it serves.
+    #[serde(default)]
+    pub travels_with_archive: Option<bool>,
+}
+
+const DECLARED_TEXT_MAX: usize = 200;
+
+impl EngineDeclared {
+    /// Text fields must be non-blank, short and free of control characters;
+    /// the date must look like `YYYY-MM-DD`.
+    fn validate(&self) -> Result<(), String> {
+        let texts = [
+            ("capability", &self.capability),
+            ("route", &self.route),
+            ("host", &self.host),
+            ("owner", &self.owner),
+            ("egress", &self.egress),
+            ("verified_version", &self.verified_version),
+            ("licence_cleared_by", &self.licence_cleared_by),
+            ("licence_cleared_on", &self.licence_cleared_on),
+        ];
+        for (name, value) in texts {
+            let Some(v) = value else { continue };
+            if v.trim().is_empty() {
+                return Err(format!("declared.{name} must not be blank"));
+            }
+            if v.chars().count() > DECLARED_TEXT_MAX {
+                return Err(format!(
+                    "declared.{name} is longer than {DECLARED_TEXT_MAX} characters"
+                ));
+            }
+            if v.chars().any(char::is_control) {
+                return Err(format!("declared.{name} contains a control character"));
+            }
+        }
+        if let Some(d) = &self.licence_cleared_on {
+            let b = d.as_bytes();
+            let shaped = b.len() == 10
+                && b.iter().enumerate().all(|(i, c)| match i {
+                    4 | 7 => *c == b'-',
+                    _ => c.is_ascii_digit(),
+                });
+            if !shaped {
+                return Err("declared.licence_cleared_on must be YYYY-MM-DD".into());
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -98,6 +179,10 @@ impl Registry {
                     "engine {}: fallback is not permitted (an unavailable engine yields `deferred`)",
                     e.engine_id
                 ));
+            }
+            if let Some(d) = &e.declared {
+                d.validate()
+                    .map_err(|m| format!("engine {}: {m}", e.engine_id))?;
             }
             if index.insert(e.engine_id.clone(), i).is_some() {
                 return Err(format!("duplicate engine_id {}", e.engine_id));
@@ -144,6 +229,7 @@ pub(crate) mod tests_support {
             chunk_overlap: None,
             domain_id: None,
             fallback: None,
+            declared: None,
         }
     }
 }
@@ -164,6 +250,68 @@ mod tests {
         bad.permits = 1;
         assert!(Registry::from_specs(vec![bad]).is_err());
         assert!(Registry::from_specs(vec![spec("a"), spec("b")]).is_ok());
+    }
+
+    #[test]
+    fn declared_metadata_is_optional_and_loads_from_json() {
+        let without = r#"{"engines":[{"engine_id":"a","kind":"llm-local","endpoint":"http://x","model":"m","weights_sha256":"w","licence":"l","permits":1,"max_job_secs":1,"max_input_bytes":1}]}"#;
+        let f: RegistryFile = serde_json::from_str(without).unwrap();
+        assert!(f.engines[0].declared.is_none());
+        let with = r#"{"engines":[{"engine_id":"a","kind":"span-gliner","endpoint":"http://x","model":"m","weights_sha256":"w","licence":"l","permits":1,"max_job_secs":1,"max_input_bytes":1,"declared":{"capability":"entity-spans","route":"gateway","host":"h1","owner":"team","egress":"none","verified_version":"1.0","licence_cleared_by":"someone","licence_cleared_on":"2026-11-19","travels_with_archive":false}}]}"#;
+        let f: RegistryFile = serde_json::from_str(with).unwrap();
+        let d = f.engines[0].declared.as_ref().unwrap();
+        assert_eq!(d.capability.as_deref(), Some("entity-spans"));
+        assert_eq!(d.travels_with_archive, Some(false));
+        assert!(Registry::from_specs(f.engines).is_ok());
+    }
+
+    #[test]
+    fn declared_metadata_rejects_blank_long_control_and_bad_date() {
+        let with = |d: EngineDeclared| {
+            let mut e = spec("a");
+            e.declared = Some(d);
+            Registry::from_specs(vec![e])
+        };
+        let ok = EngineDeclared {
+            capability: Some("ocr".into()),
+            licence_cleared_on: Some("2026-11-19".into()),
+            ..Default::default()
+        };
+        assert!(with(ok).is_ok());
+        let blank = EngineDeclared {
+            owner: Some("   ".into()),
+            ..Default::default()
+        };
+        assert!(with(blank).unwrap_err().contains("declared.owner"));
+        let long = EngineDeclared {
+            host: Some("x".repeat(201)),
+            ..Default::default()
+        };
+        assert!(with(long).unwrap_err().contains("declared.host"));
+        let control = EngineDeclared {
+            egress: Some("a\nb".into()),
+            ..Default::default()
+        };
+        assert!(with(control).unwrap_err().contains("declared.egress"));
+        for bad in [
+            "2026-1-19",
+            "19-11-2026",
+            "2026/11/19",
+            "20261119",
+            "2026-11-1x",
+        ] {
+            let d = EngineDeclared {
+                licence_cleared_on: Some(bad.into()),
+                ..Default::default()
+            };
+            assert!(with(d).unwrap_err().contains("YYYY-MM-DD"), "{bad}");
+        }
+    }
+
+    #[test]
+    fn declared_with_an_unknown_field_is_refused() {
+        let j = r#"{"engines":[{"engine_id":"a","kind":"llm-local","endpoint":"http://x","model":"m","weights_sha256":"w","licence":"l","permits":1,"max_job_secs":1,"max_input_bytes":1,"declared":{"capability":"x","bogus":1}}]}"#;
+        assert!(serde_json::from_str::<RegistryFile>(j).is_err());
     }
 
     #[test]

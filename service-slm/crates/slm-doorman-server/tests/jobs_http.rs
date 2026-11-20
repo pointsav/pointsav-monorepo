@@ -15,7 +15,7 @@ use slm_doorman::jobs::credentials::{Credential, PriorityClass};
 use slm_doorman::jobs::engines::{
     JobEngine, LlmLocalEngine, OcrOpenaiVisionEngine, OpenGate, SpanGlinerEngine,
 };
-use slm_doorman::jobs::registry::{EngineKind, EngineSpec};
+use slm_doorman::jobs::registry::{EngineDeclared, EngineKind, EngineSpec};
 use slm_doorman::jobs::service::AuditSink;
 use slm_doorman::jobs::{CredentialSet, JobStore, JobsConfig, JobsService, Registry};
 use slm_doorman::JobAuditEntry;
@@ -99,6 +99,11 @@ async fn rig() -> Rig {
         chunk_overlap: Some(100),
         domain_id: Some("projects".into()),
         fallback: None,
+        declared: Some(EngineDeclared {
+            capability: Some("entity-spans".into()),
+            owner: Some("extraction".into()),
+            ..Default::default()
+        }),
     };
     let ocr_spec = |id: &str, endpoint: String| EngineSpec {
         engine_id: id.into(),
@@ -116,6 +121,7 @@ async fn rig() -> Rig {
         chunk_overlap: None,
         domain_id: None,
         fallback: None,
+        declared: None,
     };
     let spec = EngineSpec {
         engine_id: "olmo".into(),
@@ -133,6 +139,7 @@ async fn rig() -> Rig {
         chunk_overlap: None,
         domain_id: None,
         fallback: None,
+        declared: None,
     };
     let mut engines: HashMap<String, Arc<dyn JobEngine>> = HashMap::new();
     engines.insert(
@@ -426,11 +433,16 @@ async fn end_to_end_upload_run_result_ack() {
     let r = rig().await;
     let (s, v) = call(&r.app, "GET", "/v1/engines", Some("token-a"), &[], vec![]).await;
     assert_eq!(s, StatusCode::OK);
-    assert!(v["engines"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|e| e["engine_id"] == "olmo"));
+    let engines = v["engines"].as_array().unwrap();
+    assert!(engines.iter().any(|e| e["engine_id"] == "olmo"));
+    let olmo = engines.iter().find(|e| e["engine_id"] == "olmo").unwrap();
+    assert!(
+        olmo["declared"].is_null(),
+        "no declared block, reported null"
+    );
+    let spans = engines.iter().find(|e| e["engine_id"] == "spans").unwrap();
+    assert_eq!(spans["declared"]["capability"], "entity-spans");
+    assert_eq!(spans["declared"]["owner"], "extraction");
     let (sref, sha_in) = upload(&r.app, "token-a", "Alice met Bob in Paris").await;
     let (s, v) = call(
         &r.app,
