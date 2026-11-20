@@ -304,6 +304,19 @@ fn mailbox_db_insert(db_path: &std::path::Path, row: &MailboxRow) -> rusqlite::R
     Ok(())
 }
 
+/// The inbox file `bin/mailbox-send.sh` reports it delivered to, taken from its
+/// own output line `... prepended to <path> (msg-id=...)`. The script knows where
+/// an archive's mailbox really lives, so the wrapper reads that instead of
+/// guessing a directory (a wrong guess made a delivered message report
+/// `ok: false`). Only a path under `foundry_root` named `inbox.md` is accepted.
+fn delivered_inbox_path(foundry_root: &std::path::Path, stdout: &str) -> Option<PathBuf> {
+    let line = stdout.lines().find(|l| l.contains("prepended to "))?;
+    let rest = &line[line.find("prepended to ")? + "prepended to ".len()..];
+    let path = PathBuf::from(rest[..rest.find(" (msg-id").unwrap_or(rest.len())].trim());
+    (path.starts_with(foundry_root) && path.file_name().is_some_and(|n| n == "inbox.md"))
+        .then_some(path)
+}
+
 // ── Server struct ─────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone)]
@@ -826,6 +839,8 @@ impl FoundryServer {
                             }
                             _ => (PathBuf::from("(unknown)"), "unknown".to_string()),
                         };
+                        let dest_file =
+                            delivered_inbox_path(&self.foundry_root, &stdout).unwrap_or(dest_file);
 
                         // Option C: dual-write to SQLite mailbox index — result is
                         // now observed rather than discarded, so a DB failure is
@@ -1447,4 +1462,40 @@ async fn main() -> anyhow::Result<()> {
     server.serve(transport).await?.waiting().await?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const LINE: &str = "mailbox-prepend: prepended to /srv/f/vault/x/.agent/inbox.md (msg-id=m-1)\n  ✓ x (msg-id: m-1)";
+
+    #[test]
+    fn reads_the_path_the_script_delivered_to() {
+        let root = std::path::Path::new("/srv/f");
+        assert_eq!(
+            delivered_inbox_path(root, LINE),
+            Some(PathBuf::from("/srv/f/vault/x/.agent/inbox.md"))
+        );
+    }
+
+    #[test]
+    fn no_delivery_line_gives_none() {
+        let root = std::path::Path::new("/srv/f");
+        assert_eq!(delivered_inbox_path(root, "Sent to 1 target(s)"), None);
+    }
+
+    #[test]
+    fn a_path_outside_the_root_is_refused() {
+        let root = std::path::Path::new("/srv/f");
+        let out = "prepended to /etc/x/.agent/inbox.md (msg-id=m)";
+        assert_eq!(delivered_inbox_path(root, out), None);
+    }
+
+    #[test]
+    fn a_file_not_named_inbox_is_refused() {
+        let root = std::path::Path::new("/srv/f");
+        let out = "prepended to /srv/f/clones/x/.agent/outbox.md (msg-id=m)";
+        assert_eq!(delivered_inbox_path(root, out), None);
+    }
 }
