@@ -491,6 +491,12 @@ hr { border: none; border-top: 1px solid #999; }
 .timeline { display: grid; margin: 1em 0; align-items: start; }
 .tl-leader table { margin: 0; }
 .tl-leader tr { height: var(--tl-row-h, 20pt); }
+/* Timeline has no per-row height: every bar sits at index * one uniform row pitch, and a CSS
+   `height` on a <tr> is only a minimum. A wrapped task name would grow its row while the bars
+   below keep their fixed pitch, so alignment drifts with every wrapped row. Until per-row
+   heights are threaded through Timeline/TimelineRow and both renderers, force each leader cell
+   to exactly one line (clipped with an ellipsis) so the height above stays true. */
+.tl-leader td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tl-plot { position: relative; }
 .tl-axis-header { position: relative; height: calc(var(--tl-row-h, 20pt) * 2); font-size: 8.5pt; font-weight: bold; color: #222; }
 .tl-band { position: absolute; height: var(--tl-row-h, 20pt); text-align: center; border-left: 1px solid #ccc; box-sizing: border-box; padding-top: 2px; }
@@ -679,6 +685,16 @@ mod tests {
         // The screen-only centered max-width/margin must not survive into print -- it would
         // fight the page's own margin and waste printable width on a physical page.
         assert!(html.contains("body { max-width: none; margin: 0; }"));
+    }
+
+    #[test]
+    fn timeline_leader_cells_are_clipped_to_one_line_so_bars_stay_aligned_with_their_rows() {
+        // A wrapped leader cell would grow its row past --tl-row-h while the bars keep a fixed
+        // pitch; the stylesheet must pin every leader cell to a single clipped line.
+        let html = render_html(&doc(Register::WorkingDocument, vec![]));
+        assert!(html.contains(
+            ".tl-leader td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }"
+        ));
     }
 
     #[test]

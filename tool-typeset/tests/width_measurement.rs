@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: FSL-1.1-ALv2
+// SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 // Moved out of src/afm.rs: this test's example string is a comma-grouped

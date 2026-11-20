@@ -56,6 +56,17 @@ const BANNER_FILL: (f32, f32, f32) = (0.949, 0.957, 0.969);
 // ---- Timeline mark colors (register-independent -- a Gantt bar's color is
 // part of what BarStyle means, not a per-document accent choice). ----
 const TIMELINE_TASK_RGB: (f32, f32, f32) = ACCENT_RGB;
+/// Narrowest summary bar (pt) that still draws as a bracket. Each end cap is
+/// at most 3pt wide, so below 6pt the two caps and the spine merge into an
+/// illegible sliver; narrower bars fall back to a solid fill in the summary
+/// colour (decision F-1.4, 2026-11-19).
+const TIMELINE_SUMMARY_MIN_BRACKET_W: f32 = 6.0;
+
+/// Whether a summary bar `width` pt wide is wide enough to draw as a bracket.
+fn summary_draws_as_bracket(width: f32) -> bool {
+    width >= TIMELINE_SUMMARY_MIN_BRACKET_W
+}
+
 const TIMELINE_SUMMARY_RGB: (f32, f32, f32) = (0.30, 0.30, 0.30);
 const TIMELINE_EXTERNAL_RGB: (f32, f32, f32) = (0.65, 0.65, 0.65);
 const TIMELINE_MILESTONE_RGB: (f32, f32, f32) = (0.80, 0.30, 0.05);
@@ -755,6 +766,27 @@ impl Layout {
         let indent = if align == Align::Left { indent } else { 0.0 };
         let inner_w = (w - 2.0 * CELL_PAD_X - indent).max(1.0);
         let s = Self::truncate_to_width(s, inner_w, size, face.is_bold());
+        self.place_aligned(&s, x, w, align, size, face, gray, indent);
+    }
+
+    /// Places already-fitted text within its column box without truncating.
+    /// Header lines use this directly: a single word wider than its column
+    /// overflows its box rather than being cut to an ellipsis, so the
+    /// column's only label is never lost.
+    #[allow(clippy::too_many_arguments)]
+    fn place_aligned(
+        &mut self,
+        s: &str,
+        x: f32,
+        w: f32,
+        align: Align,
+        size: f32,
+        face: Face,
+        gray: f32,
+        indent: f32,
+    ) {
+        let indent = if align == Align::Left { indent } else { 0.0 };
+        let s = s.to_string();
         match align {
             Align::Left => self.text(x + CELL_PAD_X + indent, size, face, gray, &s),
             Align::Right => self.text_right_aligned(x + w - CELL_PAD_X, size, face, gray, &s),
@@ -769,6 +801,18 @@ impl Layout {
     /// which would destroy the reader's only label for a figure column.
     fn wrap_header_cell(s: &str, w: f32, size: f32, face: Face) -> Vec<String> {
         Self::wrap(s, (w - 2.0 * CELL_PAD_X).max(1.0), size, face.is_bold())
+    }
+
+    /// Left edge and total width of a cell spanning `colspan` columns from
+    /// `col_idx`: widths are summed across the span (a missing column adds
+    /// nothing). `None` when `col_idx` itself is off the grid.
+    fn span_geometry(geometry: &[(f32, f32)], col_idx: usize, colspan: u8) -> Option<(f32, f32)> {
+        let &(x, _) = geometry.get(col_idx)?;
+        let w: f32 = (0..colspan.max(1) as usize)
+            .filter_map(|i| geometry.get(col_idx + i))
+            .map(|&(_, w)| w)
+            .sum();
+        Some((x, w))
     }
 
     /// Lays out one header line into (left_x, width, align, lines) per cell,
@@ -820,7 +864,7 @@ impl Layout {
         for cell in plan {
             for (j, line) in cell.lines.iter().enumerate() {
                 self.y = top - (depth - cell.lines.len() + j) as f32 * leading;
-                self.place_cell_text(line, cell.x, cell.w, cell.align, size, cell.face, gray, 0.0);
+                self.place_aligned(line, cell.x, cell.w, cell.align, size, cell.face, gray, 0.0);
             }
         }
         self.y = top - (depth - 1) as f32 * leading;
@@ -958,7 +1002,7 @@ impl Layout {
             };
             let mut col_idx = 0usize;
             for cell in &row.cells {
-                if let Some(&(x, w)) = geometry.get(col_idx) {
+                if let Some((x, w)) = Self::span_geometry(&geometry, col_idx, cell.colspan) {
                     let align = table
                         .columns
                         .get(col_idx)
@@ -1073,7 +1117,7 @@ impl Layout {
             };
             let mut col_idx = 0usize;
             for cell in &row.cells {
-                if let Some(&(x, w)) = leader_geometry.get(col_idx) {
+                if let Some((x, w)) = Self::span_geometry(&leader_geometry, col_idx, cell.colspan) {
                     let align = leader
                         .columns
                         .get(col_idx)
@@ -1242,7 +1286,7 @@ impl Layout {
                     BarStyle::Summary => TIMELINE_SUMMARY_RGB,
                     BarStyle::External => TIMELINE_EXTERNAL_RGB,
                 };
-                if *style == BarStyle::Summary {
+                if *style == BarStyle::Summary && summary_draws_as_bracket(x2 - x1) {
                     // A summary bar draws as a thin bracket, not a solid
                     // fill: a spine plus turned-down end caps via
                     // `fill_polygon` -- the one shape `fill_rect` can't draw.
@@ -1266,6 +1310,8 @@ impl Layout {
                         rgb,
                     );
                 } else {
+                    // Tasks, externals, and summary bars too narrow for a bracket
+                    // (see TIMELINE_SUMMARY_MIN_BRACKET_W) draw solid.
                     self.fill_rect(x1, bar_bottom, x2 - x1, bar_h, rgb);
                     if let Some(p) = progress {
                         let pw = (x2 - x1) * p.clamp(0.0, 1.0);
@@ -1951,6 +1997,40 @@ mod tests {
         );
     }
 
+    /// Regression (F-1.3): one unbreakable word wider than its column must
+    /// print in full (overflowing its box), never be cut to an ellipsis.
+    #[test]
+    fn single_word_heading_wider_than_column_is_not_truncated() {
+        let mut table = Table::new(vec![
+            Column {
+                width: ColWidth::Pct(90.0),
+                align: Align::Left,
+            },
+            Column {
+                width: ColWidth::Pct(10.0),
+                align: Align::Right,
+            },
+        ]);
+        table.header = Some(vec![Cell::text(""), Cell::text("Reconciliation").bold()]);
+        let doc = Doc {
+            page: PageSetup {
+                register: Register::FormalStatement,
+                ..Default::default()
+            },
+            blocks: vec![Block::Table(table)],
+        };
+        let pdf = stream(&doc);
+        assert!(
+            !pdf.contains('\u{2026}') && !pdf.contains("\\205"),
+            "heading was ellipsized"
+        );
+        let texts: Vec<String> = placements(&pdf).into_iter().map(|(_, t)| t).collect();
+        assert!(
+            texts.iter().any(|t| t == "Reconciliation"),
+            "expected the whole word, got {texts:?}"
+        );
+    }
+
     #[test]
     fn wrapped_heading_lines_bottom_align_onto_the_rule() {
         // The last line of a 3-line heading must share its baseline with a
@@ -2401,5 +2481,30 @@ mod tests {
             "leader row 0 must still render even though it has no marks"
         );
         assert!(places.iter().any(|(_, t)| t == "Task 1"));
+    }
+
+    /// Regression (F-1.2): a body cell spanning N columns must be given the
+    /// summed width of those columns, not just the first column's width.
+    #[test]
+    fn span_geometry_sums_widths_across_colspan() {
+        let geometry = [(10.0_f32, 50.0_f32), (60.0, 70.0), (130.0, 30.0)];
+        assert_eq!(Layout::span_geometry(&geometry, 0, 1), Some((10.0, 50.0)));
+        assert_eq!(Layout::span_geometry(&geometry, 0, 2), Some((10.0, 120.0)));
+        assert_eq!(Layout::span_geometry(&geometry, 1, 2), Some((60.0, 100.0)));
+        // A span running past the grid adds nothing for the missing columns.
+        assert_eq!(Layout::span_geometry(&geometry, 2, 3), Some((130.0, 30.0)));
+        // colspan 0 is treated as 1; an off-grid start yields None.
+        assert_eq!(Layout::span_geometry(&geometry, 0, 0), Some((10.0, 50.0)));
+        assert_eq!(Layout::span_geometry(&geometry, 3, 1), None);
+    }
+
+    /// Regression (F-1.4): summary bars narrower than two full end caps
+    /// (the real ~2.83pt repro) fall back to a solid fill.
+    #[test]
+    fn narrow_summary_bars_fall_back_to_solid() {
+        assert!(!summary_draws_as_bracket(2.83));
+        assert!(!summary_draws_as_bracket(5.99));
+        assert!(summary_draws_as_bracket(6.0));
+        assert!(summary_draws_as_bracket(120.0));
     }
 }

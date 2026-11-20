@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: FSL-1.1-ALv2
+# SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
 [package]
@@ -6,7 +6,7 @@ name = "tool-typeset"
 version = "0.1.0"
 edition = "2021"
 description = "Zero-dependency document rendering engine: one internal Document model, rendered to HTML (review) and PDF (final deliverable) by two independent backends. Never HTML-to-PDF conversion. Domain-agnostic -- cells carry pre-formatted strings, never Money/f64 -- so this crate serves any project-*, not just accounting."
-license = "FSL-1.1-ALv2"
+license = "Apache-2.0"
 publish = false
 
 # Deliberately zero dependencies -- the PDF backend writes the PDF format
