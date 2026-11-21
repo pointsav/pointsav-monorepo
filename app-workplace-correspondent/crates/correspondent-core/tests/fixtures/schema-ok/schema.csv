@@ -1,0 +1,5 @@
+column,required,type,pattern,vocab,description,table
+person_id,Y,string,,,id,
+display_name,Y,string,,,name,
+status,N,string,,,s,
+claims_col,Y,string,,,other table,claims.csv

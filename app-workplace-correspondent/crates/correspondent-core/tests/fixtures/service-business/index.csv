@@ -1,0 +1,3 @@
+business_id,legal_name,routing_code,jurisdiction,source_ref,legacy_payee_id,notes,status,kind,first_seen,last_seen
+B1,Example Holdings Ltd,,CA-BC,,,,confirmed,own-entity,2024-01-01,2026-10-01
+B2,Sample Supply Inc,,CA-AB,,,,candidate,counterparty,2025-05-05,2025-05-05

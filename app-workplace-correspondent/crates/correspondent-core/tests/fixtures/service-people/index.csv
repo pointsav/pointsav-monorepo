@@ -1,0 +1,4 @@
+person_id,display_name,aliases_ref,legacy_payee_id,notes,status,kind,first_seen,last_seen,future_column
+P1,Alder Example,,,,confirmed,principal,2024-01-05,2026-10-01,x
+P2,birch sample,,,,confirmed,counterparty,2024-02-11,2026-09-20,
+P3,Cedar Fictional,,,,candidate,automated-or-role,2025-03-02,2025-03-02,

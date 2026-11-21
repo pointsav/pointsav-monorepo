@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "app-workplace-correspondent/crates/correspondent-core",
     "service-people",
     "service-content",
     "service-email",

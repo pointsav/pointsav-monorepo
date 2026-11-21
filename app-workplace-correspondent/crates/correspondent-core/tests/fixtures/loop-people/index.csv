@@ -1,0 +1,4 @@
+person_id,display_name,status,merged_into
+P1,One,merged,P2
+P2,Two,merged,P1
+P3,Three,merged,P404

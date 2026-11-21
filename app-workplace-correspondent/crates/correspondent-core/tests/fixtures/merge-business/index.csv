@@ -1,0 +1,4 @@
+business_id,legal_name,status,merged_into
+B1,Example Holdings Ltd,merged,B2
+B2,Example Holdings Limited,confirmed,
+B3,Sample Supply Inc,retired,

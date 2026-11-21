@@ -1,0 +1,6 @@
+person_id,display_name,status,merged_into
+P1,Alder Example,merged,P2
+P2,Alder Example,merged,P3
+P3,Alder Example,confirmed,
+P4,Birch Sample,retired,
+P5,Cedar Fictional,candidate,
