@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+# Standalone crate, not a workspace member (same pattern as tool-wiki-core and the other tool-*
+# crates beside it): an empty [workspace] table stops cargo inheriting the monorepo root.
+[workspace]
+
+[package]
+name = "tool-collate"
+version = "0.1.0"
+edition = "2021"
+description = "Shared page reader: walks a folder of Markdown pages, reads each page's frontmatter and structure, and reports counts. Read-only; no rules about any one kind of page."
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+# Frontmatter is real YAML (nested lists, block scalars, escapes); a hand-written reader misreads
+# about one real page in ten. This is the crate's only third-party dependency.
+serde_yaml = "0.9"
+tool-precedent-core = { path = "../tool-precedent-core" }
+
+[lib]
+name = "tool_collate"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tool-collate"
+path = "src/main.rs"
