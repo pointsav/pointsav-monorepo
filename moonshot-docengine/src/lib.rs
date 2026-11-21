@@ -395,6 +395,21 @@ fn parse_blocks(src: &str) -> Vec<Block> {
             });
         } else if is_quote(content) {
             let start = line.start;
+            // Strip the leading `>` and one following space, matching the marker-excluded
+            // contract `heading_level` already establishes for `#`: content previously
+            // included the raw `>` marker on its first line, contradicting this module's own
+            // doc comment ("the block marker ... excluded"). Only the first line's marker is
+            // strippable this way (a `Span` is one contiguous byte range); a continuation
+            // line's own `>` stays embedded in the content for a multi-line quote.
+            let leading_ws = content.len() - content.trim_start().len();
+            let marker_len = leading_ws
+                + 1
+                + if content.as_bytes().get(leading_ws + 1) == Some(&b' ') {
+                    1
+                } else {
+                    0
+                };
+            let content_start = start + marker_len.min(content.len());
             let mut end = line.end;
             i += 1;
             while i < lines.len() && is_quote(line_content(src, lines[i])) {
@@ -403,7 +418,7 @@ fn parse_blocks(src: &str) -> Vec<Block> {
             }
             blocks.push(Block {
                 kind: BlockKind::BlockQuote {
-                    content: Span::new(start, trim_trailing_newline(src, end)),
+                    content: Span::new(content_start, trim_trailing_newline(src, end)),
                 },
                 span: Span::new(start, end),
             });
@@ -554,6 +569,40 @@ mod tests {
         } else {
             panic!("expected heading");
         }
+    }
+
+    /// The module's doc comment promises the block marker is excluded from `content` for
+    /// `Heading`, `Paragraph` and `BlockQuote` alike; `BlockQuote`'s content span used to start
+    /// at the raw `>` character, so every rendered blockquote showed "> " at the front.
+    #[test]
+    fn blockquote_content_excludes_marker() {
+        let s = "> A quoted line.\n";
+        let d = doc(s);
+        if let BlockKind::BlockQuote { content } = d.blocks()[0].kind {
+            assert_eq!(content.text(s), "A quoted line.");
+        } else {
+            panic!("expected blockquote");
+        }
+    }
+
+    #[test]
+    fn blockquote_content_excludes_marker_with_no_space_after_it() {
+        let s = ">No space after the marker.\n";
+        let d = doc(s);
+        if let BlockKind::BlockQuote { content } = d.blocks()[0].kind {
+            assert_eq!(content.text(s), "No space after the marker.");
+        } else {
+            panic!("expected blockquote");
+        }
+    }
+
+    #[test]
+    fn blockquote_still_round_trips_exactly_after_the_marker_fix() {
+        // The content span changed; the block's own outer span (and so to_source's exact
+        // byte-for-byte round trip) must not have.
+        let s = "> A quoted line.\nMore body text.\n";
+        let d = doc(s);
+        assert_eq!(d.to_source(), s);
     }
 
     #[test]
