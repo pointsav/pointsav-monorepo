@@ -1655,7 +1655,17 @@ fn preprocess_corpus_text(text: &str) -> std::borrow::Cow<'_, str> {
     std::borrow::Cow::Owned(out)
 }
 
-const GLINER_ENDPOINT: &str = "http://127.0.0.1:9085";
+/// Default GLiNER endpoint. `GLINER_ENDPOINT` overrides it at runtime, so a
+/// guest or host that runs GLiNER elsewhere needs no rebuild.
+const GLINER_ENDPOINT_DEFAULT: &str = "http://127.0.0.1:9085";
+
+/// An unset or blank override falls back to the default.
+fn resolve_gliner_endpoint(env_value: Option<&str>) -> String {
+    match env_value.map(str::trim) {
+        Some(v) if !v.is_empty() => v.to_string(),
+        _ => GLINER_ENDPOINT_DEFAULT.to_string(),
+    }
+}
 
 /// Call GLiNER Tier 0 microservice for entity extraction.
 /// Extractive (cannot hallucinate), 150x faster than OLMo.
@@ -1727,11 +1737,12 @@ enum GlinerOutcome {
 }
 
 fn call_tier_0_gliner(corpus_text: &str, domain_id: Option<&str>) -> GlinerOutcome {
-    call_tier_0_gliner_at(GLINER_ENDPOINT, corpus_text, domain_id)
+    let endpoint = resolve_gliner_endpoint(std::env::var("GLINER_ENDPOINT").ok().as_deref());
+    call_tier_0_gliner_at(&endpoint, corpus_text, domain_id)
 }
 
 /// Same as `call_tier_0_gliner` with an injectable endpoint — production
-/// code always goes through `call_tier_0_gliner` (fixed at `GLINER_ENDPOINT`);
+/// code always goes through `call_tier_0_gliner` (endpoint from `GLINER_ENDPOINT`);
 /// this split exists so tests can point at a mock server instead of a live
 /// GLiNER instance.
 fn call_tier_0_gliner_at(
@@ -2834,6 +2845,24 @@ mod tests {
     use super::*;
     use std::fs;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn gliner_endpoint_uses_the_override_and_falls_back_when_unset_or_blank() {
+        assert_eq!(
+            resolve_gliner_endpoint(Some("http://10.1.2.3:9085")),
+            "http://10.1.2.3:9085"
+        );
+        assert_eq!(
+            resolve_gliner_endpoint(Some("  http://10.1.2.3:9085  ")),
+            "http://10.1.2.3:9085"
+        );
+        assert_eq!(resolve_gliner_endpoint(None), "http://127.0.0.1:9085");
+        assert_eq!(resolve_gliner_endpoint(Some("")), "http://127.0.0.1:9085");
+        assert_eq!(
+            resolve_gliner_endpoint(Some("   ")),
+            "http://127.0.0.1:9085"
+        );
+    }
 
     fn tmp_dir(suffix: &str) -> std::path::PathBuf {
         let ms = SystemTime::now()
