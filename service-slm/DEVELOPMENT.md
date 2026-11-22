@@ -151,20 +151,17 @@ uses the same `sigstore` crate at runtime for adapter signatures
 Every `.rs` file carries an SPDX identifier in its first comment:
 
 ```rust
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 ```
 
 The project follows the [REUSE Specification](https://reuse.software/)
 for machine-verifiable licence metadata. Files without an SPDX
 identifier fail the REUSE check in CI.
 
-### Dual-licensing
+### Licensing
 
-Match the Rust community norm: code authored for this project is
-licensed under **Apache-2.0 OR MIT at the caller's choice**.
-Apache-2.0's explicit patent grant is valuable in institutional
-markets; MIT compatibility keeps the crate reusable in
-MIT-licensed downstream workspaces.
+Code authored for this project is licensed under **Apache-2.0**.
+Its explicit patent grant is valuable in institutional markets.
 
 ### Contributing
 
