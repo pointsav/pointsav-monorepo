@@ -1,0 +1,3 @@
+claim_id,action,subject,attribute,value
+c1,assert,service-people.P1,name,x
+c1,assert,service-people.P1,name,y

@@ -1,0 +1,7 @@
+business_id,legal_name,jurisdiction,status,kind,first_seen,last_seen,merged_into
+B1,Example Holdings Ltd,CA-BC,confirmed,own-entity,2024-01-01,2026-10-01,
+B2,Sample Supply Inc,CA-AB,candidate,counterparty,2025-05-05,2025-05-05,
+B3,Twin Co,CA-BC,confirmed,counterparty,2025-01-01,2025-01-01,
+B4,Twin Co,CA-AB,confirmed,counterparty,2025-01-01,2025-01-01,
+B5,Old Co,CA-BC,merged,counterparty,2024-01-01,2025-01-01,B6
+B6,New Co,CA-BC,confirmed,counterparty,2024-01-01,2026-01-01,

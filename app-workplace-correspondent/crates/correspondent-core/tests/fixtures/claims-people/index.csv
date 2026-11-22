@@ -1,0 +1,4 @@
+person_id,display_name,status,kind,first_seen,last_seen,merged_into
+P1,Alder Example,confirmed,principal,2024-01-05,2026-10-12,
+P2,Birch Sample,candidate,counterparty,2024-02-11,2026-09-20,
+P3,Cedar Retired,retired,counterparty,2023-06-01,2024-01-15,

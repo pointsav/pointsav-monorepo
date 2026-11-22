@@ -14,11 +14,17 @@
 //! - when a folder has a `schema.csv`, `index.csv` is checked against it (header
 //!   order and `required` columns); a folder without one is not checked.
 //!
-//! Not covered yet: the person-to-business link (its column list in
-//! `claims.csv` is not fixed) and alias search (`aliases.csv` columns not read).
+//! - `service-people/claims.csv`, when present, supplies name variants (searched)
+//!   and company claims (linked to a business by provisional name match). All of
+//!   it follows PROPOSED rules; see the `claims` module.
+//!
+//! Not covered yet: `redirects.csv`, `relationships.csv`, and history from
+//!   `participations`.
 
+mod claims;
 mod error;
 mod registry;
 
+pub use claims::{normalise_name, Claim};
 pub use error::Error;
 pub use registry::{Business, Person, Registry};

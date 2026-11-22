@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
+use crate::claims::{normalise_name, Claim, Claims};
 use crate::Error;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -56,6 +57,7 @@ impl Business {
 pub struct Registry {
     people: Vec<Person>,
     businesses: Vec<Business>,
+    claims: Claims,
 }
 
 impl Registry {
@@ -64,6 +66,7 @@ impl Registry {
         Ok(Self {
             people: load_people(&people_dir.join("index.csv"))?,
             businesses: load_businesses(&business_dir.join("index.csv"))?,
+            claims: Claims::load(&people_dir.join("claims.csv"))?,
         })
     }
 
@@ -106,18 +109,121 @@ impl Registry {
         None
     }
 
-    /// Case-insensitive substring search on display name, sorted by name.
-    /// Merged and retired rows are hidden. An empty query returns every
-    /// active person.
+    /// Case-insensitive substring search on display name and on name-variant
+    /// claims, sorted by display name. Merged and retired rows are hidden. An
+    /// empty query returns every active person.
     pub fn search_people(&self, query: &str) -> Vec<&Person> {
         let q = query.to_lowercase();
         let mut hits: Vec<&Person> = self
             .people
             .iter()
-            .filter(|p| p.is_active() && p.display_name.to_lowercase().contains(&q))
+            .filter(|p| {
+                p.is_active()
+                    && (p.display_name.to_lowercase().contains(&q)
+                        || self
+                            .names_of(&p.person_id)
+                            .iter()
+                            .any(|n| n.to_lowercase().contains(&q)))
+            })
             .collect();
         hits.sort_by_key(|p| p.display_name.to_lowercase());
         hits
+    }
+
+    /// The name variant that made `p` match `query`, when the display name did
+    /// not (so a list can say "also known as ...").
+    pub fn matched_alias(&self, p: &Person, query: &str) -> Option<&str> {
+        let q = query.to_lowercase();
+        if q.is_empty() || p.display_name.to_lowercase().contains(&q) {
+            return None;
+        }
+        self.names_of(&p.person_id)
+            .into_iter()
+            .find(|n| n.to_lowercase().contains(&q))
+    }
+
+    /// Active claims about a person (asserted, not withdrawn or replaced).
+    pub fn claims_for_person(&self, person_id: &str) -> Vec<&Claim> {
+        self.claims
+            .active()
+            .filter(|c| c.person_subject() == Some(person_id))
+            .collect()
+    }
+
+    /// Whether a later `confirm` row acts on this claim.
+    pub fn is_confirmed(&self, claim: &Claim) -> bool {
+        self.claims.is_confirmed(&claim.claim_id)
+    }
+
+    /// Distinct active name-variant values for a person, other than the display name.
+    pub fn names_of(&self, person_id: &str) -> Vec<&str> {
+        let display = self.person(person_id).map(|p| p.display_name.as_str());
+        let mut out: Vec<&str> = Vec::new();
+        for c in self.claims_for_person(person_id) {
+            if c.attribute == "name"
+                && !c.value.is_empty()
+                && Some(c.value.as_str()) != display
+                && !out.contains(&c.value.as_str())
+            {
+                out.push(&c.value);
+            }
+        }
+        out
+    }
+
+    /// Distinct active company claim values (text) for a person.
+    pub fn companies_of(&self, person_id: &str) -> Vec<&str> {
+        let mut out: Vec<&str> = Vec::new();
+        for c in self.claims_for_person(person_id) {
+            if c.attribute == "company" && !c.value.is_empty() && !out.contains(&c.value.as_str()) {
+                out.push(&c.value);
+            }
+        }
+        out
+    }
+
+    /// The business a company name refers to, by provisional normalised-name
+    /// equality (see [`normalise_name`]). Merged businesses resolve to their
+    /// current record. `None` when nothing matches or the name is ambiguous.
+    pub fn business_for_company(&self, company: &str) -> Option<&Business> {
+        let key = normalise_name(company);
+        if key.is_empty() {
+            return None;
+        }
+        let mut found: Option<&Business> = None;
+        for b in self
+            .businesses
+            .iter()
+            .filter(|b| normalise_name(&b.legal_name) == key)
+        {
+            let cur = self.resolve_business(&b.business_id)?;
+            match found {
+                Some(f) if f.business_id != cur.business_id => return None,
+                _ => found = Some(cur),
+            }
+        }
+        found.filter(|b| b.is_active())
+    }
+
+    /// Active people with a company claim that resolves to this business.
+    pub fn people_at_business(&self, business_id: &str) -> Vec<&Person> {
+        let mut hits: Vec<&Person> = self
+            .people
+            .iter()
+            .filter(|p| p.is_active())
+            .filter(|p| {
+                self.companies_of(&p.person_id).iter().any(|c| {
+                    self.business_for_company(c)
+                        .is_some_and(|b| b.business_id == business_id)
+                })
+            })
+            .collect();
+        hits.sort_by_key(|p| p.display_name.to_lowercase());
+        hits
+    }
+
+    pub fn business(&self, id: &str) -> Option<&Business> {
+        self.businesses.iter().find(|b| b.business_id == id)
     }
 
     /// Case-insensitive substring search on legal name, sorted by name.
@@ -134,14 +240,14 @@ impl Registry {
     }
 }
 
-struct Table {
-    file: PathBuf,
-    headers: csv::StringRecord,
-    rows: Vec<csv::StringRecord>,
+pub(crate) struct Table {
+    pub(crate) file: PathBuf,
+    pub(crate) headers: csv::StringRecord,
+    pub(crate) rows: Vec<csv::StringRecord>,
 }
 
 impl Table {
-    fn read(file: &Path) -> Result<Self, Error> {
+    pub(crate) fn read(file: &Path) -> Result<Self, Error> {
         if !file.is_file() {
             return Err(Error::MissingFile(file.to_path_buf()));
         }
@@ -162,11 +268,11 @@ impl Table {
         })
     }
 
-    fn column(&self, name: &str) -> Option<usize> {
+    pub(crate) fn column(&self, name: &str) -> Option<usize> {
         self.headers.iter().position(|h| h == name)
     }
 
-    fn required(&self, name: &'static str) -> Result<usize, Error> {
+    pub(crate) fn required(&self, name: &'static str) -> Result<usize, Error> {
         self.column(name).ok_or_else(|| Error::MissingColumn {
             file: self.file.clone(),
             column: name,
@@ -238,7 +344,7 @@ fn check_schema(t: &Table) -> Result<(), Error> {
     Ok(())
 }
 
-fn opt(row: &csv::StringRecord, idx: Option<usize>) -> Option<String> {
+pub(crate) fn opt(row: &csv::StringRecord, idx: Option<usize>) -> Option<String> {
     idx.and_then(|i| row.get(i))
         .filter(|v| !v.is_empty())
         .map(str::to_string)
