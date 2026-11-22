@@ -5,6 +5,7 @@ mod config_http;
 mod entity_filter;
 mod entity_hints;
 mod er;
+mod gliner_jobs;
 /// Exposed (not just `mod`) so `tests/http_test.rs` can build a real `LbugGraphStore`
 /// over a tempdir and drive it directly for the concurrency-safety tests.
 pub mod graph;
@@ -1752,8 +1753,21 @@ enum GlinerOutcome {
 }
 
 fn call_tier_0_gliner(corpus_text: &str, domain_id: Option<&str>) -> GlinerOutcome {
-    let endpoint = resolve_gliner_endpoint(std::env::var("GLINER_ENDPOINT").ok().as_deref());
-    call_tier_0_gliner_at(&endpoint, corpus_text, domain_id)
+    match gliner_jobs::Mode::from_env() {
+        gliner_jobs::Mode::Off => {
+            let endpoint =
+                resolve_gliner_endpoint(std::env::var("GLINER_ENDPOINT").ok().as_deref());
+            call_tier_0_gliner_at(&endpoint, corpus_text, domain_id)
+        }
+        gliner_jobs::Mode::On(via) => call_tier_0_gliner_via(&via, corpus_text, domain_id),
+        gliner_jobs::Mode::Misconfigured(why) => {
+            eprintln!(
+                "  -> [TIER-0] GLiNER via Doorman is switched on but unusable: {}",
+                why
+            );
+            GlinerOutcome::Unavailable
+        }
+    }
 }
 
 /// Same as `call_tier_0_gliner` with an injectable endpoint — production
@@ -1778,14 +1792,53 @@ fn call_tier_0_gliner_at(
         }
     };
 
+    gliner_with_domain_fallback(domain_id, chunks.len(), &|domain| {
+        run_gliner_domain(&client, endpoint, &chunks, domain)
+    })
+}
+
+/// The same call through the Doorman's `/v1/jobs` family (operator ruling
+/// 2026-11-19). The Doorman chunks, so the whole document is sent. There is
+/// no direct fallback: a failed job is `Unavailable`, as a failed direct
+/// call is.
+fn call_tier_0_gliner_via(
+    via: &gliner_jobs::DoormanGliner,
+    corpus_text: &str,
+    domain_id: Option<&str>,
+) -> GlinerOutcome {
+    let client = match reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(30))
+        .build()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("  -> [TIER-0] Client build failed: {}", e);
+            return GlinerOutcome::Unavailable;
+        }
+    };
+    gliner_with_domain_fallback(domain_id, 1, &|domain| {
+        via.run_domain(&client, corpus_text, domain).map_err(|why| {
+            eprintln!("  -> [TIER-0] GLiNER job via Doorman failed: {}", why);
+            GlinerOutcome::Unavailable
+        })
+    })
+}
+
+/// Domain choice and the empty-result retry, shared by the direct and the
+/// Doorman path. `run` extracts for one domain.
+fn gliner_with_domain_fallback(
+    domain_id: Option<&str>,
+    chunk_count: usize,
+    run: &dyn Fn(&str) -> Result<Vec<serde_json::Value>, GlinerOutcome>,
+) -> GlinerOutcome {
     let primary_domain = domain_id.unwrap_or("projects");
-    let entities = match run_gliner_domain(&client, endpoint, &chunks, primary_domain) {
+    let entities = match run(primary_domain) {
         Ok(e) => e,
         Err(outcome) => return outcome,
     };
 
     if !entities.is_empty() {
-        return finish_gliner_found(entities, chunks.len());
+        return finish_gliner_found(entities, chunk_count);
     }
 
     // Empty result under the hardcoded default domain is a genuine full-miss
@@ -1795,8 +1848,8 @@ fn call_tier_0_gliner_at(
     // Retry once against "corporate" before giving up, but never override an
     // explicit caller-supplied domain_id — that choice is intentional.
     if domain_id.is_none() && primary_domain != "corporate" {
-        match run_gliner_domain(&client, endpoint, &chunks, "corporate") {
-            Ok(e) if !e.is_empty() => return finish_gliner_found(e, chunks.len()),
+        match run("corporate") {
+            Ok(e) if !e.is_empty() => return finish_gliner_found(e, chunk_count),
             Ok(_) => {}
             Err(outcome) => return outcome,
         }
@@ -1804,7 +1857,7 @@ fn call_tier_0_gliner_at(
 
     eprintln!(
         "  -> [TIER-0] No entities in {} chunk(s) — file done (GLiNER available)",
-        chunks.len()
+        chunk_count
     );
     GlinerOutcome::Empty
 }
