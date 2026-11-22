@@ -57,6 +57,7 @@ impl std::error::Error for MirrorViewError {}
 #[derive(Debug, Clone)]
 struct Part {
     uid: String,
+    mailbox: String,
     path: PathBuf,
     sha256: String,
     ordinal: usize,
@@ -120,6 +121,7 @@ impl MirrorView {
                 .filter_map(|r| {
                     roots.get(r.mailbox.as_str()).map(|root| Part {
                         uid: r.uid.clone(),
+                        mailbox: r.mailbox.clone(),
                         path: root.join(&r.file),
                         sha256: r.sha256.clone(),
                         ordinal: r.ordinal,
@@ -161,6 +163,18 @@ impl MirrorView {
 
     pub fn uid(&self, name: &str) -> Option<&str> {
         self.entries.get(name).map(|e| e.uid.as_str())
+    }
+
+    /// The mailboxes that hold a live version of `name`, sorted, once each.
+    pub fn mailboxes(&self, name: &str) -> Vec<&str> {
+        let mut out: Vec<&str> = self
+            .entries
+            .get(name)
+            .map(|e| e.parts.iter().map(|p| p.mailbox.as_str()).collect())
+            .unwrap_or_default();
+        out.sort_unstable();
+        out.dedup();
+        out
     }
 
     pub fn modified(&self, name: &str) -> Option<SystemTime> {

@@ -54,7 +54,9 @@ pub fn router_with_mirror(
     ))
 }
 
-fn router_for(fs: Box<WormCalendarFs>) -> Router {
+/// The router for an already built file system, for callers that
+/// attach an annotation log with [`WormCalendarFs::with_annotation_log`].
+pub fn router_for(fs: Box<WormCalendarFs>) -> Router {
     let dav = DavHandler::builder()
         .filesystem(fs)
         .locksystem(FakeLs::new())

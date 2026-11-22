@@ -46,8 +46,10 @@ use dav_server::fs::{
 };
 use futures_util::stream;
 
+use crate::annotation_log::AnnotationLog;
 use crate::event_store::EventStore;
 use crate::ledger_backing::LedgerBacking;
+use crate::mirror_index::{Annotation, AnnotationKind};
 use crate::mirror_view::MirrorView;
 
 /// A boxed, pinned stream of directory entries — the return type
@@ -60,6 +62,7 @@ pub struct WormCalendarFs {
     ledger_backing: Arc<LedgerBacking>,
     event_store: Arc<EventStore>,
     mirror: Option<Arc<MirrorView>>,
+    annotations: Option<Arc<AnnotationLog>>,
 }
 
 impl std::fmt::Debug for WormCalendarFs {
@@ -74,6 +77,7 @@ impl WormCalendarFs {
             ledger_backing,
             event_store,
             mirror: None,
+            annotations: None,
         })
     }
 
@@ -89,7 +93,15 @@ impl WormCalendarFs {
             ledger_backing,
             event_store,
             mirror: Some(mirror),
+            annotations: None,
         })
+    }
+
+    /// Records a client's DELETE of a mirrored event in `log`. The
+    /// DELETE is still refused: an annotation never removes anything.
+    pub fn with_annotation_log(mut self: Box<Self>, log: Arc<AnnotationLog>) -> Box<Self> {
+        self.annotations = Some(log);
+        self
     }
 
     /// The mirrored resource `name`, unless a native event shadows it.
@@ -410,9 +422,25 @@ impl DavFileSystem for WormCalendarFs {
         Box::pin(async move {
             let uid = Self::uid_for(path)?.ok_or(FsError::Forbidden)?;
             if self.event_store.lookup_by_uid(&uid).is_none() {
-                // Deleting a mirrored event is not a removal; recording
-                // it as an annotation is not wired yet.
-                if self.mirrored(&uid).is_some() {
+                // Deleting a mirrored event is not a removal: the intent
+                // is recorded as an annotation and the request refused.
+                if let Some(mirror) = self.mirrored(&uid) {
+                    if let Some(log) = &self.annotations {
+                        for mailbox in mirror.mailboxes(&uid) {
+                            let mut a = Annotation::for_uid(
+                                AnnotationKind::Deleted,
+                                mirror.uid(&uid).unwrap_or_default(),
+                                mailbox,
+                            );
+                            a.event_key = uid.clone();
+                            a.at = Some(chrono::Utc::now());
+                            a.note = "deleted by a CalDAV client".to_string();
+                            log.append(&a).map_err(|e| {
+                                tracing::warn!("annotation for {uid} not recorded: {e}");
+                                FsError::GeneralFailure
+                            })?;
+                        }
+                    }
                     return Err(FsError::Forbidden);
                 }
                 return Err(FsError::NotFound);

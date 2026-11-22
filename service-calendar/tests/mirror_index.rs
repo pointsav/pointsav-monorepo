@@ -495,3 +495,80 @@ async fn mirrored_events_are_served_beside_native_ones() {
         "a refused DELETE leaves the mirrored event served"
     );
 }
+
+fn mirror_router(
+    mb: &MailboxRoot,
+    log: Option<Arc<service_calendar::AnnotationLog>>,
+) -> axum::Router {
+    let index_path = tmp_dir("del-out").join("index.csv");
+    rebuild_from_mirror(std::slice::from_ref(mb), &[], &NoSidecar, &index_path).unwrap();
+    let view = Arc::new(MirrorView::load(&index_path, std::slice::from_ref(mb)).unwrap());
+    let ledger = worm_ledger::InMemoryLedger::open(tmp_dir("del-ledger"), "t").unwrap();
+    let backing = Arc::new(service_calendar::LedgerBacking::new(
+        Box::new(ledger),
+        tmp_vocab(),
+        "t",
+    ));
+    let store = Arc::new(service_calendar::EventStore::new());
+    let mut fs = service_calendar::WormCalendarFs::with_mirror(backing, store, view);
+    if let Some(log) = log {
+        fs = fs.with_annotation_log(log);
+    }
+    service_calendar::router_for(fs)
+}
+
+#[tokio::test]
+async fn a_client_delete_of_a_mirrored_event_is_recorded_and_refused() {
+    let mb = mailbox("del");
+    put(
+        &mb.root,
+        &cal(
+            Some("REQUEST"),
+            &[vevent("u-del", &[ORG_A, "SUMMARY:Keep"])],
+        ),
+    );
+    let log_path = tmp_dir("del-log").join("annotations.jsonl");
+    let log = Arc::new(
+        service_calendar::AnnotationLog::open(&log_path, std::slice::from_ref(&mb)).unwrap(),
+    );
+    let router = mirror_router(&mb, Some(log.clone()));
+    let key = event_key("u-del");
+
+    let (status, _) = send(&router, "DELETE", &format!("/{key}.ics"), "").await;
+    assert!(!status.is_success(), "{status}");
+
+    let read = log.read().unwrap();
+    assert_eq!(read.skipped, 0);
+    assert_eq!(read.annotations.len(), 1);
+    let a = &read.annotations[0];
+    assert_eq!(a.event_key, key);
+    assert_eq!(a.mailbox, "del");
+    assert_eq!(a.kind, AnnotationKind::Deleted);
+    assert!(a.at.is_some());
+
+    let (status, _) = send(&router, "GET", &format!("/{key}.ics"), "").await;
+    assert_eq!(status, StatusCode::OK, "the event is still served");
+}
+
+#[tokio::test]
+async fn a_delete_whose_annotation_cannot_be_written_fails_and_keeps_the_event() {
+    let mb = mailbox("delfail");
+    put(
+        &mb.root,
+        &cal(Some("REQUEST"), &[vevent("u-f", &[ORG_A, "SUMMARY:Keep"])]),
+    );
+    // A directory where the log file should be: every append fails.
+    let dir = tmp_dir("delfail-log");
+    let log_path = dir.join("annotations.jsonl");
+    std::fs::create_dir_all(&log_path).unwrap();
+    let log = Arc::new(
+        service_calendar::AnnotationLog::open(&log_path, std::slice::from_ref(&mb)).unwrap(),
+    );
+    let router = mirror_router(&mb, Some(log));
+    let key = event_key("u-f");
+
+    let (status, _) = send(&router, "DELETE", &format!("/{key}.ics"), "").await;
+    assert!(!status.is_success(), "{status}");
+    let (status, _) = send(&router, "GET", &format!("/{key}.ics"), "").await;
+    assert_eq!(status, StatusCode::OK);
+}
