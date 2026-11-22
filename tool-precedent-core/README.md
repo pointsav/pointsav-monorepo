@@ -6,7 +6,7 @@ Staged in project-documents (built and tested 2026-10-23); the intended home is 
 
 Commands (all take `--root DIR`, default `.`, and `--file` to name another CSV): `changes-add`, `changes`, `versions [--dir outputs] [--out F]`, `terms`, `terms-add`, `draws`, `draw-add`, `apply <file.html> [--check]`, `catalog`, `registry <check|classes|css|dtcg|lint>`, `shared-hash`.
 
-Sibling: `tool-forecasting-core` (project-proforma) carries the same six modules (changes, csv, draws, fence, terms, versions), copied. `shared-hash` prints the FNV-1a 64 of each; the two lists must match line for line. When a shared module changes, copy it to the other core and compare.
+Sibling: `tool-forecasting-core` carries the same six modules (changes, csv, draws, fence, terms, versions), copied. `shared-hash` prints the FNV-1a 64 of each; the two lists must match line for line. When a shared module changes, copy it to the other core and compare.
 
 Status: tool-precedent-documents (2026-10-29) and tool-precedent-orgcharts (2026-11-01) depend on this core and have deleted their copies of these modules; so does tool-precedent-drawings. tool-forecasting-core (project-proforma) still carries its own byte-identical copies until it is renamed onto the core.
 
@@ -53,7 +53,7 @@ Generated from one table in `src/commands.rs` (`tool-precedent-core describe --m
 
 ## The approval gate (SYS-ADR-07)
 
-The gate is procedural at the command line. Append and write commands run at a person's instruction, and the person approving the command in the session is the gate: a CLI cannot tell a person from a model, so it does not pretend to. The library path is different: `store::EditStore::commit` applies `adr07::check` to the approver. What the CLI is meant to enforce mechanically is confinement: every write target stays inside `--root` (a planned change, see the audit brief; until it ships, `--file` and `--out` accept any path). Read flags (`--registry`, `--entities`, `--parties-file`) may name files outside the root by design.
+The gate is procedural at the command line. Append and write commands run at a person's instruction, and the person approving the command in the session is the gate: a CLI cannot tell a person from a model, so it does not pretend to. The library path is different: `store::EditStore::commit` applies `adr07::check` to the approver. What the CLI is meant to enforce mechanically is confinement: every write target stays inside `--root` (a planned change; until it ships, `--file` and `--out` accept any path). Read flags (`--registry`, `--entities`, `--parties-file`) may name files outside the root by design.
 
 ## For an AI
 

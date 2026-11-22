@@ -4,7 +4,7 @@ El núcleo genérico de registros planos de precedentes. Cero dependencias. Cont
 
 Comandos (todos aceptan `--root DIR`, por defecto `.`, y `--file` para nombrar otro CSV): `changes-add`, `changes`, `versions [--dir outputs] [--out F]`, `terms`, `terms-add`, `draws`, `draw-add`, `apply <file.html> [--check]`, `catalog`, `registry <check|classes|css|dtcg|lint>`, `shared-hash`.
 
-Hermano: `tool-forecasting-core` (project-proforma) lleva los mismos seis módulos (changes, csv, draws, fence, terms, versions), copiados. `shared-hash` imprime el FNV-1a 64 de cada uno; las dos listas deben coincidir línea por línea. Cuando cambia un módulo compartido, se copia al otro núcleo y se comparan.
+Hermano: `tool-forecasting-core` lleva los mismos seis módulos (changes, csv, draws, fence, terms, versions), copiados. `shared-hash` imprime el FNV-1a 64 de cada uno; las dos listas deben coincidir línea por línea. Cuando cambia un módulo compartido, se copia al otro núcleo y se comparan.
 
 ## Comandos
 
