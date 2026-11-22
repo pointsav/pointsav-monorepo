@@ -116,6 +116,15 @@ impl From<OrchestrationTierClient> for LocalBackend {
 }
 
 impl LocalBackend {
+    /// True when this backend can serve now. A direct backend always can; an
+    /// orchestrated one only once it holds a membership token.
+    pub fn is_ready(&self) -> bool {
+        match self {
+            LocalBackend::Direct(_) => true,
+            LocalBackend::Orchestrated(c) => c.is_registered(),
+        }
+    }
+
     pub async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         match self {
             LocalBackend::Direct(c) => c.complete(req).await,
@@ -216,8 +225,11 @@ impl Doorman {
         self.route(req).await
     }
 
+    /// Whether Tier A can serve now. Routing still treats a configured but
+    /// unregistered Tier 0 backend as present, so a request triggers its
+    /// on-demand registration; this is for health reporting.
     pub fn has_local(&self) -> bool {
-        self.local.is_some()
+        self.local.as_ref().is_some_and(|l| l.is_ready())
     }
 
     pub fn has_yoyo(&self) -> bool {
@@ -1010,6 +1022,28 @@ mod tests {
     use super::*;
     use slm_core::{ChatMessage, ModuleId, RequestId};
     use std::str::FromStr;
+
+    /// A configured but unregistered Tier 0 backend is routed to (so a request
+    /// can register it on demand) yet is not reported as ready.
+    #[test]
+    fn unregistered_orchestrated_backend_is_not_ready() {
+        let orch = LocalBackend::from(OrchestrationTierClient::new(
+            crate::tier::OrchestrationTierConfig {
+                endpoint: "http://127.0.0.1:1".to_string(),
+                module_id: "op::a::slm".to_string(),
+                archive_id: "a".to_string(),
+                doorman_endpoint: String::new(),
+                registration_token: None,
+                tier_b_subscribed: false,
+            },
+        ));
+        assert!(!orch.is_ready());
+        let direct = LocalBackend::Direct(LocalTierClient::new(crate::tier::LocalTierConfig {
+            endpoint: "http://127.0.0.1:1".to_string(),
+            default_model: "m".to_string(),
+        }));
+        assert!(direct.is_ready());
+    }
 
     fn req(
         complexity: Complexity,

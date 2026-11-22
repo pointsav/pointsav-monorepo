@@ -80,10 +80,16 @@ pub struct OrchestrationTierClient {
     config: OrchestrationTierConfig,
     http: reqwest::Client,
     membership_token: RwLock<Option<String>>,
+    /// Serialises on-demand registration and remembers when it was last tried,
+    /// so concurrent callers share one attempt and a down chassis is not hit on
+    /// every request.
+    last_register_attempt: tokio::sync::Mutex<Option<Instant>>,
 }
 
 const MAX_RETRIES: u32 = 2;
 const RETRY_BACKOFF: Duration = Duration::from_secs(2);
+/// Minimum gap between on-demand registration attempts while unregistered.
+const REGISTER_MIN_INTERVAL: Duration = Duration::from_secs(5);
 
 // Matches the chassis's own `YoyoProxyClient` budget
 // (`orchestration-slm/src/yoyo_proxy.rs`) — this client previously had NO
@@ -105,6 +111,35 @@ impl OrchestrationTierClient {
                 .build()
                 .unwrap_or_else(|_| reqwest::Client::new()),
             membership_token: RwLock::new(None),
+            last_register_attempt: tokio::sync::Mutex::new(None),
+        }
+    }
+
+    /// Makes sure a membership token exists, registering on demand if the
+    /// startup registration failed or never ran. One attempt at a time, at most
+    /// one per `REGISTER_MIN_INTERVAL`; `false` means still unregistered.
+    async fn ensure_registered(&self) -> bool {
+        if self.is_registered() {
+            return true;
+        }
+        let mut last = self.last_register_attempt.lock().await;
+        if self.is_registered() {
+            return true;
+        }
+        if last.is_some_and(|t| t.elapsed() < REGISTER_MIN_INTERVAL) {
+            return false;
+        }
+        let result = self.register().await;
+        *last = Some(Instant::now());
+        match result {
+            Ok(()) => {
+                info!("orchestration tier: registered on demand");
+                true
+            }
+            Err(e) => {
+                warn!(error = %e, "orchestration tier: on-demand registration failed");
+                false
+            }
         }
     }
 
@@ -114,8 +149,8 @@ impl OrchestrationTierClient {
     }
 
     /// Registers with the chassis and stores the returned membership token.
-    /// Per decision #9, callers MUST call this once at startup and treat a
-    /// failure as fatal — do not start serving requests without a token.
+    /// Callers should try this at startup; a failure is no longer fatal
+    /// (standalone-first): `complete` registers on demand until it succeeds.
     pub async fn register(&self) -> Result<()> {
         let url = format!(
             "{}/v1/discovery/register",
@@ -163,6 +198,9 @@ impl OrchestrationTierClient {
     /// `DoormanError::TierUnavailable(InferenceRoute::Local)`, per decision #17's
     /// "queue locally and retry, no other escalation" lock.
     pub async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        if !self.ensure_registered().await {
+            return Err(DoormanError::TierUnavailable(InferenceRoute::Local));
+        }
         let mut last_err = DoormanError::TierUnavailable(InferenceRoute::Local);
         for attempt in 0..=MAX_RETRIES {
             if attempt > 0 {
@@ -430,10 +468,11 @@ mod tests {
         }
     }
 
-    /// Before `register()` succeeds, `complete()` must fail with
-    /// `TierUnavailable(Local)` rather than attempting an unauthenticated call.
+    /// Before registration succeeds, `complete()` must fail with
+    /// `TierUnavailable(Local)` and never send an unauthenticated inference
+    /// call: the only request it may make is the registration attempt.
     #[tokio::test]
-    async fn complete_before_registration_fails_without_any_network_call() {
+    async fn complete_before_registration_fails_without_an_inference_call() {
         let server = MockServer::start().await;
         let c = client(server.uri());
         let err = c
@@ -444,9 +483,11 @@ mod tests {
             err,
             DoormanError::TierUnavailable(InferenceRoute::Local)
         ));
-        assert_eq!(
-            server.received_requests().await.unwrap_or_default().len(),
-            0
+        let seen = server.received_requests().await.unwrap_or_default();
+        assert!(
+            seen.iter()
+                .all(|r| r.url.path() == "/v1/discovery/register"),
+            "only the registration attempt may reach the chassis"
         );
     }
 
@@ -616,5 +657,60 @@ mod tests {
             err,
             DoormanError::TierUnavailable(InferenceRoute::Local) | DoormanError::Upstream(_)
         ));
+    }
+
+    /// Startup registration failed (no token yet): the next request registers
+    /// on demand and is served, with no restart.
+    #[tokio::test]
+    async fn unregistered_client_registers_on_demand_and_serves() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/discovery/register"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "status": "registered",
+                "module_id": "op::a::slm",
+                "chassis_version": "0.1.0",
+                "membership_token": "late-token.sig"
+            })))
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/v1/inference"))
+            .and(header("authorization", "Bearer late-token.sig"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "choices": [{ "message": { "content": "pong-after-late-register" } }]
+            })))
+            .mount(&server)
+            .await;
+
+        let c = client(server.uri());
+        assert!(!c.is_registered());
+        let resp = c.complete(&req()).await.expect("on-demand registration");
+        assert_eq!(resp.content, "pong-after-late-register");
+        assert!(c.is_registered());
+    }
+
+    /// While the chassis is down, a request fails fast with TierUnavailable and
+    /// a second request inside the minimum interval does not hit it again.
+    #[tokio::test]
+    async fn failed_on_demand_registration_is_rate_limited() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/discovery/register"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&server)
+            .await;
+
+        let c = client(server.uri());
+        for _ in 0..2 {
+            let err = c.complete(&req()).await.expect_err("chassis is down");
+            assert!(matches!(
+                err,
+                DoormanError::TierUnavailable(InferenceRoute::Local)
+            ));
+        }
+        let hits = server.received_requests().await.unwrap();
+        assert_eq!(hits.len(), 1, "one register attempt, then rate-limited");
+        assert!(!c.is_registered());
     }
 }

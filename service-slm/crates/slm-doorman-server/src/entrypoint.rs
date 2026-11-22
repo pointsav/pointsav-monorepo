@@ -990,12 +990,10 @@ fn write_identity_cache(
 }
 
 /// Resolves this Doorman's identity (operator-provided, cached, or freshly
-/// allocated) and registers with the orchestration chassis — the whole
-/// SLM_TIER=0 startup sequence as one fallible unit. Callers decide what to
-/// do with an `Err` (as of 2026-07-29, the standalone-first revision: log a
-/// warning and continue with no Tier 0 backend, never fail the boot — see
-/// this fn's call site in `build_doorman()`).
-async fn register_tier_0(
+/// allocated) and builds the Tier 0 client, without registering it. Only a
+/// first-ever boot with no cached identity needs the chassis here; the caller
+/// registers separately and keeps the client either way (see `build_doorman()`).
+async fn build_tier_0_client(
     orchestration_endpoint: &str,
     registration_token: Option<&str>,
 ) -> anyhow::Result<slm_doorman::tier::OrchestrationTierClient> {
@@ -1085,10 +1083,6 @@ async fn register_tier_0(
             tier_b_subscribed,
         },
     );
-    client
-        .register()
-        .await
-        .context("SLM_TIER=0: chassis registration failed")?;
     Ok(client)
 }
 
@@ -1228,21 +1222,28 @@ async fn build_doorman() -> anyhow::Result<Doorman> {
         let orchestration_endpoint = orchestration_endpoint_raw;
         let registration_token = std::env::var("SLM_ORCHESTRATION_REGISTRATION_TOKEN").ok();
 
-        match register_tier_0(&orchestration_endpoint, registration_token.as_deref()).await {
+        match build_tier_0_client(&orchestration_endpoint, registration_token.as_deref()).await {
             Ok(client) => {
-                info!(
-                    "SLM_TIER=0: chassis registration succeeded; Doorman ready to serve via \
-                     orchestration"
-                );
+                match client.register().await {
+                    Ok(()) => info!(
+                        "SLM_TIER=0: chassis registration succeeded; Doorman ready to serve via \
+                         orchestration"
+                    ),
+                    Err(e) => tracing::warn!(
+                        error = %e,
+                        "SLM_TIER=0: chassis registration did not succeed — Tier 0 reports not \
+                         ready and registers on demand (at most every 5 s) when a request needs \
+                         it; no restart needed (standalone-first)"
+                    ),
+                }
                 Some(LocalBackend::from(client))
             }
             Err(e) => {
                 tracing::warn!(
                     error = %e,
-                    "SLM_TIER=0: chassis registration did not succeed — starting with no Tier 0 \
-                     compute backend; inference reports unavailable until orchestration is \
-                     reachable and the Doorman is restarted (standalone-first, supersedes the \
-                     old decision #9 fail-fast)"
+                    "SLM_TIER=0: could not resolve or allocate an identity (first boot needs the \
+                     chassis) — starting with no Tier 0 compute backend; inference reports \
+                     unavailable until the Doorman is restarted with the chassis reachable"
                 );
                 None
             }
