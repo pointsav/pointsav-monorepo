@@ -1055,34 +1055,22 @@ fn headerless_allowed(state: &HttpState, req: &Request) -> bool {
 /// verify against a registered peer's public key (resolved by `from_instance`
 /// via `PairingStore::resolve_public_key`, which checks service-content's own
 /// direct `/v1/pair` registrations first, falling back to peers Command has
-/// paired — O9 credential-chain wiring, BRIEF-os-totebox-platform.md) or are
+/// paired — O9 credential-chain wiring, the platform design notes) or are
 /// rejected. A verified request is recorded to `interface-audit.jsonl` before
 /// continuing, tagged with which trust source resolved it.
-async fn capability_gate(
-    State(state): State<Arc<HttpState>>,
-    req: Request,
-    next: Next,
-) -> Result<Response, (StatusCode, String)> {
+/// Parses, signature-verifies, and grant-ceiling-checks an `X-Foundry-Capability`
+/// header value, shared by [`capability_gate`] and [`admin_capability_gate`] —
+/// everything up through "is this signed payload within what this peer was
+/// actually granted at `/v1/pair` time" is identical between the two; only the
+/// policy check applied *after* this (archive-scope-vs-target for tenant
+/// routes, ADMIN-only for global config routes) differs.
+///
+/// Returns the verified payload plus the trust-source label for the audit log.
+async fn verify_capability_grant(
+    state: &Arc<HttpState>,
+    header_str: &str,
+) -> Result<(crate::pairing::CapabilityPayload, &'static str), (StatusCode, String)> {
     use crate::pairing::{verify_capability, CapabilityError};
-
-    let Some(header_value) = req.headers().get("X-Foundry-Capability") else {
-        if headerless_allowed(&state, &req) {
-            return Ok(next.run(req).await);
-        }
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            "X-Foundry-Capability header required".to_string(),
-        ));
-    };
-    let header_str = header_value
-        .to_str()
-        .map_err(|_| {
-            (
-                StatusCode::BAD_REQUEST,
-                "malformed X-Foundry-Capability header".to_string(),
-            )
-        })?
-        .to_string();
 
     let (payload_b64, _) = header_str.split_once('.').ok_or((
         StatusCode::UNAUTHORIZED,
@@ -1108,18 +1096,30 @@ async fn capability_gate(
             "capability payload missing from_instance".to_string(),
         ))?;
 
-    let resolved = {
+    // Resolve the peer's public key AND (for a direct registration) its full
+    // granted `PairingRecord` in the same lock acquisition — the record's
+    // `role`/`archive_scope` are the actual grant from `/v1/pair` time, used
+    // below as a ceiling on what the peer's own signed payload may claim.
+    let (resolved, direct_grant) = {
         let store = state.pairing_store.lock().unwrap();
-        store.resolve_public_key(from_instance)
-    }
-    .ok_or((
+        let resolved = store.resolve_public_key(from_instance);
+        let direct_grant = resolved.as_ref().and_then(|r| {
+            if matches!(r, crate::pairing::ResolvedPeer::Direct(_)) {
+                store.get(r.public_key()).cloned()
+            } else {
+                None
+            }
+        });
+        (resolved, direct_grant)
+    };
+    let resolved = resolved.ok_or((
         StatusCode::FORBIDDEN,
         format!("{from_instance} is not a paired peer"),
     ))?;
     let public_key = resolved.public_key().to_string();
     let trust_source = resolved.source_label();
 
-    let verified = verify_capability(&header_str, &public_key).map_err(|e| match e {
+    let verified = verify_capability(header_str, &public_key).map_err(|e| match e {
         CapabilityError::Malformed => (StatusCode::BAD_REQUEST, e.to_string()),
         CapabilityError::BadSignature => (StatusCode::UNAUTHORIZED, e.to_string()),
         CapabilityError::Expired => (StatusCode::UNAUTHORIZED, e.to_string()),
@@ -1132,6 +1132,128 @@ async fn capability_gate(
         ));
     }
 
+    // ── grant ceiling (S1 fix — tenant-isolation bypass) ──────────────────
+    //
+    // Signature verification only proves the caller holds the private key
+    // for a *paired* public key — it does not prove the caller is entitled
+    // to whatever `user_scope`/`archive_scope` it put in its own signed
+    // payload. Before this check, a peer paired with role USER and a single
+    // archive could self-sign a payload claiming `user_scope: "ADMIN"`,
+    // `archive_scope: ["*"]` and the gate would honor it outright, silently
+    // defeating the tenant-isolation design's "operator override,
+    // ADMIN-role only" design. Enforce the payload as a ceiling under the
+    // actual `/v1/pair`-time grant, not a self-description trusted as-is.
+    //
+    // Direct peers: role must match the granted role (ADMIN's grant covers
+    // any lower self-asserted role — a peer may legitimately scope itself
+    // down for one request); every self-asserted archive must be present in
+    // the granted `archive_scope` (or the grant itself contains `"*"`).
+    // ViaCommand peers: only the role ceiling applies — Command's minimal
+    // pairing record carries no per-archive scope, and that path already
+    // represents an operator-level trust source distinct from archive-to-
+    // archive `/v1/pair` (see `CommandPairedPeer`'s own doc comment).
+    let user_scope_within_grant =
+        |granted_role: &str| granted_role == "ADMIN" || granted_role == verified.user_scope;
+    match (&resolved, &direct_grant) {
+        (crate::pairing::ResolvedPeer::Direct(_), Some(grant)) => {
+            if !user_scope_within_grant(&grant.role) {
+                return Err((
+                    StatusCode::FORBIDDEN,
+                    format!(
+                        "capability claims user_scope {:?} but this peer was only granted {:?}",
+                        verified.user_scope, grant.role
+                    ),
+                ));
+            }
+            let grant_is_wildcard = grant.archive_scope.iter().any(|s| s == "*");
+            if !grant_is_wildcard {
+                if let Some(bad) = verified
+                    .archive_scope
+                    .iter()
+                    .find(|s| *s != "*" && !grant.archive_scope.contains(s))
+                {
+                    return Err((
+                        StatusCode::FORBIDDEN,
+                        format!(
+                            "capability claims archive_scope entry {bad:?} not covered by this \
+                             peer's granted archive_scope {:?}",
+                            grant.archive_scope
+                        ),
+                    ));
+                }
+                if verified.archive_scope.iter().any(|s| s == "*") {
+                    return Err((
+                        StatusCode::FORBIDDEN,
+                        "capability claims wildcard archive_scope but this peer's grant is not \
+                         wildcard"
+                            .to_string(),
+                    ));
+                }
+            }
+        }
+        (crate::pairing::ResolvedPeer::Direct(_), None) => {
+            // Resolved via a direct public-key match with no stored record
+            // (shouldn't happen in practice — `resolve_public_key`'s Direct
+            // path only returns keys found in the store — but fail closed
+            // rather than silently skip the grant check if it ever does).
+            return Err((
+                StatusCode::FORBIDDEN,
+                "no pairing record found for this peer's grant".to_string(),
+            ));
+        }
+        (crate::pairing::ResolvedPeer::ViaCommand { role, .. }, _) => {
+            if !user_scope_within_grant(role) {
+                return Err((
+                    StatusCode::FORBIDDEN,
+                    format!(
+                        "capability claims user_scope {:?} but Command granted this peer {:?}",
+                        verified.user_scope, role
+                    ),
+                ));
+            }
+        }
+    }
+
+    Ok((verified, trust_source))
+}
+
+/// Verifies a forwarded `X-Foundry-Capability` header on WORM-touching routes.
+///
+/// Requests with no header pass through unchanged — this preserves the current
+/// localhost-trusted path (the Doorman calls `/v1/graph/mutate` directly and
+/// does not yet send this header). Requests that DO present the header must
+/// verify against a registered peer's public key (resolved by `from_instance`
+/// via `PairingStore::resolve_public_key`, which checks service-content's own
+/// direct `/v1/pair` registrations first, falling back to peers Command has
+/// paired — O9 credential-chain wiring, the platform design notes) or are
+/// rejected. A verified request is recorded to `interface-audit.jsonl` before
+/// continuing, tagged with which trust source resolved it.
+async fn capability_gate(
+    State(state): State<Arc<HttpState>>,
+    req: Request,
+    next: Next,
+) -> Result<Response, (StatusCode, String)> {
+    let Some(header_value) = req.headers().get("X-Foundry-Capability") else {
+        if headerless_allowed(&state, &req) {
+            return Ok(next.run(req).await);
+        }
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            "X-Foundry-Capability header required".to_string(),
+        ));
+    };
+    let header_str = header_value
+        .to_str()
+        .map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                "malformed X-Foundry-Capability header".to_string(),
+            )
+        })?
+        .to_string();
+
+    let (verified, trust_source) = verify_capability_grant(&state, &header_str).await?;
+
     // ── scope-vs-target (BRIEF-datagraph-tenant-isolation.md, Decisions Locked) ──
     //
     // A forwarded capability's `archive_scope` must actually cover the archive
@@ -1142,8 +1264,13 @@ async fn capability_gate(
     // not silently assumed safe. See `scope_permits_request` for the pure
     // policy logic (unit-tested independently of the router/HTTP plumbing).
     let is_mutate_route = req.method() == Method::POST && req.uri().path() == "/v1/graph/mutate";
+    // /v1/ingest carries its target module_id in the JSON body (`IngestRequest`),
+    // not the query string — added to the gates alongside cleanup, enrich and
+    // delta; needs the same body-parsing path as mutate, not the query-string
+    // fallback below (which would always return None for a JSON POST).
+    let is_ingest_route = req.method() == Method::POST && req.uri().path() == "/v1/ingest";
 
-    let (req, target_module_id) = if is_mutate_route {
+    let (req, target_module_id) = if is_mutate_route || is_ingest_route {
         let (parts, body) = req.into_parts();
         let bytes = to_bytes(body, 10 * 1024 * 1024).await.map_err(|e| {
             (
@@ -1167,11 +1294,14 @@ async fn capability_gate(
         (req, target)
     };
 
+    // /v1/ingest is a write (creates a new corpus document) — the "operator
+    // override is read-only, even for ADMIN" rule applies equally to it, not
+    // just to /v1/graph/mutate.
     if let Err(msg) = scope_permits_request(
         &verified.archive_scope,
         &verified.user_scope,
         target_module_id.as_deref(),
-        is_mutate_route,
+        is_mutate_route || is_ingest_route,
         verified.forwarded_for.as_deref(),
     ) {
         let status = if msg.starts_with("could not determine") {
@@ -1183,7 +1313,66 @@ async fn capability_gate(
     }
 
     let endpoint = req.uri().path().to_string();
-    if let Err(e) = state.capability_audit.record(&endpoint, &verified, trust_source) {
+    if let Err(e) = state
+        .capability_audit
+        .record(&endpoint, &verified, trust_source)
+    {
+        eprintln!("[HTTP] interface-audit write failed: {e}");
+    }
+
+    Ok(next.run(req).await)
+}
+
+/// Global config routes (`/v1/config/*`, taxonomy rewrite) have no
+/// natural per-archive `module_id` to scope against (`scope_permits_request`'s
+/// archive-scope-vs-target check does not apply to them), so this is a
+/// separate, simpler gate rather than reusing [`capability_gate`] outright:
+/// same signature/nonce/grant-ceiling verification via
+/// [`verify_capability_grant`], then a flat requirement that the *granted*
+/// role (not just the self-asserted one — the ceiling check already enforces
+/// that) is `ADMIN`. Absent-header requests still pass through unchanged,
+/// preserving the same localhost-trusted default as `capability_gate`.
+async fn admin_capability_gate(
+    State(state): State<Arc<HttpState>>,
+    req: Request,
+    next: Next,
+) -> Result<Response, (StatusCode, String)> {
+    let Some(header_value) = req.headers().get("X-Foundry-Capability") else {
+        if headerless_allowed(&state, &req) {
+            return Ok(next.run(req).await);
+        }
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            "X-Foundry-Capability header required".to_string(),
+        ));
+    };
+    let header_str = header_value
+        .to_str()
+        .map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                "malformed X-Foundry-Capability header".to_string(),
+            )
+        })?
+        .to_string();
+
+    let (verified, trust_source) = verify_capability_grant(&state, &header_str).await?;
+
+    if verified.user_scope != "ADMIN" {
+        return Err((
+            StatusCode::FORBIDDEN,
+            format!(
+                "config routes require an ADMIN capability, got {:?}",
+                verified.user_scope
+            ),
+        ));
+    }
+
+    let endpoint = req.uri().path().to_string();
+    if let Err(e) = state
+        .capability_audit
+        .record(&endpoint, &verified, trust_source)
+    {
         eprintln!("[HTTP] interface-audit write failed: {e}");
     }
 
@@ -1196,36 +1385,45 @@ async fn capability_gate(
 /// side effects — separated from `run_server` so tests can drive the real router via
 /// `tower::ServiceExt::oneshot` instead of only unit-testing individual handlers.
 pub fn router(state: Arc<HttpState>) -> Router {
-    // Capability-gated: both the read (`/v1/graph/context`) and write
-    // (`/v1/graph/mutate`) DataGraph proxy routes are gated by the capability
-    // middleware when an X-Foundry-Capability header is present (forwarded
-    // INTERFACE-peer / operator-override requests); absent-header (local
-    // Doorman) calls pass through unchanged. `/v1/graph/context` was
-    // previously ungated entirely — closed as part of the tenant-isolation
-    // fix (BRIEF-datagraph-tenant-isolation.md).
+    // Capability-gated: the DataGraph read, write and destructive routes. A
+    // request that presents an X-Foundry-Capability header is verified against a
+    // paired peer; a headerless request passes only while
+    // SERVICE_CONTENT_REQUIRE_CAPABILITY is off, or from a loopback peer when it
+    // is on (the co-resident Doorman). `/v1/graph/cleanup` deletes entities in
+    // bulk when `dry_run=false`; `/v1/ingest` writes a corpus document and
+    // carries its module_id in the JSON body.
     let capability_gated = Router::new()
         .route("/v1/graph/context", get(graph_context))
         .route("/v1/graph/mutate", post(graph_mutate))
+        .route("/v1/graph/edges", get(graph_edges))
+        .route("/v1/graph/delta", get(graph_delta))
+        .route("/v1/graph/cleanup", get(graph_cleanup))
+        .route("/v1/graph/enrich", post(graph_enrich))
+        .route("/v1/ingest", post(ingest_document))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             capability_gate,
         ));
 
-    Router::new()
-        .route("/healthz", get(healthz))
-        .route("/v1/graph/edges", get(graph_edges))
-        .route("/v1/graph/delta", get(graph_delta))
-        .route("/v1/graph/cleanup", get(graph_cleanup))
-        .route("/v1/graph/enrich", post(graph_enrich))
-        .route("/v1/draft/generate", post(draft_generate))
-        .route("/v1/ingest", post(ingest_document))
-        .route("/v1/pair", post(pair_peer))
+    // Global routes with no per-archive module_id to scope against: the
+    // taxonomy config routes, minting invite tokens and listing pairings. A
+    // presented header must carry an ADMIN grant.
+    let admin_gated = config_routes()
         .route("/v1/pair/token", get(issue_pair_token))
         .route("/v1/pairs", get(list_pairs))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            admin_capability_gate,
+        ));
+
+    Router::new()
+        .route("/healthz", get(healthz))
+        .route("/v1/draft/generate", post(draft_generate))
+        .route("/v1/pair", post(pair_peer))
         .route("/v1/graph/pending", get(graph_pending))
         .route("/v1/graph/verdict", post(graph_verdict))
         .merge(capability_gated)
-        .merge(config_routes())
+        .merge(admin_gated)
         .with_state(state)
 }
 

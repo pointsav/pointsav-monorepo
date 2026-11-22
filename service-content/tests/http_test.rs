@@ -1035,3 +1035,159 @@ async fn wrong_scope_header_is_rejected_403_when_required() {
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }
+
+// ── routes added to the capability gates ──────────────────────────────────────
+
+/// Routes the gates now cover that canonical left open: (method, uri, JSON body).
+const CAPABILITY_GATED_ROUTES: &[(&str, &str, &str)] = &[
+    ("GET", "/v1/graph/edges?module_id=pointsav", ""),
+    ("GET", "/v1/graph/delta?module_id=pointsav&since=0", ""),
+    ("GET", "/v1/graph/cleanup?module_id=pointsav&dry_run=true", ""),
+    ("POST", "/v1/graph/enrich", r#"{"module_id":"pointsav"}"#),
+    (
+        "POST",
+        "/v1/ingest",
+        r#"{"text":"x","module_id":"pointsav","doc_id":"d1","source_type":"note"}"#,
+    ),
+];
+
+const ADMIN_GATED_ROUTES: &[(&str, &str, &str)] = &[
+    ("GET", "/v1/config/domains", ""),
+    ("GET", "/v1/pairs", ""),
+    ("GET", "/v1/pair/token?role=USER&node_label=n&archive_scope=pointsav", ""),
+];
+
+fn route_request(
+    (method, uri, body): (&str, &str, &str),
+    peer: &str,
+    token: Option<&str>,
+) -> Request<Body> {
+    let mut b = Request::builder().method(method).uri(uri);
+    if !body.is_empty() {
+        b = b.header("content-type", "application/json");
+    }
+    let mut req = b.body(Body::from(body.to_string())).unwrap();
+    let addr: SocketAddr = peer.parse().unwrap();
+    req.extensions_mut().insert(ConnectInfo(addr));
+    if let Some(t) = token {
+        req.headers_mut()
+            .insert("X-Foundry-Capability", t.parse().unwrap());
+    }
+    req
+}
+
+fn all_newly_gated() -> Vec<(&'static str, &'static str, &'static str)> {
+    CAPABILITY_GATED_ROUTES
+        .iter()
+        .chain(ADMIN_GATED_ROUTES.iter())
+        .copied()
+        .collect()
+}
+
+fn fresh_token(state: &Arc<HttpState>, seed: u8, role: &str) -> String {
+    let key = test_peer_keypair(seed);
+    let name = format!("peer-gated-{seed}");
+    register_test_peer(state, &key, &name, role, vec!["pointsav".to_string()]);
+    make_capability_token(
+        &key,
+        &name,
+        role,
+        vec!["pointsav".to_string()],
+        chrono::Utc::now() + chrono::Duration::hours(1),
+    )
+}
+
+#[tokio::test]
+async fn newly_gated_routes_refuse_headerless_remote_when_required() {
+    let (app, _state) = test_app_requiring_capability();
+    for route in all_newly_gated() {
+        let resp = app
+            .clone()
+            .oneshot(route_request(route, "203.0.113.5:4000", None))
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::UNAUTHORIZED, "{}", route.1);
+    }
+}
+
+#[tokio::test]
+async fn newly_gated_routes_accept_headerless_loopback_when_required() {
+    let (app, _state) = test_app_requiring_capability();
+    for route in all_newly_gated() {
+        let resp = app
+            .clone()
+            .oneshot(route_request(route, "127.0.0.1:4000", None))
+            .await
+            .unwrap();
+        assert!(
+            resp.status() != StatusCode::UNAUTHORIZED && resp.status() != StatusCode::FORBIDDEN,
+            "{} returned {}",
+            route.1,
+            resp.status()
+        );
+    }
+}
+
+#[tokio::test]
+async fn newly_gated_routes_are_unchanged_when_requirement_is_off() {
+    let (app, _state, _dir) = test_app();
+    for route in all_newly_gated() {
+        let resp = app
+            .clone()
+            .oneshot(route_request(route, "203.0.113.5:4000", None))
+            .await
+            .unwrap();
+        assert!(
+            resp.status() != StatusCode::UNAUTHORIZED && resp.status() != StatusCode::FORBIDDEN,
+            "{} returned {}",
+            route.1,
+            resp.status()
+        );
+    }
+}
+
+#[tokio::test]
+async fn capability_gated_routes_accept_a_valid_user_header_from_remote() {
+    let (app, state) = test_app_requiring_capability();
+    for (i, route) in CAPABILITY_GATED_ROUTES.iter().enumerate() {
+        let token = fresh_token(&state, 40 + i as u8, "USER");
+        let resp = app
+            .clone()
+            .oneshot(route_request(*route, "203.0.113.5:4000", Some(&token)))
+            .await
+            .unwrap();
+        assert!(
+            resp.status() != StatusCode::UNAUTHORIZED && resp.status() != StatusCode::FORBIDDEN,
+            "{} returned {}",
+            route.1,
+            resp.status()
+        );
+    }
+}
+
+#[tokio::test]
+async fn admin_gated_routes_refuse_a_user_header_and_accept_an_admin_header() {
+    let (app, state) = test_app_requiring_capability();
+    for (i, route) in ADMIN_GATED_ROUTES.iter().enumerate() {
+        let user = fresh_token(&state, 60 + i as u8, "USER");
+        let resp = app
+            .clone()
+            .oneshot(route_request(*route, "203.0.113.5:4000", Some(&user)))
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::FORBIDDEN, "{}", route.1);
+
+        let admin = fresh_token(&state, 80 + i as u8, "ADMIN");
+        let resp = app
+            .clone()
+            .oneshot(route_request(*route, "203.0.113.5:4000", Some(&admin)))
+            .await
+            .unwrap();
+        assert!(
+            resp.status() != StatusCode::UNAUTHORIZED && resp.status() != StatusCode::FORBIDDEN,
+            "{} returned {}",
+            route.1,
+            resp.status()
+        );
+    }
+}
