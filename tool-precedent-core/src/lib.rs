@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 //! tool-precedent-core: the generic shard. Zero dependencies.
 //! Commands: changes-add, changes, versions, terms, terms-add, draws, draw-add, apply, catalog, registry, shared-hash.
+#![forbid(unsafe_code)]
 pub mod adr07;
 pub mod catalog;
 pub mod changes;

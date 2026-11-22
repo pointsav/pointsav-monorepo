@@ -51,6 +51,10 @@ Generated from one table in `src/commands.rs` (`tool-precedent-core describe --m
 - **read** never writes; **append** adds a row to a register under `precedent/`; **write** creates or rewrites a file. Note: `registry css` and `registry dtcg` write a file only when `--out` is given.
 - Customer verbs: **Find** (read what the files already say), **File** (record a row), and, once built, **Continue** (carry a document into its next version) and **Issue** (mark a version final, `_FIN`).
 
+## The approval gate (SYS-ADR-07)
+
+The gate is procedural at the command line. Append and write commands run at a person's instruction, and the person approving the command in the session is the gate: a CLI cannot tell a person from a model, so it does not pretend to. The library path is different: `store::EditStore::commit` applies `adr07::check` to the approver. What the CLI is meant to enforce mechanically is confinement: every write target stays inside `--root` (a planned change, see the audit brief; until it ships, `--file` and `--out` accept any path). Read flags (`--registry`, `--entities`, `--parties-file`) may name files outside the root by design.
+
 ## For an AI
 
 Run `tool-precedent-core describe --json` to read every command, its flags, and whether it only reads or also writes. Read commands may be run freely. Append and write commands are run at a person's instruction: the person instructing the session is the person acting. `lineage-report`, `language-report` and `find --counts` print counts only and are safe to show.

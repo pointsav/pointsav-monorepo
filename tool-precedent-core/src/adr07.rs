@@ -5,6 +5,14 @@
 //! path?": an AI actor is refused on a file whose extension marks it as structured data, a human
 //! actor passes. `store::EditStore` lets a model *propose* anything and applies this gate to the
 //! approver at commit.
+//!
+//! Scope of the gate: it guards the library path (`store::EditStore::commit`). The command line
+//! does not call it. The CLI write commands (`changes-add`, `terms-add`, `draw-add`, `versions`,
+//! `apply`, `registry --out`) are run at a person's instruction (`commands.rs`, `Access::ai`),
+//! and the person approving the command in the session is the gate. A CLI cannot tell a person
+//! from a model, so a flag such as `--approved-by` would be a string a model could type too: it
+//! would look like a gate without being one. What the CLI does enforce is mechanical: every write
+//! target stays inside `--root` (audit decision of 2026-11-21).
 //! The list errs toward blocking. `csv`/`tsv` are included because the precedent shards
 //! themselves (changes, terms, draws, versions) are CSV.
 
