@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! POSIX-backed `LedgerBackend` implementation — persistent
 //! linear-hash-chain WORM ledger per

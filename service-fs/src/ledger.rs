@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! WORM Ledger Layer 2 (per
 //! `~/Foundry/conventions/worm-ledger-design.md`).

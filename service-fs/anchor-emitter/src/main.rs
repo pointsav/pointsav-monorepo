@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 //
 // fs-anchor-emitter — Sigstore Rekor v2 monthly anchoring for service-fs checkpoints.
 // Doctrine Invention #7.  ADR-07: no AI path anywhere in this binary.
