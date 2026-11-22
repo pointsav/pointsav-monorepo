@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Citation registry resolver — Phase 2 (P2-2.4) of
 //! learning-loop-master-plan-2026-05-18.md.

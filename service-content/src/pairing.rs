@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PointSav-Proprietary
+// SPDX-License-Identifier: Apache-2.0
 
 //! Peer pairing for service-content — `POST /v1/pair` receiver side.
 //!
@@ -150,7 +150,7 @@ pub fn verify_pair_token(token: &str, public_key_b64: &str) -> Result<TokenPaylo
 //
 // Deliberately NOT a new Cargo dependency on `orchestration-command-core`
 // (that crate is `LicenseRef-PointSav-Proprietary`; service-content is
-// AGPL-3.0-or-later — a dependency in that direction is not legal per this
+// Apache-2.0 — a dependency in that direction is not legal per this
 // workspace's own license-boundary rule, matching the same "duplicate a
 // tiny type, don't share a crate" pattern already used for O5/O8). This
 // struct only needs to deserialize the same wire shape Command already

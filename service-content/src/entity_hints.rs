@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LicenseRef-PointSav-Proprietary
+// SPDX-License-Identifier: Apache-2.0
 
 //! KoGNER-style entity-hint cache.
 //!
