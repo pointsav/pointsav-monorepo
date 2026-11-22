@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-License-Identifier: Apache-2.0
 """
 list-pending-apprenticeships.py — list apprenticeship shadow attempts that have
 not yet received an operator verdict, so a human can pick items to review.

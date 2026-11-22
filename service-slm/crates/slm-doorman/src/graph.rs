@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Graph context client — queries `service-content`'s Ring 2 knowledge graph
 //! to inject per-tenant entity context ahead of Doorman inference calls.

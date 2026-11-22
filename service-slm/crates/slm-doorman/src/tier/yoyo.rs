@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Tier B — Yo-Yo cloud burst over the contract at
 //! `infrastructure/slm-yoyo/CONTRACT.md`.

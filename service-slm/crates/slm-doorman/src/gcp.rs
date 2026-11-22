@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! GCP Compute Engine client — start, stop, and poll a burst GPU VM.
 //!

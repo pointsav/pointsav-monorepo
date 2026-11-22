@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! `slm-doorman-server` — HTTP entry point for the service-slm Doorman.
 //!

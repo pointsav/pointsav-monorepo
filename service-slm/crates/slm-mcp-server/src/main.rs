@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 //
 // slm-mcp-server — Foundry MCP server (Sprint 3 + Sprint 4 + Sprint 5)
 //

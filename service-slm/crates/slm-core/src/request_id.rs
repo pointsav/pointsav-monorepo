@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Request correlation id — UUIDv7 so timestamps are recoverable from the
 //! id alone (used for audit-ledger ordering).

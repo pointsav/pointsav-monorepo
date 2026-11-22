@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Brief Queue Substrate — file-backed durable queue for `ApprenticeshipBrief`
 //! records (apprenticeship-substrate.md §7C, doctrine v0.0.14).

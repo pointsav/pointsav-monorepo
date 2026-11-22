@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Drain-worker decision logic, extracted from `main.rs` so it is unit-testable.
 //!

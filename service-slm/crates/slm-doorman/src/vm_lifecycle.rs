@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! VM lifecycle — the seven-state machine that governs a burst GPU node.
 //!

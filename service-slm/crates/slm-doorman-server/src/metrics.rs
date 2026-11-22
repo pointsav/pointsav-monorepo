@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Prometheus metrics exporter — Phase 3 (P3-3.1) of
 //! learning-loop-master-plan-2026-05-18.md.

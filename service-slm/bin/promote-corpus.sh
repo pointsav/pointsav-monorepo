@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: Apache-2.0 OR MIT
+# SPDX-License-Identifier: Apache-2.0
 #
 # bin/promote-corpus.sh — F12 corpus promotion gate (SYS-ADR-10)
 #

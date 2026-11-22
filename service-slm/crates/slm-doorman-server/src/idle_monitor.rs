@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Yo-Yo idle monitor (B5) — replaces yoyo-manual/yoyo-idle-check.sh.
 //!

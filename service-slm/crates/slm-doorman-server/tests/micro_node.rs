@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Micro-node integration tests — validates service-slm behavior on the
 //! $7/mo e2-micro fleet node (DOCTRINE.md claims #49, #54).

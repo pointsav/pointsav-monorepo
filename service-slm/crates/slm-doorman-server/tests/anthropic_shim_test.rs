@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Integration tests for `POST /v1/messages` — Anthropic Messages API shim.
 //!

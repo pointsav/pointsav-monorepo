@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! In-process cache from `(brief_id, attempt_id)` to the brief / attempt
 //! pair that produced it.

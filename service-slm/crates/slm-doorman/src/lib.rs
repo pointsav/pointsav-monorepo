@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Doorman — the single secure boundary between the isolated Totebox
 //! Archive and any external Large Language Model.

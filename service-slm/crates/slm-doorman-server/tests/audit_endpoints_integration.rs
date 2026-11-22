@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Integration tests for the audit endpoint pair — `POST /v1/audit/proxy` and
 //! `POST /v1/audit/capture` — exercising them together as cross-cluster

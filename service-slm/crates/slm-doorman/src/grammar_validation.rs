@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Lark grammar pre-validation at the Doorman boundary (PS.3 step 5).
 //!

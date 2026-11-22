@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! Tier 0 orchestration client — routes inference through
 //! `app-orchestration-slm`'s `POST /v1/inference` instead of a local
