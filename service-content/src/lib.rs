@@ -150,7 +150,22 @@ pub mod test_helpers {
                 verifier,
                 pending_dir,
             },
+            require_capability: false,
         })
+    }
+
+    /// Same as `test_http_state`, but with `SERVICE_CONTENT_REQUIRE_CAPABILITY`
+    /// behaviour switched on: headerless requests pass only from a loopback peer.
+    pub fn test_http_state_requiring_capability(
+        graph: Arc<dyn GraphStore>,
+        graph_dir: &str,
+        corpus_dir: &str,
+    ) -> Arc<HttpState> {
+        let mut state = test_http_state(graph, graph_dir, corpus_dir);
+        Arc::get_mut(&mut state)
+            .expect("freshly built state has one owner")
+            .require_capability = true;
+        state
     }
 
     /// Generate a fresh, standalone Ed25519 keypair representing an arbitrary

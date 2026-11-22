@@ -17,14 +17,17 @@
 //! none is introduced here.
 
 use axum::body::Body;
+use axum::extract::ConnectInfo;
 use axum::http::{Request, StatusCode};
 use serde_json::{json, Value};
 use service_content::graph::GraphEntity;
 use service_content::http::{router, HttpState};
 use service_content::pairing::PairingKeypair;
 use service_content::test_helpers::{
-    make_capability_token, register_test_peer, temp_graph_store, test_http_state, test_peer_keypair,
+    make_capability_token, register_test_peer, temp_graph_store, test_http_state,
+    test_http_state_requiring_capability, test_peer_keypair,
 };
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tower::ServiceExt as _;
 
@@ -912,4 +915,123 @@ async fn list_pairs_reflects_registered_peers() {
     let list = body.as_array().unwrap();
     assert_eq!(list.len(), 1);
     assert_eq!(list[0]["issuer"], "project-editorial");
+}
+
+// ── SERVICE_CONTENT_REQUIRE_CAPABILITY (headerless requests) ───────────────────
+
+/// Like `test_app`, but with the require-capability behaviour switched on.
+fn test_app_requiring_capability() -> (axum::Router, Arc<HttpState>) {
+    let (store, dir) = temp_graph_store();
+    let corpus_dir = dir.join("corpus");
+    std::fs::create_dir_all(&corpus_dir).expect("create corpus dir");
+    let state = test_http_state_requiring_capability(
+        store,
+        dir.to_str().unwrap(),
+        corpus_dir.to_str().unwrap(),
+    );
+    (router(state.clone()), state)
+}
+
+fn context_request(peer: Option<&str>) -> Request<Body> {
+    let mut req = Request::builder()
+        .method("GET")
+        .uri("/v1/graph/context?q=x&module_id=pointsav&limit=10")
+        .body(Body::empty())
+        .unwrap();
+    if let Some(addr) = peer {
+        let addr: SocketAddr = addr.parse().unwrap();
+        req.extensions_mut().insert(ConnectInfo(addr));
+    }
+    req
+}
+
+#[tokio::test]
+async fn headerless_passes_when_requirement_is_off() {
+    let (app, _state, _dir) = test_app();
+    let resp = app
+        .oneshot(context_request(Some("203.0.113.5:4000")))
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn headerless_remote_is_rejected_401_when_required() {
+    let (app, _state) = test_app_requiring_capability();
+    let resp = app
+        .oneshot(context_request(Some("203.0.113.5:4000")))
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+}
+
+#[tokio::test]
+async fn headerless_loopback_passes_when_required() {
+    let (app, _state) = test_app_requiring_capability();
+    let resp = app
+        .oneshot(context_request(Some("127.0.0.1:4000")))
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn headerless_with_unknown_peer_is_rejected_when_required() {
+    let (app, _state) = test_app_requiring_capability();
+    let resp = app.oneshot(context_request(None)).await.unwrap();
+    assert_eq!(
+        resp.status(),
+        StatusCode::UNAUTHORIZED,
+        "an unknown peer address must fail closed"
+    );
+}
+
+#[tokio::test]
+async fn valid_header_from_remote_passes_when_required() {
+    let (app, state) = test_app_requiring_capability();
+    let peer_key = test_peer_keypair(11);
+    register_test_peer(
+        &state,
+        &peer_key,
+        "peer-a",
+        "USER",
+        vec!["pointsav".to_string()],
+    );
+    let token = make_capability_token(
+        &peer_key,
+        "peer-a",
+        "USER",
+        vec!["pointsav".to_string()],
+        chrono::Utc::now() + chrono::Duration::hours(1),
+    );
+    let mut req = context_request(Some("203.0.113.5:4000"));
+    req.headers_mut()
+        .insert("X-Foundry-Capability", token.parse().unwrap());
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn wrong_scope_header_is_rejected_403_when_required() {
+    let (app, state) = test_app_requiring_capability();
+    let peer_key = test_peer_keypair(12);
+    register_test_peer(
+        &state,
+        &peer_key,
+        "peer-a",
+        "USER",
+        vec!["woodfine".to_string()],
+    );
+    let token = make_capability_token(
+        &peer_key,
+        "peer-a",
+        "USER",
+        vec!["woodfine".to_string()],
+        chrono::Utc::now() + chrono::Duration::hours(1),
+    );
+    let mut req = context_request(Some("203.0.113.5:4000"));
+    req.headers_mut()
+        .insert("X-Foundry-Capability", token.parse().unwrap());
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
 }

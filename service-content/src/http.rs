@@ -3,7 +3,7 @@
 
 use axum::{
     body::{to_bytes, Body},
-    extract::{Query, Request, State},
+    extract::{ConnectInfo, Query, Request, State},
     http::{Method, StatusCode},
     middleware::{self, Next},
     response::{Json, Response},
@@ -14,6 +14,7 @@ use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine as _;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -41,6 +42,11 @@ pub struct HttpState {
     /// GOVERNANCE_ENABLED` — the dispatcher/endpoints always exist; the flag
     /// only controls whether `lib.rs`'s automated writers route through it.
     pub write_governance: WriteGovernanceDispatcher,
+    /// When true (`SERVICE_CONTENT_REQUIRE_CAPABILITY=1`), a request without an
+    /// `X-Foundry-Capability` header is rejected with 401 by both capability gates
+    /// unless it comes from a loopback peer (the co-resident Doorman, which does not
+    /// yet send the header). Default off, so current behaviour is unchanged.
+    pub require_capability: bool,
 }
 
 // ── pairing request / response ────────────────────────────────────────────────
@@ -1027,6 +1033,20 @@ fn scope_permits_request(
     }
 }
 
+/// Whether a request with no `X-Foundry-Capability` header may pass a capability
+/// gate. Always true while `require_capability` is off. When on, only a loopback
+/// peer passes; an unknown peer address (no `ConnectInfo`) is treated as not
+/// loopback, so the check fails closed.
+fn headerless_allowed(state: &HttpState, req: &Request) -> bool {
+    if !state.require_capability {
+        return true;
+    }
+    req.extensions()
+        .get::<ConnectInfo<SocketAddr>>()
+        .map(|c| c.0.ip().is_loopback())
+        .unwrap_or(false)
+}
+
 /// Verifies a forwarded `X-Foundry-Capability` header on WORM-touching routes.
 ///
 /// Requests with no header pass through unchanged — this preserves the current
@@ -1046,7 +1066,13 @@ async fn capability_gate(
     use crate::pairing::{verify_capability, CapabilityError};
 
     let Some(header_value) = req.headers().get("X-Foundry-Capability") else {
-        return Ok(next.run(req).await);
+        if headerless_allowed(&state, &req) {
+            return Ok(next.run(req).await);
+        }
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            "X-Foundry-Capability header required".to_string(),
+        ));
     };
     let header_str = header_value
         .to_str()
@@ -1235,6 +1261,14 @@ pub async fn run_server(
         pending_dir: crate::write_governance::pending_writes_dir(),
     };
 
+    let require_capability = std::env::var("SERVICE_CONTENT_REQUIRE_CAPABILITY")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
+    if require_capability {
+        println!(
+            "[HTTP] SERVICE_CONTENT_REQUIRE_CAPABILITY on: headerless requests allowed from loopback only"
+        );
+    }
     let state = Arc::new(HttpState {
         graph: store,
         doorman_endpoint,
@@ -1246,6 +1280,7 @@ pub async fn run_server(
         pairing_key,
         capability_audit,
         write_governance,
+        require_capability,
     });
 
     let app = router(state);
@@ -1258,9 +1293,12 @@ pub async fn run_server(
         }
     };
     println!("[HTTP] Graph API listening on {}", bind_addr);
-    if let Err(e) = axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
+    if let Err(e) = axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
     {
         eprintln!("[HTTP] Server error: {}", e);
     }
