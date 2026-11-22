@@ -4,7 +4,7 @@
 //! Claims: derived facts about a person (a name variant, a company), read from
 //! `service-people/claims.csv` when that file exists.
 //!
-//! Rules taken from project-email's registry constitution (all PROPOSED, not
+//! Rules taken from the registry's proposed rules (all PROPOSED, not
 //! ratified, so this reader is tolerant and changes in one place):
 //! - claims are append-only; nothing is edited. A correction, confirmation or
 //!   rejection is a new row whose `supersedes` names the claim it acts on;
@@ -133,7 +133,7 @@ impl Claims {
 
 /// Provisional name match for linking a company claim to a business: lower-case,
 /// trimmed, runs of whitespace collapsed. "Ltd" and "Limited" stay different.
-/// project-email has not defined its normalisation for this link; replace this
+/// The registry has not defined its normalisation for this link; replace this
 /// when it does.
 pub fn normalise_name(s: &str) -> String {
     s.split_whitespace()

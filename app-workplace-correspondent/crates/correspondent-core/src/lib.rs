@@ -6,7 +6,7 @@
 //! The registries are CSV folders (`index.csv` is the primary table). This crate
 //! reads them in place by path. It never writes, copies or creates data.
 //!
-//! Rules taken from project-email's registry constitution:
+//! Rules taken from the registry's proposed rules:
 //! - columns are append-only, so unknown columns are ignored;
 //! - a missing required column or file fails loudly with a clear error;
 //! - identifiers are opaque strings, never parsed or derived.
