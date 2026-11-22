@@ -1,15 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
 
+pub mod annotation_log;
 pub mod dav_fs;
 pub mod event;
 pub mod event_store;
 pub mod ledger_backing;
+pub mod mirror_index;
+pub mod mirror_rebuild;
+pub mod mirror_view;
 
+pub use annotation_log::AnnotationLog;
 pub use dav_fs::WormCalendarFs;
 pub use event::CalendarEvent;
 pub use event_store::EventStore;
 pub use ledger_backing::LedgerBacking;
+pub use mirror_index::MirrorIndex;
+pub use mirror_rebuild::{rebuild_from_mirror, MailboxRoot};
+pub use mirror_view::MirrorView;
 
 use axum::extract::{Request, State};
 use axum::response::IntoResponse;
@@ -29,8 +37,26 @@ pub struct AppState {
 /// MKCALENDAR, ...) mounted at `/` and every path beneath it, handled
 /// entirely by `dav_server::DavHandler` against a `WormCalendarFs`.
 pub fn router(ledger_backing: Arc<LedgerBacking>, event_store: Arc<EventStore>) -> Router {
+    router_for(WormCalendarFs::new(ledger_backing, event_store))
+}
+
+/// As [`router`], also serving the mirrored events in `mirror`
+/// (read-only) beside the native ones.
+pub fn router_with_mirror(
+    ledger_backing: Arc<LedgerBacking>,
+    event_store: Arc<EventStore>,
+    mirror: Arc<MirrorView>,
+) -> Router {
+    router_for(WormCalendarFs::with_mirror(
+        ledger_backing,
+        event_store,
+        mirror,
+    ))
+}
+
+fn router_for(fs: Box<WormCalendarFs>) -> Router {
     let dav = DavHandler::builder()
-        .filesystem(WormCalendarFs::new(ledger_backing, event_store))
+        .filesystem(fs)
         .locksystem(FakeLs::new())
         .build_handler();
 

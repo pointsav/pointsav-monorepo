@@ -48,6 +48,7 @@ use futures_util::stream;
 
 use crate::event_store::EventStore;
 use crate::ledger_backing::LedgerBacking;
+use crate::mirror_view::MirrorView;
 
 /// A boxed, pinned stream of directory entries — the return type
 /// `read_dir` must produce; factored out to satisfy
@@ -58,6 +59,7 @@ type DirEntryStream = Pin<Box<dyn futures_util::Stream<Item = FsResult<Box<dyn D
 pub struct WormCalendarFs {
     ledger_backing: Arc<LedgerBacking>,
     event_store: Arc<EventStore>,
+    mirror: Option<Arc<MirrorView>>,
 }
 
 impl std::fmt::Debug for WormCalendarFs {
@@ -71,7 +73,50 @@ impl WormCalendarFs {
         Box::new(Self {
             ledger_backing,
             event_store,
+            mirror: None,
         })
+    }
+
+    /// Also serves the mirrored events in `mirror`, read-only, beside
+    /// the native ones. A native event wins over a mirrored event with
+    /// the same UID.
+    pub fn with_mirror(
+        ledger_backing: Arc<LedgerBacking>,
+        event_store: Arc<EventStore>,
+        mirror: Arc<MirrorView>,
+    ) -> Box<Self> {
+        Box::new(Self {
+            ledger_backing,
+            event_store,
+            mirror: Some(mirror),
+        })
+    }
+
+    /// The mirrored resource `name`, unless a native event shadows it.
+    fn mirrored(&self, name: &str) -> Option<&MirrorView> {
+        let mirror = self.mirror.as_deref()?;
+        let uid = mirror.uid(name)?;
+        if self.event_store.lookup_by_uid(uid).is_some() {
+            return None;
+        }
+        Some(mirror)
+    }
+
+    fn mirrored_file(&self, name: &str) -> FsResult<Option<(Bytes, SystemTime)>> {
+        let Some(mirror) = self.mirrored(name) else {
+            return Ok(None);
+        };
+        match mirror.content(name) {
+            Ok(Some(bytes)) => Ok(Some((
+                bytes,
+                mirror.modified(name).unwrap_or(SystemTime::UNIX_EPOCH),
+            ))),
+            Ok(None) => Ok(None),
+            Err(e) => {
+                tracing::warn!("mirrored event {name} could not be served: {e}");
+                Err(FsError::GeneralFailure)
+            }
+        }
     }
 
     fn uid_for(path: &DavPath) -> FsResult<Option<String>> {
@@ -251,6 +296,10 @@ impl DavFileSystem for WormCalendarFs {
             let uid = uid.ok_or(FsError::Forbidden)?; // root isn't a file
 
             if options.write {
+                // The mirror is read-only through CalDAV.
+                if self.event_store.lookup_by_uid(&uid).is_none() && self.mirrored(&uid).is_some() {
+                    return Err(FsError::Forbidden);
+                }
                 return Ok(Box::new(WormDavFile::Write {
                     buffer: Vec::new(),
                     fs: self.clone(),
@@ -263,7 +312,14 @@ impl DavFileSystem for WormCalendarFs {
                     pos: 0,
                     modified: SystemTime::from(event.updated_at),
                 }) as Box<dyn DavFile>),
-                None => Err(FsError::NotFound),
+                None => match self.mirrored_file(&uid)? {
+                    Some((content, modified)) => Ok(Box::new(WormDavFile::Read {
+                        content,
+                        pos: 0,
+                        modified,
+                    }) as Box<dyn DavFile>),
+                    None => Err(FsError::NotFound),
+                },
             }
         })
     }
@@ -278,7 +334,7 @@ impl DavFileSystem for WormCalendarFs {
             if uid.is_some() {
                 return Err(FsError::Forbidden); // only the root collection has children
             }
-            let entries: Vec<FsResult<Box<dyn DavDirEntry>>> = self
+            let mut entries: Vec<FsResult<Box<dyn DavDirEntry>>> = self
                 .event_store
                 .list_all()
                 .into_iter()
@@ -295,6 +351,25 @@ impl DavFileSystem for WormCalendarFs {
                     }) as Box<dyn DavDirEntry>)
                 })
                 .collect();
+            if let Some(mirror) = self.mirror.as_deref() {
+                for (name, _uid) in mirror.resources() {
+                    // A file that cannot be served is left out of the
+                    // listing rather than failing the whole PROPFIND.
+                    let Ok(Some((content, modified))) = self.mirrored_file(name) else {
+                        continue;
+                    };
+                    let meta = WormMetaData {
+                        len: content.len() as u64,
+                        modified,
+                        is_dir: false,
+                        is_calendar: false,
+                    };
+                    entries.push(Ok(Box::new(WormDirEntry {
+                        name: format!("{name}.ics").into_bytes(),
+                        meta,
+                    }) as Box<dyn DavDirEntry>));
+                }
+            }
             let s: DirEntryStream = Box::pin(stream::iter(entries));
             Ok(s)
         })
@@ -316,7 +391,16 @@ impl DavFileSystem for WormCalendarFs {
                         is_dir: false,
                         is_calendar: false,
                     }) as Box<dyn DavMetaData>),
-                    None => Err(FsError::NotFound),
+                    None => {
+                        let (content, modified) =
+                            self.mirrored_file(&uid)?.ok_or(FsError::NotFound)?;
+                        Ok(Box::new(WormMetaData {
+                            len: content.len() as u64,
+                            modified,
+                            is_dir: false,
+                            is_calendar: false,
+                        }) as Box<dyn DavMetaData>)
+                    }
                 },
             }
         })
@@ -326,6 +410,11 @@ impl DavFileSystem for WormCalendarFs {
         Box::pin(async move {
             let uid = Self::uid_for(path)?.ok_or(FsError::Forbidden)?;
             if self.event_store.lookup_by_uid(&uid).is_none() {
+                // Deleting a mirrored event is not a removal; recording
+                // it as an annotation is not wired yet.
+                if self.mirrored(&uid).is_some() {
+                    return Err(FsError::Forbidden);
+                }
                 return Err(FsError::NotFound);
             }
             self.ledger_backing
