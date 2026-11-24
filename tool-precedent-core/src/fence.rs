@@ -27,6 +27,15 @@ pub fn overrides(style: &str) -> String {
         _ => String::new(),
     }
 }
+/// Like `overrides`, but refuses a style block whose markers are unbalanced (one missing, or the
+/// close before the open), which `overrides` would read as "no overrides" and so drop the CSS.
+pub fn overrides_checked(style: &str) -> Result<String, String> {
+    match (style.find(OVR_OPEN), style.find(OVR_CLOSE)) {
+        (None, None) => Ok(String::new()),
+        (Some(a), Some(b)) if b > a => Ok(style[a + OVR_OPEN.len()..b].trim_matches('\n').to_string()),
+        _ => Err("the per-document override markers are unbalanced (one missing, or the end before the start); fix them by hand, nothing was changed".to_string()),
+    }
+}
 pub fn compose(token: &str, comps: &[(String, String)], ovr: &str) -> String {
     let mut s = String::new();
     s.push_str(token.trim_end());
@@ -120,7 +129,13 @@ pub fn apply(target: &str, root: &Path, args: &[String]) -> ExitCode {
         eprintln!("error: no <style> block");
         return ExitCode::FAILURE;
     };
-    let ovr = overrides(&html[a..b]);
+    let ovr = match overrides_checked(&html[a..b]) {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
     let new_style = format!("\n{}", compose(&token, &comps, &ovr));
     let out = format!("{}{}{}", &html[..a], new_style, &html[b..]);
     if args.iter().any(|x| x == "--check") {

@@ -206,7 +206,19 @@ fn infer_parent(chain: &[Seg], have: &BTreeSet<String>) -> Option<String> {
     if last.n > 1 {
         let prefix = &chain[..chain.len() - 1];
         let mut best: Option<(u32, String)> = None;
-        for k in (1..last.n).rev() {
+        // Only numbers that occur in a known label can match, so walk those (largest first)
+        // instead of every integer below `last.n`, which can be billions.
+        let mut candidates: BTreeSet<u32> = BTreeSet::new();
+        for l in have {
+            for run in l.split(|c: char| !c.is_ascii_digit()) {
+                if let Ok(k) = run.parse::<u32>() {
+                    if k >= 1 && k < last.n {
+                        candidates.insert(k);
+                    }
+                }
+            }
+        }
+        for k in candidates.into_iter().rev() {
             let mut c = prefix.to_vec();
             c.push(Seg {
                 who: last.who.clone(),

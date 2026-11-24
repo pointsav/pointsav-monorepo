@@ -81,20 +81,8 @@ pub fn append_draw(path: &Path, row: &DrawRow) -> Result<(), String> {
             return Err("this draw is already recorded; a recorded draw is never changed".into());
         }
     }
-    crate::csv::check_header(path, DRAWS_HEADER)?;
     use std::io::Write;
-    let new_file = !path.exists();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-    let mut f = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-        .map_err(|e| format!("{}: {e}", path.display()))?;
-    if new_file {
-        writeln!(f, "{DRAWS_HEADER}").map_err(|e| e.to_string())?;
-    }
+    let mut f = crate::csv::open_for_append(path, DRAWS_HEADER)?;
     let fields = [
         &row.instrument,
         &row.version,

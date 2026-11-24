@@ -62,7 +62,12 @@ fn pct(n: usize, of: usize) -> String {
         .map_or_else(|| "0%".to_string(), |v| format!("{v}%"))
 }
 
-pub fn lineage_report(root: &Root, dirs: &str, initials: Option<String>) -> Result<String> {
+pub fn lineage_report(
+    root: &Root,
+    dirs: &str,
+    initials: Option<String>,
+    show_names: bool,
+) -> Result<String> {
     let files: Vec<String> = list(root, dirs)?.into_iter().map(|(n, _)| n).collect();
     let ini = initials_arg(initials);
     let ini: Vec<&str> = ini.iter().map(String::as_str).collect();
@@ -96,12 +101,22 @@ pub fn lineage_report(root: &Root, dirs: &str, initials: Option<String>) -> Resu
         "longest spine (versions on the path to a head): {}\n",
         r.longest_spine
     ));
-    o.push_str(&format!("versions by author initials: {:?}\n", r.by_author));
-    o.push_str(&format!(
-        "variant words after the chain: {:?}\n",
-        r.variants
-    ));
-    o.push_str(&format!("renditions (extensions) seen: {:?}\n", r.exts));
+    // Words taken from file names (initials, variant words, extensions) are shown only on request.
+    if show_names {
+        o.push_str(&format!("versions by author initials: {:?}\n", r.by_author));
+        o.push_str(&format!(
+            "variant words after the chain: {:?}\n",
+            r.variants
+        ));
+        o.push_str(&format!("renditions (extensions) seen: {:?}\n", r.exts));
+    } else {
+        o.push_str(&format!(
+            "author initials: {} distinct   variant words: {} distinct   renditions: {} distinct   (add --names to list them)\n",
+            r.by_author.len(),
+            r.variants.len(),
+            r.exts.len()
+        ));
+    }
     Ok(o)
 }
 
@@ -111,6 +126,7 @@ pub fn language_report(
     initials: Option<String>,
     min_words: usize,
     near: f64,
+    show_names: bool,
 ) -> Result<String> {
     let listed = list(root, dirs)?;
     let names: Vec<String> = listed.iter().map(|(n, _)| n.clone()).collect();
@@ -178,7 +194,14 @@ pub fn language_report(
         "entity codes: {}   in 2+ documents: {}   most documents under one code: {}\n",
         r.entities, r.entities_in_2plus_docs, r.max_docs_one_entity
     ));
-    o.push_str(&format!("document types: {:?}\n", r.kinds));
+    if show_names {
+        o.push_str(&format!("document types: {:?}\n", r.kinds));
+    } else {
+        o.push_str(&format!(
+            "document types: {} distinct   (add --names to list them)\n",
+            r.kinds.len()
+        ));
+    }
     Ok(o)
 }
 
@@ -483,13 +506,13 @@ mod tests {
         .unwrap();
         let before = fs::read_dir(d.join("wip")).unwrap().count();
         let root = Root::new(&d).unwrap();
-        let l = lineage_report(&root, "wip", None).unwrap();
+        let l = lineage_report(&root, "wip", None, false).unwrap();
         assert!(l.contains("instruments: 2   versions: 3"));
         assert!(
             !l.contains("COMPLIANCE") && !l.contains("ENT-01"),
             "no names in the output"
         );
-        let g = language_report(&root, "wip", None, 12, 0.5).unwrap();
+        let g = language_report(&root, "wip", None, 12, 0.5, false).unwrap();
         assert!(g.contains("current HTML documents read (one per head): 2"));
         assert!(g.contains("exact twin in another document: 2"));
         assert!(!g.contains("COMPLIANCE") && !g.contains("ENT-01") && !g.contains("long enough"));
@@ -498,7 +521,7 @@ mod tests {
             before,
             "nothing was written"
         );
-        assert!(lineage_report(&root, "../x", None).is_err());
+        assert!(lineage_report(&root, "../x", None, false).is_err());
         let _ = fs::remove_dir_all(d);
     }
 

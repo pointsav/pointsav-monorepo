@@ -692,8 +692,9 @@ impl Registry {
                             .and_then(|(p, n)| n.parse::<usize>().ok().map(|n| (p, n)))
                         {
                             Some((p, n)) if file.ends_with(p) || p.ends_with(file.as_str()) => {
-                                if !lines
-                                    .get(n - 1)
+                                if !n
+                                    .checked_sub(1)
+                                    .and_then(|i| lines.get(i))
                                     .map(|l| l.starts_with(&format!("{}{{", g(r, "selector"))))
                                     .unwrap_or(false)
                                 {
@@ -1582,6 +1583,16 @@ fn flag(args: &[String], name: &str) -> Option<String> {
         .cloned()
 }
 
+/// A path a registry command writes to, given relative to `--root`: it must stay inside the root.
+fn confine(root: &Path, rel: &str) -> Result<PathBuf, String> {
+    crate::tree::Root::new(root)
+        .and_then(|r| r.resolve(rel))
+        .map_err(|e| e.to_string())
+}
+/// A component name that is safe to use as a file name under the output folder.
+fn plain_name(c: &str) -> bool {
+    !c.is_empty() && c != "." && c != ".." && !c.contains(['/', '\\'])
+}
 /// `registry <sub> ...`: exit 0 = ok, 1 = findings, 2 = usage / read error.
 pub fn run(args: &[String], default_root: &Path) -> i32 {
     let Some(sub) = args.first() else {
@@ -1639,7 +1650,17 @@ pub fn run(args: &[String], default_root: &Path) -> i32 {
             }
             match flag(rest, "--out") {
                 Some(out) => {
-                    let d = Path::new(&out).join("css");
+                    let d = match confine(&root, &format!("{out}/css")) {
+                        Ok(d) => d,
+                        Err(e) => {
+                            eprintln!("error: {e}");
+                            return 2;
+                        }
+                    };
+                    if let Some((c, _)) = files.iter().find(|(c, _)| !plain_name(c)) {
+                        eprintln!("error: component name is not a plain file name: {c}");
+                        return 2;
+                    }
                     if let Err(e) = std::fs::create_dir_all(&d) {
                         eprintln!("error: {e}");
                         return 2;
@@ -1666,7 +1687,14 @@ pub fn run(args: &[String], default_root: &Path) -> i32 {
             let js = reg.dtcg(family.as_deref());
             match flag(rest, "--out") {
                 Some(p) => {
-                    if let Err(e) = std::fs::write(&p, format!("{js}\n")) {
+                    let target = match confine(&root, &p) {
+                        Ok(t) => t,
+                        Err(e) => {
+                            eprintln!("error: {e}");
+                            return 2;
+                        }
+                    };
+                    if let Err(e) = std::fs::write(&target, format!("{js}\n")) {
                         eprintln!("error: {e}");
                         return 2;
                     }

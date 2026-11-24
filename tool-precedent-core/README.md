@@ -42,19 +42,19 @@ Generated from one table in `src/commands.rs` (`tool-precedent-core describe --m
 | `draw-add` | File | Record that a version grew from an earlier one (in this or another document). | append |
 | `versions` |  | Rebuild the version index from the files present (it is an index, recomputed each time). | write |
 | `apply` |  | Bring a document's style block into line with its family token and components; --check only reports. | write |
-| `registry` |  | The typesetting registry: check it, list its classes, generate CSS or DTCG tokens from it, lint a document against it. | read |
+| `registry` |  | The typesetting registry: check it, list its classes, generate CSS or DTCG tokens from it, lint a document against it. | write |
 | `shared-hash` |  | Print a fingerprint of each shared module, to compare two copies of the code. | read |
 | `help` |  | Show the command list, or one command in full. | read |
 | `describe` |  | Describe every command for a program or an AI: names, flags, whether it reads or writes, and when it may run. | read |
 | `man` |  | Print the manual page (troff) for the whole tool. | read |
 
-- **read** never writes; **append** adds a row to a register under `precedent/`; **write** creates or rewrites a file. Note: `registry css` and `registry dtcg` write a file only when `--out` is given.
+- **read** never writes; **append** adds a row to a register under `precedent/`; **write** creates or rewrites a file. Note: `registry` is labelled write because `registry css` and `registry dtcg` write a file when `--out` is given (the other subcommands only read); an AI runs it at a person's instruction.
 - Customer verbs: **Find** (read what the files already say), **File** (record a row), and, once built, **Continue** (carry a document into its next version) and **Issue** (mark a version final, `_FIN`).
 
 ## The approval gate (SYS-ADR-07)
 
-The gate is procedural at the command line. Append and write commands run at a person's instruction, and the person approving the command in the session is the gate: a CLI cannot tell a person from a model, so it does not pretend to. The library path is different: `store::EditStore::commit` applies `adr07::check` to the approver. What the CLI is meant to enforce mechanically is confinement: every write target stays inside `--root` (a planned change; until it ships, `--file` and `--out` accept any path). Read flags (`--registry`, `--entities`, `--parties-file`) may name files outside the root by design.
+The gate is procedural at the command line. Append and write commands run at a person's instruction, and the person approving the command in the session is the gate: a CLI cannot tell a person from a model, so it does not pretend to. The library path is different: `store::EditStore::commit` applies `adr07::check` to the approver. What the CLI is meant to enforce mechanically is confinement: every write target stays inside `--root`: `--file`, `--out` and the `apply` target are relative to `--root`, and a path outside it is refused with "path escapes root". Read flags (`--registry`, `--entities`, `--parties-file`) may name files outside the root by design.
 
 ## For an AI
 
-Run `tool-precedent-core describe --json` to read every command, its flags, and whether it only reads or also writes. Read commands may be run freely. Append and write commands are run at a person's instruction: the person instructing the session is the person acting. `lineage-report`, `language-report` and `find --counts` print counts only and are safe to show.
+Run `tool-precedent-core describe --json` to read every command, its flags, and whether it only reads or also writes. Read commands may be run freely. Append and write commands are run at a person's instruction: the person instructing the session is the person acting. `lineage-report`, `language-report` and `find --counts` print counts only and are safe to show. Words taken from file names (author initials, variant words, renditions, document types) are listed only with `--names`; without it these reports print numbers only.

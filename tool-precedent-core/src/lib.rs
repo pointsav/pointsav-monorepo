@@ -93,6 +93,19 @@ fn file(args: &[String], root: &Path, default: &str) -> PathBuf {
         None => root.join(default),
     }
 }
+/// A path a command writes to, given as `rel` (relative to `--root`): it must stay inside the root.
+fn confine(root: &Path, rel: &str) -> std::result::Result<PathBuf, String> {
+    tree::Root::new(root)
+        .and_then(|r| r.resolve(rel))
+        .map_err(|e| e.to_string())
+}
+/// The `--file` target of a command that writes: the default under the root, or the named path confined to the root.
+fn write_file(args: &[String], root: &Path, default: &str) -> std::result::Result<PathBuf, String> {
+    match flag(args, "--file") {
+        Some(f) => confine(root, &f),
+        None => Ok(root.join(default)),
+    }
+}
 
 pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
     let Some(cmd) = args.first().cloned() else {
@@ -164,7 +177,10 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
             {
                 return fail("changes-add requires --instrument --version --baseline --section --old --new --tag --decision");
             }
-            let f = file(rest, &root, "precedent/changes.csv");
+            let f = match write_file(rest, &root, "precedent/changes.csv") {
+                Ok(f) => f,
+                Err(e) => return fail(&e),
+            };
             match changes::append_change(&f, &row) {
                 Ok(()) => {
                     println!("appended to {}", f.display());
@@ -193,9 +209,14 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
             Err(e) => fail(&e),
         },
         "versions" => {
-            let out = flag(rest, "--out")
-                .map(PathBuf::from)
-                .unwrap_or_else(|| file(rest, &root, "precedent/versions.csv"));
+            let out = match flag(rest, "--out") {
+                Some(o) => confine(&root, &o),
+                None => write_file(rest, &root, "precedent/versions.csv"),
+            };
+            let out = match out {
+                Ok(o) => o,
+                Err(e) => return fail(&e),
+            };
             let rows = versions::scan_versions(
                 &root,
                 &flag(rest, "--dir").unwrap_or_else(|| "outputs".into()),
@@ -242,7 +263,10 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
                 date: g("--date"),
                 context: g("--context"),
             };
-            let f = file(rest, &root, "precedent/terms.csv");
+            let f = match write_file(rest, &root, "precedent/terms.csv") {
+                Ok(f) => f,
+                Err(e) => return fail(&e),
+            };
             match terms::append_term(&f, &row) {
                 Ok(()) => {
                     println!("appended to {}", f.display());
@@ -281,7 +305,10 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
                 date: g("--date"),
                 note: g("--note"),
             };
-            let f = file(rest, &root, "precedent/draws.csv");
+            let f = match write_file(rest, &root, "precedent/draws.csv") {
+                Ok(f) => f,
+                Err(e) => return fail(&e),
+            };
             match draws::append_draw(&f, &row) {
                 Ok(()) => {
                     println!("appended to {}", f.display());
@@ -291,7 +318,10 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
             }
         }
         "apply" => match positionals(rest).first() {
-            Some(f) => fence::apply(f, &root, rest),
+            Some(f) => match confine(&root, f) {
+                Ok(target) => fence::apply(&target.to_string_lossy(), &root, rest),
+                Err(e) => fail(&e),
+            },
             None => fail(&commands::usage()),
         },
         "catalog" => {
@@ -320,9 +350,10 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
         "lineage-report" | "language-report" => {
             let dirs = flag(rest, "--dir").unwrap_or_else(|| "service-wip".into());
             let ini = flag(rest, "--initials");
+            let names = rest.iter().any(|a| a == "--names");
             let out = tree::Root::new(&root).and_then(|r| {
                 if cmd == "lineage-report" {
-                    survey::lineage_report(&r, &dirs, ini)
+                    survey::lineage_report(&r, &dirs, ini, names)
                 } else {
                     let mw = flag(rest, "--min-words")
                         .and_then(|v| v.parse().ok())
@@ -330,7 +361,7 @@ pub fn run(args: Vec<String>, default_root: &str) -> ExitCode {
                     let nr = flag(rest, "--near")
                         .and_then(|v| v.parse().ok())
                         .unwrap_or(0.5);
-                    survey::language_report(&r, &dirs, ini, mw, nr)
+                    survey::language_report(&r, &dirs, ini, mw, nr, names)
                 }
             });
             match out {

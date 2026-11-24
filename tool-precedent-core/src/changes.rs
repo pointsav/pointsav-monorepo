@@ -78,20 +78,8 @@ pub fn append_change(path: &Path, row: &ChangeRow) -> Result<(), String> {
             row.tag
         ));
     }
-    crate::csv::check_header(path, CHANGES_HEADER)?;
     use std::io::Write;
-    let new_file = !path.exists();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-    let mut f = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-        .map_err(|e| format!("{}: {e}", path.display()))?;
-    if new_file {
-        writeln!(f, "{CHANGES_HEADER}").map_err(|e| e.to_string())?;
-    }
+    let mut f = crate::csv::open_for_append(path, CHANGES_HEADER)?;
     let fields = [
         &row.instrument,
         &row.version,

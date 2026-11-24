@@ -40,6 +40,34 @@ pub fn parse(s: &str) -> Vec<Vec<String>> {
     }
     rows
 }
+/// Open a register file for appending one row. Checks the header, creates the folder, writes the
+/// header when the file is new or empty, and ends an unterminated last line with a newline first,
+/// so a new row never fuses onto the previous one.
+pub fn open_for_append(path: &std::path::Path, header: &str) -> Result<std::fs::File, String> {
+    use std::io::{Read, Seek, SeekFrom, Write};
+    check_header(path, header)?;
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let mut f = std::fs::OpenOptions::new()
+        .create(true)
+        .read(true)
+        .append(true)
+        .open(path)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    let len = f.metadata().map_err(|e| e.to_string())?.len();
+    if len == 0 {
+        writeln!(f, "{header}").map_err(|e| e.to_string())?;
+    } else {
+        let mut last = [0u8; 1];
+        f.seek(SeekFrom::End(-1)).map_err(|e| e.to_string())?;
+        f.read_exact(&mut last).map_err(|e| e.to_string())?;
+        if last[0] != b'\n' {
+            writeln!(f).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(f)
+}
 /// An existing shard file must carry the shared header before a row is appended to it
 /// (an older file, for example one still keyed `doc_id`, needs its one-time re-key first).
 pub fn check_header(path: &std::path::Path, expected: &str) -> Result<(), String> {

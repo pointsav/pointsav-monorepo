@@ -89,10 +89,11 @@ pub const COMMANDS: &[Cmd] = &[
         name: "lineage-report",
         verb: "Find",
         summary: "How the files grow from each other, read from the version names (and draw rows when present): instruments, versions, authors, heads, forks, gaps. Counts only.",
-        usage: "lineage-report [--dir D[,D]] [--initials JW,MW,AI] [--root DIR]",
+        usage: "lineage-report [--dir D[,D]] [--initials JW,MW,AI] [--names] [--root DIR]",
         flags: &[
             Flag { name: "--dir", value: "D[,D]", help: "folders to read (default service-wip)" },
             Flag { name: "--initials", value: "A,B", help: "accepted author initials (default JW,MW,AI)" },
+            Flag { name: "--names", value: "", help: "also list the words taken from file names (author initials, variant words, renditions, document types); off by default so the report is numbers only" },
         ],
         example: "tool-precedent-core lineage-report --root /path/to/matter --dir service-wip,outputs",
         access: Access::Read,
@@ -102,12 +103,13 @@ pub const COMMANDS: &[Cmd] = &[
         name: "language-report",
         verb: "Find",
         summary: "What language the current documents hold: headings, paragraphs, exact and near repeats, defined terms, entity codes. Counts only.",
-        usage: "language-report [--dir D[,D]] [--initials JW,MW,AI] [--min-words N] [--near N] [--root DIR]",
+        usage: "language-report [--dir D[,D]] [--initials JW,MW,AI] [--min-words N] [--near N] [--names] [--root DIR]",
         flags: &[
             Flag { name: "--dir", value: "D[,D]", help: "folders to read (default service-wip)" },
             Flag { name: "--min-words", value: "N", help: "smallest unit counted as a paragraph (default 12)" },
             Flag { name: "--near", value: "N", help: "similarity at which two paragraphs are near twins (default 0.5)" },
             Flag { name: "--initials", value: "A,B", help: "accepted author initials (default JW,MW,AI)" },
+            Flag { name: "--names", value: "", help: "also list the words taken from file names (author initials, variant words, renditions, document types); off by default so the report is numbers only" },
         ],
         example: "tool-precedent-core language-report --root /path/to/matter",
         access: Access::Read,
@@ -255,7 +257,7 @@ pub const COMMANDS: &[Cmd] = &[
             Flag { name: "--strict", value: "", help: "lint: treat informational findings as errors" },
         ],
         example: "tool-precedent-core registry lint outputs/MEMO_A_JW3.html --family memo",
-        access: Access::Read,
+        access: Access::Write,
         touches: "reads the registry tables; css/dtcg write a file only when --out is given",
     },
     Cmd {
@@ -535,7 +537,14 @@ mod tests {
         for c in COMMANDS {
             assert_eq!(c.access == Access::Read, c.access.ai() == "free");
         }
-        for w in ["changes-add", "terms-add", "draw-add", "versions", "apply"] {
+        for w in [
+            "changes-add",
+            "terms-add",
+            "draw-add",
+            "versions",
+            "apply",
+            "registry",
+        ] {
             assert_ne!(get(w).unwrap().access, Access::Read, "{w} writes");
         }
         for r in [
@@ -546,7 +555,6 @@ mod tests {
             "changes",
             "terms",
             "draws",
-            "registry",
             "shared-hash",
         ] {
             assert_eq!(get(r).unwrap().access, Access::Read, "{r} only reads");

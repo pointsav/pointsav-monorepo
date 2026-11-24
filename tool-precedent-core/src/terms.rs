@@ -83,20 +83,8 @@ pub fn append_term(path: &Path, row: &TermRow) -> Result<(), String> {
             ));
         }
     }
-    crate::csv::check_header(path, TERMS_HEADER)?;
     use std::io::Write;
-    let new_file = !path.exists();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-    let mut f = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(path)
-        .map_err(|e| format!("{}: {e}", path.display()))?;
-    if new_file {
-        writeln!(f, "{TERMS_HEADER}").map_err(|e| e.to_string())?;
-    }
+    let mut f = crate::csv::open_for_append(path, TERMS_HEADER)?;
     let fields = [
         &row.instrument,
         &row.version,
