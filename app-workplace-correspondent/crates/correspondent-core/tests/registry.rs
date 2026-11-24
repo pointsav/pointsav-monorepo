@@ -318,3 +318,153 @@ fn duplicate_claim_ids_fail_loudly() {
     let e = Registry::open(&fx("dup-claims"), &fx("service-business")).unwrap_err();
     assert!(matches!(e, Error::DuplicateId { .. }), "{e}");
 }
+
+#[test]
+fn details_list_contact_facts_but_not_names_companies_or_counters() {
+    let r = claims_reg();
+    let attrs: Vec<(&str, &str)> = r
+        .details_of("P1")
+        .iter()
+        .map(|c| (c.attribute.as_str(), c.value.as_str()))
+        .collect();
+    // phone appears once although it was asserted twice (c08, c21); name, company,
+    // first-seen and count-* are left out.
+    assert_eq!(
+        attrs,
+        vec![
+            ("phone", "555-0100"),
+            ("website", "https://example.com/alder")
+        ]
+    );
+    assert!(r.details_of("P2").is_empty());
+}
+
+fn merge_reg() -> Registry {
+    Registry::open(&fx("claims-merge"), &fx("claims-business")).unwrap()
+}
+
+#[test]
+fn claims_left_on_merged_records_show_on_the_winner_through_two_merge_steps() {
+    let r = merge_reg();
+    // A1 -> A2 -> A3. A1's rejected nickname is gone; its second one stands.
+    let mut names = r.names_of("A3");
+    names.sort();
+    assert_eq!(
+        names,
+        vec![
+            "Middle Display Name",
+            "Old Display Name",
+            "Second Nickname",
+            "Winner Alias"
+        ]
+    );
+    let attrs: Vec<&str> = r
+        .details_of("A3")
+        .iter()
+        .map(|c| c.value.as_str())
+        .collect();
+    assert_eq!(attrs, vec!["555-0101"], "A2's phone shows on A3");
+    assert_eq!(r.companies_of("A3"), vec!["Example Holdings Ltd"]);
+}
+
+#[test]
+fn a_person_does_not_inherit_from_unrelated_retired_or_looping_records() {
+    let r = merge_reg();
+    assert!(r.names_of("A5").is_empty());
+    assert_eq!(r.companies_of("A5"), vec!["Sample Supply Inc"]);
+    // A4 is retired with no target: its claim stays on A4 only.
+    assert_eq!(r.names_of("A4"), vec!["Retired Alias"]);
+    // A6 and A7 merge into each other: no winner, nothing is attributed, no panic.
+    assert!(r.names_of("A7").is_empty());
+    assert_eq!(r.names_of("A6"), vec!["Loop Alias"], "stays on A6 only");
+    assert!(r.resolve_person("A6").is_none());
+}
+
+#[test]
+fn search_and_business_links_follow_the_merge_chain() {
+    let r = merge_reg();
+    let hits = r.search_people("old display");
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0].person_id, "A3");
+    assert_eq!(
+        r.matched_alias(hits[0], "old display"),
+        Some("Old Display Name")
+    );
+    // A1's company claim links A3 (not A1) to the business.
+    let at: Vec<&str> = r
+        .people_at_business("B1")
+        .iter()
+        .map(|p| p.person_id.as_str())
+        .collect();
+    assert_eq!(at, vec!["A3"]);
+}
+
+fn chain_reg() -> Registry {
+    Registry::open(&fx("claims-chain"), &fx("claims-business2")).unwrap()
+}
+
+#[test]
+fn withdrawing_a_withdrawal_brings_the_claim_back() {
+    let r = chain_reg();
+    // a1 asserted, r1 rejected it, r2 rejected the rejection: the name is live again.
+    assert!(r.names_of("X1").contains(&"Revived Name"));
+}
+
+#[test]
+fn a_retracted_confirmation_leaves_the_claim_unconfirmed() {
+    let r = chain_reg();
+    let phone = r
+        .claims_for_person("X1")
+        .into_iter()
+        .find(|c| c.attribute == "phone")
+        .expect("phone claim stays");
+    assert!(!r.is_confirmed(phone));
+}
+
+#[test]
+fn a_row_about_one_person_cannot_withdraw_another_persons_claim() {
+    let r = chain_reg();
+    // r3 is filed under X1 but points at X2's claim a3: it is ignored.
+    assert_eq!(r.names_of("X2"), vec!["Cross Target"]);
+}
+
+#[test]
+fn whitespace_around_ids_and_status_does_not_break_matching() {
+    let r = chain_reg();
+    // r6's supersedes is "a6 " (trailing space): the website is still withdrawn.
+    assert!(r.details_of("X1").iter().all(|c| c.attribute != "website"));
+    // " merged " counts as merged, so X3 is hidden from search.
+    assert!(!r.person("X3").unwrap().is_active());
+    // Its old name finds the person it merged into, never the hidden record itself.
+    let hits = r.search_people("spaced");
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0].person_id, "X1");
+}
+
+#[test]
+fn rows_with_a_blank_claim_id_do_not_count_as_duplicates() {
+    let r = chain_reg();
+    let attrs: Vec<&str> = r
+        .details_of("X1")
+        .iter()
+        .map(|c| c.attribute.as_str())
+        .collect();
+    assert!(attrs.contains(&"headline") && attrs.contains(&"postal-address"));
+}
+
+#[test]
+fn a_short_csv_row_does_not_take_the_registry_down() {
+    let r = chain_reg();
+    assert_eq!(r.person("X4").unwrap().display_name, "Short Row");
+}
+
+#[test]
+fn a_broken_or_retired_namesake_does_not_block_a_company_link() {
+    let r = chain_reg();
+    // B2 is a retired duplicate of B1; B3 merges into an unknown id.
+    assert_eq!(r.business_for_company("Dup Co").unwrap().business_id, "B1");
+    assert_eq!(
+        r.business_for_company("Broken Co").unwrap().business_id,
+        "B4"
+    );
+}

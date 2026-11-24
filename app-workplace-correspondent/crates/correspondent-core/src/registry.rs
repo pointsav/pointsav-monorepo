@@ -3,7 +3,7 @@
 
 use crate::claims::{normalise_name, Claim, Claims};
 use crate::Error;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 /// One row of `service-people/index.csv`. `person_id` is opaque.
@@ -35,7 +35,10 @@ pub struct Business {
 /// A missing status counts as active (older registries have no status column).
 fn is_active(status: &Option<String>) -> bool {
     !matches!(
-        status.as_deref().map(str::to_lowercase).as_deref(),
+        status
+            .as_deref()
+            .map(|s| s.trim().to_lowercase())
+            .as_deref(),
         Some("merged") | Some("retired")
     )
 }
@@ -58,16 +61,59 @@ pub struct Registry {
     people: Vec<Person>,
     businesses: Vec<Business>,
     claims: Claims,
+    person_ix: HashMap<String, usize>,
+    business_ix: HashMap<String, usize>,
+    /// normalised legal name -> indices into `businesses` (file order)
+    business_by_name: HashMap<String, Vec<usize>>,
+    /// active winner id -> ids of inactive records that resolve to it (file order)
+    absorbed: HashMap<String, Vec<String>>,
 }
 
 impl Registry {
     /// Load `people_dir/index.csv` and `business_dir/index.csv`.
     pub fn open(people_dir: &Path, business_dir: &Path) -> Result<Self, Error> {
-        Ok(Self {
-            people: load_people(&people_dir.join("index.csv"))?,
-            businesses: load_businesses(&business_dir.join("index.csv"))?,
-            claims: Claims::load(&people_dir.join("claims.csv"))?,
-        })
+        let people = load_people(&people_dir.join("index.csv"))?;
+        let businesses = load_businesses(&business_dir.join("index.csv"))?;
+        let claims = Claims::load(&people_dir.join("claims.csv"))?;
+        let person_ix = people
+            .iter()
+            .enumerate()
+            .map(|(i, p)| (p.person_id.clone(), i))
+            .collect();
+        let business_ix = businesses
+            .iter()
+            .enumerate()
+            .map(|(i, b)| (b.business_id.clone(), i))
+            .collect();
+        let mut business_by_name: HashMap<String, Vec<usize>> = HashMap::new();
+        for (i, b) in businesses.iter().enumerate() {
+            business_by_name
+                .entry(normalise_name(&b.legal_name))
+                .or_default()
+                .push(i);
+        }
+        let mut reg = Self {
+            people,
+            businesses,
+            claims,
+            person_ix,
+            business_ix,
+            business_by_name,
+            absorbed: HashMap::new(),
+        };
+        let mut absorbed: HashMap<String, Vec<String>> = HashMap::new();
+        for p in reg.people.iter().filter(|p| !p.is_active()) {
+            if let Some(w) = reg.resolve_person(&p.person_id) {
+                if w.person_id != p.person_id {
+                    absorbed
+                        .entry(w.person_id.clone())
+                        .or_default()
+                        .push(p.person_id.clone());
+                }
+            }
+        }
+        reg.absorbed = absorbed;
+        Ok(reg)
     }
 
     pub fn people(&self) -> &[Person] {
@@ -79,7 +125,7 @@ impl Registry {
     }
 
     pub fn person(&self, id: &str) -> Option<&Person> {
-        self.people.iter().find(|p| p.person_id == id)
+        self.person_ix.get(id).map(|&i| &self.people[i])
     }
 
     /// Follow `merged_into` from `id` to the current record. Returns `None`
@@ -97,12 +143,10 @@ impl Registry {
 
     /// Follow `merged_into` from `id` to the current business record.
     pub fn resolve_business(&self, id: &str) -> Option<&Business> {
-        let mut cur = self.businesses.iter().find(|b| b.business_id == id)?;
+        let mut cur = self.business(id)?;
         for _ in 0..=self.businesses.len() {
             match cur.merged_into.as_deref() {
-                Some(next) if !cur.is_active() => {
-                    cur = self.businesses.iter().find(|b| b.business_id == next)?
-                }
+                Some(next) if !cur.is_active() => cur = self.business(next)?,
                 _ => return Some(cur),
             }
         }
@@ -142,12 +186,27 @@ impl Registry {
             .find(|n| n.to_lowercase().contains(&q))
     }
 
-    /// Active claims about a person (asserted, not withdrawn or replaced).
+    /// Ids whose claims belong on `person_id`'s page: the id itself plus every
+    /// merged record that resolves to it (through any number of merge steps).
+    /// Claims stay on the losing id in the registry (nothing is copied or
+    /// re-pointed; project-email's PROPOSED rule), so the reader gathers them.
+    /// Only an active record absorbs others; loops and dangling targets
+    /// absorb nothing.
+    fn merge_chain<'a>(&'a self, person_id: &'a str) -> Vec<&'a str> {
+        let mut ids = vec![person_id];
+        if self.person(person_id).is_some_and(Person::is_active) {
+            if let Some(v) = self.absorbed.get(person_id) {
+                ids.extend(v.iter().map(String::as_str));
+            }
+        }
+        ids
+    }
+
+    /// Active claims about a person (asserted, not withdrawn or replaced),
+    /// including claims left on records that were merged into this one.
     pub fn claims_for_person(&self, person_id: &str) -> Vec<&Claim> {
-        self.claims
-            .active()
-            .filter(|c| c.person_subject() == Some(person_id))
-            .collect()
+        let ids = self.merge_chain(person_id);
+        self.claims.active_for(&ids)
     }
 
     /// Whether a later `confirm` row acts on this claim.
@@ -155,7 +214,9 @@ impl Registry {
         self.claims.is_confirmed(&claim.claim_id)
     }
 
-    /// Distinct active name-variant values for a person, other than the display name.
+    /// Distinct name variants for a person, other than the display name: active
+    /// `name` claims (including those left on merged-in records) and the display
+    /// names of records merged into this one.
     pub fn names_of(&self, person_id: &str) -> Vec<&str> {
         let display = self.person(person_id).map(|p| p.display_name.as_str());
         let mut out: Vec<&str> = Vec::new();
@@ -167,6 +228,40 @@ impl Registry {
             {
                 out.push(&c.value);
             }
+        }
+        for id in self.merge_chain(person_id).into_iter().skip(1) {
+            if let Some(p) = self.person(id) {
+                let n = p.display_name.as_str();
+                if !n.is_empty() && Some(n) != display && !out.contains(&n) {
+                    out.push(n);
+                }
+            }
+        }
+        out
+    }
+
+    /// Active claims worth showing as contact details: every attribute except
+    /// the ones shown elsewhere (`name`, `company`), the ones the registry row
+    /// already carries (`first-seen`, `last-seen`) and the extractor's counters
+    /// (`count-*`). Duplicates of the same attribute and value are dropped.
+    pub fn details_of(&self, person_id: &str) -> Vec<&Claim> {
+        let mut out: Vec<&Claim> = Vec::new();
+        for c in self.claims_for_person(person_id) {
+            let a = c.attribute.as_str();
+            if a.is_empty()
+                || c.value.is_empty()
+                || matches!(a, "name" | "company" | "first-seen" | "last-seen")
+                || a.starts_with("count-")
+            {
+                continue;
+            }
+            if out
+                .iter()
+                .any(|o| o.attribute == c.attribute && o.value == c.value)
+            {
+                continue;
+            }
+            out.push(c);
         }
         out
     }
@@ -192,17 +287,26 @@ impl Registry {
         }
         let mut found: Option<&Business> = None;
         for b in self
-            .businesses
-            .iter()
-            .filter(|b| normalise_name(&b.legal_name) == key)
+            .business_by_name
+            .get(&key)
+            .into_iter()
+            .flatten()
+            .map(|&i| &self.businesses[i])
         {
-            let cur = self.resolve_business(&b.business_id)?;
+            // A row whose merge chain is broken or looped is skipped, not fatal; only
+            // active, resolved businesses count towards ambiguity.
+            let Some(cur) = self.resolve_business(&b.business_id) else {
+                continue;
+            };
+            if !cur.is_active() {
+                continue;
+            }
             match found {
                 Some(f) if f.business_id != cur.business_id => return None,
                 _ => found = Some(cur),
             }
         }
-        found.filter(|b| b.is_active())
+        found
     }
 
     /// Active people with a company claim that resolves to this business.
@@ -223,7 +327,7 @@ impl Registry {
     }
 
     pub fn business(&self, id: &str) -> Option<&Business> {
-        self.businesses.iter().find(|b| b.business_id == id)
+        self.business_ix.get(id).map(|&i| &self.businesses[i])
     }
 
     /// Case-insensitive substring search on legal name, sorted by name.
@@ -255,7 +359,12 @@ impl Table {
             file: file.to_path_buf(),
             source,
         };
-        let mut rdr = csv::Reader::from_path(file).map_err(csv_err)?;
+        // Flexible: one short or long row must not take the whole view down; a missing cell
+        // reads as empty. Header problems still fail loudly through `required`.
+        let mut rdr = csv::ReaderBuilder::new()
+            .flexible(true)
+            .from_path(file)
+            .map_err(csv_err)?;
         let headers = rdr.headers().map_err(csv_err)?.clone();
         let rows = rdr
             .records()

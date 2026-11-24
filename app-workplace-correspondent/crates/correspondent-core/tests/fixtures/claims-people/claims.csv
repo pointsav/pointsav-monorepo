@@ -15,3 +15,7 @@ c14,assert,service-people.P3,name,Cedar Variant,medium,hdr-name-v1,s13,2025-01-1
 c15,assert,service-people.P1,company,Twin Co,medium,sig-company-v1,s14,2025-01-14T00:00:00Z,,test,
 c16,assert,service-people.P1,company,Old Co,medium,sig-company-v1,s15,2025-01-15T00:00:00Z,,test,
 c17,retract,service-people.P1,company,Old Co,high,human,s16,2025-01-16T00:00:00Z,,test,c16
+c18,assert,service-people.P1,website,https://example.com/alder,medium,sig-website-v1,s17,2025-01-17T00:00:00Z,,test,
+c19,assert,service-people.P1,count-received-from,7,medium,count-v1,s18,2025-01-18T00:00:00Z,,test,
+c20,assert,service-people.P1,first-seen,2024-01-05T00:00:00Z,medium,first-seen-v1,s19,2025-01-19T00:00:00Z,,test,
+c21,assert,service-people.P1,phone,555-0100,low,sig-phone-v1,s20,2025-01-20T00:00:00Z,,test,

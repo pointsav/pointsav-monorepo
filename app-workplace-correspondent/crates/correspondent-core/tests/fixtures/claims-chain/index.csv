@@ -1,0 +1,5 @@
+person_id,display_name,status,kind,merged_into
+X1,Chain Person,confirmed,principal,
+X2,Other Person,confirmed,counterparty,
+X3,Spaced Status, merged ,counterparty,X1
+X4,Short Row

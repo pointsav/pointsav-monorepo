@@ -1,0 +1,8 @@
+person_id,display_name,status,kind,merged_into
+A1,Old Display Name,merged,principal,A2
+A2,Middle Display Name,merged,principal,A3
+A3,Winner Person,confirmed,principal,
+A4,Retired Person,retired,counterparty,
+A5,Unrelated Person,confirmed,counterparty,
+A6,Loop One,merged,counterparty,A7
+A7,Loop Two,merged,counterparty,A6

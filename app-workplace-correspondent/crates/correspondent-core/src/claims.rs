@@ -16,7 +16,7 @@
 
 use crate::registry::{opt, Table};
 use crate::Error;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 /// One row of `claims.csv`. Columns are found by name, so extra or missing
@@ -55,8 +55,9 @@ impl Claim {
 #[derive(Debug, Default)]
 pub(crate) struct Claims {
     rows: Vec<Claim>,
-    dead: HashSet<String>,
     confirmed: HashSet<String>,
+    /// person id -> indices (file order) of live `assert` rows about that person
+    by_person: HashMap<String, Vec<usize>>,
 }
 
 impl Claims {
@@ -76,8 +77,9 @@ impl Claims {
         let mut seen = HashSet::new();
         let mut rows = Vec::with_capacity(t.rows.len());
         for row in &t.rows {
-            let claim_id = row.get(id).unwrap_or("").to_string();
-            if !seen.insert(claim_id.clone()) {
+            let claim_id = row.get(id).unwrap_or("").trim().to_string();
+            // An empty id is not an identity: it can neither duplicate nor be superseded.
+            if !claim_id.is_empty() && !seen.insert(claim_id.clone()) {
                 return Err(Error::DuplicateId {
                     file: t.file.clone(),
                     id: claim_id,
@@ -86,44 +88,94 @@ impl Claims {
             rows.push(Claim {
                 claim_id,
                 action: row.get(action).unwrap_or("").trim().to_lowercase(),
-                subject: row.get(subject).unwrap_or("").to_string(),
+                subject: row.get(subject).unwrap_or("").trim().to_string(),
                 attribute: row.get(attribute).unwrap_or("").to_string(),
                 value: row.get(value).unwrap_or("").trim().to_string(),
                 confidence: opt(row, conf),
                 method: opt(row, method),
                 source_ref: opt(row, src),
                 observed_at: opt(row, obs),
-                supersedes: opt(row, sup),
+                supersedes: opt(row, sup)
+                    .map(|v| v.trim().to_string())
+                    .filter(|v| !v.is_empty()),
             });
         }
-        let (mut dead, mut confirmed) = (HashSet::new(), HashSet::new());
-        for c in &rows {
-            let Some(target) = &c.supersedes else {
+        // Who acts on whom. A row acts only on a row of the SAME subject, so a row about one
+        // person can never withdraw a claim about another.
+        let index: HashMap<&str, usize> = rows
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| !c.claim_id.is_empty())
+            .map(|(i, c)| (c.claim_id.as_str(), i))
+            .collect();
+        let n = rows.len();
+        let mut killers: Vec<Vec<usize>> = vec![Vec::new(); n];
+        let mut confirmers: Vec<Vec<usize>> = vec![Vec::new(); n];
+        for (j, c) in rows.iter().enumerate() {
+            let Some(t) = c.supersedes.as_deref().and_then(|s| index.get(s).copied()) else {
                 continue;
             };
+            if t == j || rows[t].subject != c.subject {
+                continue;
+            }
             match c.action.as_str() {
                 // A correction replaces its target; a reject or retract withdraws it.
-                "assert" | "reject" | "retract" => {
-                    dead.insert(target.clone());
-                }
-                "confirm" => {
-                    confirmed.insert(target.clone());
-                }
+                "assert" | "reject" | "retract" => killers[t].push(j),
+                "confirm" => confirmers[t].push(j),
                 _ => {}
+            }
+        }
+        // A row is alive unless a LIVE row replaces or withdraws it, so withdrawing a
+        // withdrawal brings the original back. Repeat until nothing changes (bounded, so a
+        // malformed cycle cannot loop forever).
+        let mut alive = vec![true; n];
+        for _ in 0..=100 {
+            let mut changed = false;
+            for i in 0..n {
+                if killers[i].is_empty() {
+                    continue;
+                }
+                let now = !killers[i].iter().any(|&j| alive[j]);
+                if now != alive[i] {
+                    alive[i] = now;
+                    changed = true;
+                }
+            }
+            if !changed {
+                break;
+            }
+        }
+        let confirmed: HashSet<String> = (0..n)
+            .filter(|&i| confirmers[i].iter().any(|&j| alive[j]))
+            .map(|i| rows[i].claim_id.clone())
+            .collect();
+        let mut by_person: HashMap<String, Vec<usize>> = HashMap::new();
+        for (i, c) in rows.iter().enumerate() {
+            if alive[i] && c.action == "assert" {
+                if let Some(p) = c.person_subject() {
+                    by_person.entry(p.to_string()).or_default().push(i);
+                }
             }
         }
         Ok(Self {
             rows,
-            dead,
             confirmed,
+            by_person,
         })
     }
 
-    /// Asserted claims that nothing has withdrawn or replaced.
-    pub(crate) fn active(&self) -> impl Iterator<Item = &Claim> {
-        self.rows
+    /// Live asserted claims whose subject is any of `ids`, in file order.
+    pub(crate) fn active_for(&self, ids: &[&str]) -> Vec<&Claim> {
+        let mut ix: Vec<usize> = ids
             .iter()
-            .filter(|c| c.action == "assert" && !self.dead.contains(&c.claim_id))
+            .filter_map(|id| self.by_person.get(*id))
+            .flatten()
+            .copied()
+            .collect();
+        if ids.len() > 1 {
+            ix.sort_unstable();
+        }
+        ix.into_iter().map(|i| &self.rows[i]).collect()
     }
 
     pub(crate) fn is_confirmed(&self, claim_id: &str) -> bool {

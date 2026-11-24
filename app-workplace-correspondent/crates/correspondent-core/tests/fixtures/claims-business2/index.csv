@@ -1,0 +1,5 @@
+business_id,legal_name,status,kind,merged_into
+B1,Dup Co,confirmed,counterparty,
+B2,Dup Co,retired,counterparty,
+B3,Broken Co,merged,counterparty,B99
+B4,Broken Co,confirmed,counterparty,
