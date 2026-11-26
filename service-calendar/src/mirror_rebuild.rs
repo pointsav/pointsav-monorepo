@@ -4,6 +4,7 @@
 //! mirror; never writes into it. The index file is replaced
 //! atomically (temporary file, fsync, rename).
 
+use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -11,7 +12,7 @@ use std::path::{Path, PathBuf};
 use worm_ledger::blob::sha256_hex;
 
 use crate::mirror_index::{
-    parse_mirror_item, Annotation, MirrorIndex, MirrorItem, Problem, ProblemKind,
+    parse_csv, parse_mirror_item, Annotation, MirrorIndex, MirrorItem, Problem, ProblemKind,
 };
 
 /// One mailbox of the mirror: the name used in index rows and the
@@ -41,6 +42,141 @@ pub trait MirrorSidecar {
 pub struct NoSidecar;
 
 impl MirrorSidecar for NoSidecar {}
+
+/// Reads `change_seq` from the mirror's `calendar.csv`, one file per
+/// mailbox, loaded once. Columns are found by header name (`file`,
+/// `change_seq`, and `sha256` when present), never by position. A row
+/// is used only when it is whole, its `change_seq` is a number, its
+/// `sha256` (if the column exists) equals the file name's hash, and
+/// every row for the same file agrees. Anything else gives `None` for
+/// that file, and a line in [`reasons`](Self::reasons). What
+/// `change_seq` counts (per mailbox, per folder, whether it resets on
+/// a resync) is not confirmed: the index only uses it to break ties
+/// within one mailbox, after SEQUENCE, LAST-MODIFIED and DTSTAMP.
+#[derive(Debug, Default)]
+pub struct CalendarCsvSidecar {
+    /// mailbox -> file -> change_seq; `None` marks a conflicted file.
+    seqs: HashMap<String, HashMap<String, Option<u64>>>,
+    reasons: Vec<String>,
+}
+
+impl CalendarCsvSidecar {
+    /// `csvs` pairs each mailbox name with its `calendar.csv` path. A
+    /// file that cannot be read is reported, not fatal.
+    pub fn load(csvs: &[(String, PathBuf)]) -> Self {
+        let mut me = Self::default();
+        for (mailbox, path) in csvs {
+            match fs::read(path) {
+                Ok(bytes) => match String::from_utf8(bytes) {
+                    Ok(text) => me.add_text(mailbox, &text),
+                    Err(_) => me
+                        .reasons
+                        .push(format!("{mailbox}: calendar.csv is not UTF-8")),
+                },
+                Err(e) => me
+                    .reasons
+                    .push(format!("{mailbox}: calendar.csv not read: {e}")),
+            }
+        }
+        me
+    }
+
+    /// Adds one mailbox's `calendar.csv` text.
+    pub fn add_text(&mut self, mailbox: &str, text: &str) {
+        let text = text.strip_prefix('\u{feff}').unwrap_or(text);
+        let rows = match parse_csv(text) {
+            Ok(r) => r,
+            Err(e) => {
+                self.reasons.push(format!("{mailbox}: calendar.csv: {e}"));
+                return;
+            }
+        };
+        let Some((header, rows)) = rows.split_first() else {
+            self.reasons
+                .push(format!("{mailbox}: calendar.csv has no header"));
+            return;
+        };
+        let col = |name: &str| header.iter().position(|h| h == name);
+        let (Some(file_col), Some(seq_col)) = (col("file"), col("change_seq")) else {
+            self.reasons.push(format!(
+                "{mailbox}: calendar.csv has no `file` or no `change_seq` column"
+            ));
+            return;
+        };
+        let sha_col = col("sha256");
+        let (mut short, mut unreadable, mut conflicts, mut mismatches) = (0, 0, 0, 0);
+        let map = self.seqs.entry(mailbox.to_string()).or_default();
+        let mut bad_files = BTreeSet::new();
+        for row in rows {
+            if row.len() != header.len() {
+                short += 1;
+                continue;
+            }
+            let file = row[file_col].as_str();
+            let stem = file
+                .rsplit('/')
+                .next()
+                .and_then(|n| n.strip_suffix(".ics"))
+                .unwrap_or("");
+            if let Some(c) = sha_col {
+                if row[c] != stem {
+                    mismatches += 1;
+                    bad_files.insert(file.to_string());
+                    continue;
+                }
+            }
+            let cell = row[seq_col].trim();
+            if cell.is_empty() {
+                continue;
+            }
+            let Ok(seq) = cell.parse::<u64>() else {
+                unreadable += 1;
+                continue;
+            };
+            match map.get(file) {
+                Some(Some(prev)) if *prev != seq => {
+                    conflicts += 1;
+                    map.insert(file.to_string(), None);
+                }
+                Some(_) => {}
+                None => {
+                    map.insert(file.to_string(), Some(seq));
+                }
+            }
+        }
+        for f in bad_files {
+            map.insert(f, None);
+        }
+        for (n, what) in [
+            (short, "rows with the wrong number of fields skipped"),
+            (unreadable, "rows with a non-numeric change_seq skipped"),
+            (
+                conflicts,
+                "rows disagreeing with an earlier row for the same file",
+            ),
+            (mismatches, "rows whose sha256 does not match the file name"),
+        ] {
+            if n > 0 {
+                self.reasons.push(format!("{mailbox}: {n} {what}"));
+            }
+        }
+    }
+
+    /// Why anything was skipped or refused, one line each.
+    pub fn reasons(&self) -> &[String] {
+        &self.reasons
+    }
+}
+
+impl MirrorSidecar for CalendarCsvSidecar {
+    fn change_seq(&self, mailbox: &MailboxRoot, file: &str) -> Option<u64> {
+        self.seqs
+            .get(&mailbox.mailbox)?
+            .get(file)
+            .copied()
+            .flatten()
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct RebuildReport {

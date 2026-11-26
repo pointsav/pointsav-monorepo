@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use service_calendar::{EventStore, LedgerBacking};
+use service_calendar::{EventStore, LedgerBacking, MirrorConfig};
 use std::env;
 use std::sync::Arc;
 use tracing::info;
@@ -22,6 +22,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let bind_addr =
         env::var("CALENDAR_BIND_ADDR").unwrap_or_else(|_| "127.0.0.1:9303".to_string());
+
+    let mirror_config =
+        MirrorConfig::from_env().unwrap_or_else(|e| panic!("mirror configuration: {e}"));
 
     info!("Starting service-calendar on {}", bind_addr);
     info!("Module ID: {}", module_id);
@@ -48,10 +51,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => tracing::error!("ledger replay failed: {e} -- starting with an empty EventStore"),
     }
 
+    let router = match mirror_config {
+        None => {
+            info!("mirror not configured -- serving native events only");
+            service_calendar::router(ledger_backing, event_store)
+        }
+        Some(config) => {
+            let fs = config
+                .build_fs(ledger_backing, event_store)
+                .unwrap_or_else(|e| panic!("mirror configuration: {e}"));
+            info!(
+                "serving mirror index {} over {} mailbox root(s); a rebuild is seen after a restart",
+                config.index.display(),
+                config.mailboxes.len()
+            );
+            match &config.annotation_log {
+                Some(path) => info!(
+                    "recording client deletes of mirrored events in {}",
+                    path.display()
+                ),
+                None => info!(
+                    "annotation log not configured -- client deletes of mirrored events are refused, not recorded"
+                ),
+            }
+            service_calendar::router_for(fs)
+        }
+    };
+
     let listener = tokio::net::TcpListener::bind(&bind_addr).await?;
     info!("service-calendar (CalDAV) listening on {}", bind_addr);
 
-    let router = service_calendar::router(ledger_backing, event_store);
     axum::serve(listener, router).await?;
 
     Ok(())

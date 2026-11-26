@@ -797,7 +797,7 @@ fn write_csv_record<'a>(out: &mut String, fields: impl Iterator<Item = &'a str>)
 }
 
 /// Parses RFC 4180 text into records. Accepts CRLF or LF line ends.
-fn parse_csv(text: &str) -> Result<Vec<Vec<String>>, CsvError> {
+pub(crate) fn parse_csv(text: &str) -> Result<Vec<Vec<String>>, CsvError> {
     let mut records = Vec::new();
     let mut record = Vec::new();
     let mut field = String::new();

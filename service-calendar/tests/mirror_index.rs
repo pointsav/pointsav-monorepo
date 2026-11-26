@@ -15,7 +15,8 @@ use service_calendar::mirror_index::{
     MirrorItem, ProblemKind,
 };
 use service_calendar::mirror_rebuild::{
-    build_from_mirror, rebuild_from_mirror, MailboxRoot, NoSidecar, RebuildError,
+    build_from_mirror, rebuild_from_mirror, CalendarCsvSidecar, MailboxRoot, MirrorSidecar,
+    NoSidecar, RebuildError,
 };
 use service_calendar::MirrorView;
 use tower::ServiceExt;
@@ -571,4 +572,196 @@ async fn a_delete_whose_annotation_cannot_be_written_fails_and_keeps_the_event()
     assert!(!status.is_success(), "{status}");
     let (status, _) = send(&router, "GET", &format!("/{key}.ics"), "").await;
     assert_eq!(status, StatusCode::OK);
+}
+
+fn sidecar_for(text: &str) -> (CalendarCsvSidecar, MailboxRoot) {
+    let mut sc = CalendarCsvSidecar::default();
+    sc.add_text("sc", text);
+    (
+        sc,
+        MailboxRoot {
+            mailbox: "sc".into(),
+            root: PathBuf::from("/nonexistent"),
+        },
+    )
+}
+
+fn calendar_file(n: u8) -> String {
+    let sha = format!("{n:02x}").repeat(32);
+    format!("calendar/{}/{sha}.ics", &sha[..2])
+}
+
+fn sha_of(file: &str) -> String {
+    file.rsplit('/')
+        .next()
+        .unwrap()
+        .trim_end_matches(".ics")
+        .to_string()
+}
+
+#[test]
+fn csv_sidecar_finds_columns_by_name_in_any_order() {
+    let f = calendar_file(1);
+    let text = format!(
+        "change_seq,other,sha256,file\r\n7,\"a, \"\"b\"\"\",{},{f}\r\n",
+        sha_of(&f)
+    );
+    let (sc, mb) = sidecar_for(&text);
+    assert_eq!(sc.change_seq(&mb, &f), Some(7));
+    assert!(sc.reasons().is_empty(), "{:?}", sc.reasons());
+}
+
+#[test]
+fn csv_sidecar_gives_none_for_a_missing_row_or_empty_cell() {
+    let (f1, f2) = (calendar_file(1), calendar_file(2));
+    let text = format!("file,change_seq\n{f1},\n");
+    let (sc, mb) = sidecar_for(&text);
+    assert_eq!(sc.change_seq(&mb, &f1), None);
+    assert_eq!(sc.change_seq(&mb, &f2), None);
+}
+
+#[test]
+fn csv_sidecar_without_a_change_seq_column_gives_none_and_a_reason() {
+    let f = calendar_file(1);
+    let (sc, mb) = sidecar_for(&format!("file,sha256\n{f},{}\n", sha_of(&f)));
+    assert_eq!(sc.change_seq(&mb, &f), None);
+    assert_eq!(sc.reasons().len(), 1);
+}
+
+#[test]
+fn csv_sidecar_refuses_a_file_whose_rows_disagree() {
+    let f = calendar_file(1);
+    let (sc, mb) = sidecar_for(&format!("file,change_seq\n{f},3\n{f},4\n"));
+    assert_eq!(sc.change_seq(&mb, &f), None);
+    assert!(sc.reasons().iter().any(|r| r.contains("disagreeing")));
+    let (sc, mb) = sidecar_for(&format!("file,change_seq\n{f},3\n{f},3\n"));
+    assert_eq!(sc.change_seq(&mb, &f), Some(3), "equal duplicates are fine");
+}
+
+#[test]
+fn csv_sidecar_refuses_a_row_whose_sha256_is_not_the_file_name() {
+    let (f1, f2) = (calendar_file(1), calendar_file(2));
+    let (sc, mb) = sidecar_for(&format!("file,sha256,change_seq\n{f1},{},9\n", sha_of(&f2)));
+    assert_eq!(sc.change_seq(&mb, &f1), None);
+    assert!(sc.reasons().iter().any(|r| r.contains("sha256")));
+}
+
+#[test]
+fn csv_sidecar_skips_and_counts_a_truncated_last_row() {
+    let (f1, f2) = (calendar_file(1), calendar_file(2));
+    let (sc, mb) = sidecar_for(&format!("file,x,change_seq\n{f1},a,5\n{f2},b"));
+    assert_eq!(sc.change_seq(&mb, &f1), Some(5));
+    assert_eq!(sc.change_seq(&mb, &f2), None);
+    assert!(sc.reasons().iter().any(|r| r.contains("wrong number")));
+}
+
+#[test]
+fn csv_sidecar_reads_past_a_utf8_bom() {
+    let f = calendar_file(1);
+    let (sc, mb) = sidecar_for(&format!("\u{feff}file,change_seq\n{f},12\n"));
+    assert_eq!(sc.change_seq(&mb, &f), Some(12));
+}
+
+#[test]
+fn csv_sidecar_reports_an_unreadable_csv_and_never_fails_the_rebuild() {
+    let f = calendar_file(1);
+    let sc = CalendarCsvSidecar::load(&[("sc".into(), PathBuf::from("/nonexistent/calendar.csv"))]);
+    let mb = MailboxRoot {
+        mailbox: "sc".into(),
+        root: PathBuf::from("/nonexistent"),
+    };
+    assert_eq!(sc.change_seq(&mb, &f), None);
+    assert_eq!(sc.reasons().len(), 1);
+}
+
+fn env_of(vars: &[(&str, String)]) -> impl Fn(&str) -> Option<String> {
+    let vars: std::collections::HashMap<String, String> = vars
+        .iter()
+        .map(|(k, v)| (k.to_string(), v.clone()))
+        .collect();
+    move |k| vars.get(k).cloned()
+}
+
+#[tokio::test]
+async fn the_parsed_configuration_serves_the_mirror_and_records_a_delete() {
+    use service_calendar::mirror_config::{ANNOTATION_LOG, MIRROR_INDEX, MIRROR_MAILBOXES};
+    use service_calendar::MirrorConfig;
+
+    let mb = mailbox("cfg");
+    let ics = cal(
+        Some("REQUEST"),
+        &[vevent("u-cfg", &[ORG_A, "SUMMARY:Configured"])],
+    );
+    put(&mb.root, &ics);
+    let index_path = tmp_dir("cfg-out").join("index.csv");
+    rebuild_from_mirror(std::slice::from_ref(&mb), &[], &NoSidecar, &index_path).unwrap();
+    let log_path = tmp_dir("cfg-log").join("annotations.jsonl");
+
+    let config = MirrorConfig::parse(env_of(&[
+        (MIRROR_INDEX, index_path.display().to_string()),
+        (MIRROR_MAILBOXES, format!("cfg={}", mb.root.display())),
+        (ANNOTATION_LOG, log_path.display().to_string()),
+    ]))
+    .unwrap()
+    .unwrap();
+
+    let ledger = worm_ledger::InMemoryLedger::open(tmp_dir("cfg-ledger"), "t").unwrap();
+    let backing = Arc::new(service_calendar::LedgerBacking::new(
+        Box::new(ledger),
+        tmp_vocab(),
+        "t",
+    ));
+    let store = Arc::new(service_calendar::EventStore::new());
+    let router = service_calendar::router_for(config.build_fs(backing, store).unwrap());
+    let key = event_key("u-cfg");
+
+    let (status, body) = send(&router, "GET", &format!("/{key}.ics"), "").await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(body, ics);
+
+    let (status, _) = send(&router, "DELETE", &format!("/{key}.ics"), "").await;
+    assert!(!status.is_success(), "{status}");
+    let log = service_calendar::AnnotationLog::open(&log_path, std::slice::from_ref(&mb)).unwrap();
+    let read = log.read().unwrap();
+    assert_eq!(read.annotations.len(), 1);
+    assert_eq!(read.annotations[0].event_key, key);
+    assert_eq!(read.annotations[0].mailbox, "cfg");
+    assert_eq!(read.annotations[0].kind, AnnotationKind::Deleted);
+
+    let (status, _) = send(&router, "GET", &format!("/{key}.ics"), "").await;
+    assert_eq!(status, StatusCode::OK, "the event is still served");
+}
+
+#[test]
+fn a_configured_annotation_log_inside_a_mailbox_root_fails_at_load() {
+    use service_calendar::mirror_config::{
+        ConfigError, ANNOTATION_LOG, MIRROR_INDEX, MIRROR_MAILBOXES,
+    };
+    use service_calendar::MirrorConfig;
+
+    let mb = mailbox("cfg-inside");
+    put(&mb.root, &cal(Some("REQUEST"), &[vevent("u-in", &[ORG_A])]));
+    let index_path = tmp_dir("cfg-inside-out").join("index.csv");
+    rebuild_from_mirror(std::slice::from_ref(&mb), &[], &NoSidecar, &index_path).unwrap();
+    let log_path = mb.root.join("annotations.jsonl");
+
+    let config = MirrorConfig::parse(env_of(&[
+        (MIRROR_INDEX, index_path.display().to_string()),
+        (
+            MIRROR_MAILBOXES,
+            format!("cfg-inside={}", mb.root.display()),
+        ),
+        (ANNOTATION_LOG, log_path.display().to_string()),
+    ]))
+    .unwrap()
+    .unwrap();
+    let Err(err) = config.load() else {
+        panic!("load succeeded")
+    };
+    assert!(
+        matches!(err, ConfigError::Unusable { var, .. } if var == ANNOTATION_LOG),
+        "{err}"
+    );
+    assert!(err.to_string().contains(ANNOTATION_LOG), "{err}");
+    assert!(!log_path.exists());
 }
