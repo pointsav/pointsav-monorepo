@@ -766,21 +766,18 @@ pub fn reap_expired_leases(cfg: &QueueConfig, max_age: Duration) -> QueueResult<
                     // PID liveness: if the worker that holds this lease is still
                     // running, skip requeue — the lease is legitimately in-flight.
                     // Only requeue when the worker PID is dead (crashed or exited).
-                    // Worker IDs have the form "drain-<pid>"; skip the check for
-                    // any other format (non-drain workers, tests).
-                    if let Some(worker_id) = extract_worker_id(&fname_str) {
-                        if let Some(pid_str) = worker_id.strip_prefix("drain-") {
-                            if let Ok(pid) = pid_str.parse::<u32>() {
-                                if is_pid_alive(pid) {
-                                    debug!(
-                                        lease_file = %fname_str,
-                                        pid,
-                                        age_secs = age_nanos / 1_000_000_000,
-                                        "expired lease skipped — worker PID still alive"
-                                    );
-                                    continue;
-                                }
-                            }
+                    // Worker IDs have the form "drain-<pid>-<n>" (entrypoint.rs)
+                    // or the older "drain-<pid>"; skip the check for any other
+                    // format (non-drain workers, tests).
+                    if let Some(pid) = extract_worker_id(&fname_str).and_then(drain_worker_pid) {
+                        if is_pid_alive(pid) {
+                            debug!(
+                                lease_file = %fname_str,
+                                pid,
+                                age_secs = age_nanos / 1_000_000_000,
+                                "expired lease skipped — worker PID still alive"
+                            );
+                            continue;
                         }
                     }
 
@@ -855,6 +852,23 @@ fn extract_worker_id(lease_filename: &str) -> Option<&str> {
     // worker_id is everything except the last `.`-delimited ts component.
     let dot_pos = after_lease.rfind('.')?;
     Some(&after_lease[..dot_pos])
+}
+
+/// Extract the worker PID from a drain worker ID.
+///
+/// Accepts `drain-<pid>-<n>` (the form the drain workers in `entrypoint.rs`
+/// use) and `drain-<pid>`. Returns `None` for any other form, including a
+/// non-numeric `<n>`, so the reaper falls back to the age-only check.
+fn drain_worker_pid(worker_id: &str) -> Option<u32> {
+    let rest = worker_id.strip_prefix("drain-")?;
+    let pid_str = match rest.split_once('-') {
+        Some((pid_str, n_str)) => {
+            n_str.parse::<usize>().ok()?;
+            pid_str
+        }
+        None => rest,
+    };
+    pid_str.parse::<u32>().ok()
 }
 
 /// Check whether a PID is alive on Linux by probing `/proc/<pid>`.
@@ -1223,6 +1237,89 @@ mod tests {
             inflight_count, 0,
             "queue-in-flight/ must be empty after reap"
         );
+    }
+
+    // ── Reaper PID liveness (drain worker IDs) ────────────────────────────
+
+    /// Enqueue one brief and move it into queue-in-flight/ under an ancient
+    /// lease (ts_nanos = 1) held by `worker_id`. Returns the queue/ path the
+    /// brief returns to if the reaper requeues it.
+    fn plant_ancient_lease(cfg: &QueueConfig, brief_id: &str, worker_id: &str) -> PathBuf {
+        enqueue(cfg, &make_brief(brief_id)).expect("enqueue ok");
+        let base = brief_filename(brief_id);
+        let src = cfg.queue_dir().join(&base);
+        let lease_path = cfg.in_flight_dir().join(format!("{base}.lease.{worker_id}.1"));
+        fs::rename(&src, &lease_path).expect("simulate lease creation");
+        src
+    }
+
+    /// A PID no Linux process can hold: above the kernel's maximum pid_max
+    /// (2^22), so `/proc/<pid>` never exists.
+    const DEAD_PID: u32 = u32::MAX;
+
+    #[test]
+    fn drain_worker_pid_parses_supported_forms() {
+        assert_eq!(drain_worker_pid("drain-1234-0"), Some(1234));
+        assert_eq!(drain_worker_pid("drain-1234-17"), Some(1234));
+        assert_eq!(drain_worker_pid("drain-1234"), Some(1234));
+        assert_eq!(drain_worker_pid("drain-abc-0"), None);
+        assert_eq!(drain_worker_pid("drain-1234-x"), None);
+        assert_eq!(drain_worker_pid("drain-1234-"), None);
+        assert_eq!(drain_worker_pid("drain-retry-2"), None);
+        assert_eq!(drain_worker_pid("worker-0"), None);
+    }
+
+    /// A lease held by a live `drain-<pid>-<n>` worker is not requeued on age alone.
+    #[test]
+    fn reaper_skips_expired_lease_of_live_drain_pid_n_worker() {
+        let cfg = tmp_queue("reap-live-pid-n");
+        ensure_dirs(&cfg).expect("ensure dirs");
+        let worker_id = format!("drain-{}-0", std::process::id());
+        let queue_file = plant_ancient_lease(&cfg, "01J9REAPTEST00000000000001", &worker_id);
+
+        let reclaimed = reap_expired_leases(&cfg, Duration::from_millis(1)).expect("reap ok");
+        assert_eq!(reclaimed, 0, "a live worker's lease must not be requeued");
+        assert!(!queue_file.exists(), "brief must stay in queue-in-flight/");
+    }
+
+    /// A lease held by a dead `drain-<pid>-<n>` worker is requeued once expired.
+    #[test]
+    fn reaper_requeues_expired_lease_of_dead_drain_pid_n_worker() {
+        let cfg = tmp_queue("reap-dead-pid-n");
+        ensure_dirs(&cfg).expect("ensure dirs");
+        let worker_id = format!("drain-{DEAD_PID}-0");
+        let queue_file = plant_ancient_lease(&cfg, "01J9REAPTEST00000000000002", &worker_id);
+
+        let reclaimed = reap_expired_leases(&cfg, Duration::from_millis(1)).expect("reap ok");
+        assert_eq!(reclaimed, 1, "a dead worker's expired lease must be requeued");
+        assert!(queue_file.exists(), "brief must be back in queue/");
+    }
+
+    /// The older `drain-<pid>` form keeps its liveness check.
+    #[test]
+    fn reaper_skips_expired_lease_of_live_drain_pid_worker() {
+        let cfg = tmp_queue("reap-live-pid");
+        ensure_dirs(&cfg).expect("ensure dirs");
+        let worker_id = format!("drain-{}", std::process::id());
+        let queue_file = plant_ancient_lease(&cfg, "01J9REAPTEST00000000000003", &worker_id);
+
+        let reclaimed = reap_expired_leases(&cfg, Duration::from_millis(1)).expect("reap ok");
+        assert_eq!(reclaimed, 0, "a live worker's lease must not be requeued");
+        assert!(!queue_file.exists(), "brief must stay in queue-in-flight/");
+    }
+
+    /// A malformed drain worker ID keeps the previous behaviour: no liveness
+    /// check, so the lease is requeued on age alone even though the PID is live.
+    #[test]
+    fn reaper_requeues_expired_lease_of_malformed_drain_worker_id() {
+        let cfg = tmp_queue("reap-malformed");
+        ensure_dirs(&cfg).expect("ensure dirs");
+        let worker_id = format!("drain-{}-x", std::process::id());
+        let queue_file = plant_ancient_lease(&cfg, "01J9REAPTEST00000000000004", &worker_id);
+
+        let reclaimed = reap_expired_leases(&cfg, Duration::from_millis(1)).expect("reap ok");
+        assert_eq!(reclaimed, 1, "malformed worker ID falls back to age-only reap");
+        assert!(queue_file.exists(), "brief must be back in queue/");
     }
 
     // ── Shadow queue (ShadowQueueEntry format) ────────────────────────────────
