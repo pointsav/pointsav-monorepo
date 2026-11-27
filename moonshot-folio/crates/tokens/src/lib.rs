@@ -4,3 +4,5 @@
 //! moonshot-folio-tokens (L1): design-token theme snapshot, style roles, stamps.
 //!
 //! Skeleton (task F0.1). Design: BRIEF-moonshot-folio-architecture.
+
+#![forbid(unsafe_code)]

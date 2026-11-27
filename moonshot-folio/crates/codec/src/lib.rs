@@ -4,3 +4,5 @@
 //! moonshot-folio-codec (L0): CRC32, Adler32, ZIP, inflate, SHA-256, PNG/JPEG.
 //!
 //! Skeleton (task F0.1). Design: BRIEF-moonshot-folio-architecture.
+
+#![forbid(unsafe_code)]

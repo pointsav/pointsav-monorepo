@@ -4,3 +4,5 @@
 //! moonshot-folio-conform (L5): golden corpus runner and verifiers.
 //!
 //! Skeleton (task F0.1). Design: BRIEF-moonshot-folio-architecture.
+
+#![forbid(unsafe_code)]

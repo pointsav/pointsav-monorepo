@@ -20,3 +20,23 @@ moonshot-folio-docx = { path = "../docx" }
 moonshot-folio-xlsx = { path = "../xlsx" }
 moonshot-folio-html = { path = "../html" }
 moonshot-folio-csv = { path = "../csv" }
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+unreachable_pub = "deny"
+unused_must_use = "deny"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+indexing_slicing = "deny"
+panic = "deny"
+arithmetic_side_effects = "deny"
+too_many_lines = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"

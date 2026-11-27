@@ -4,3 +4,5 @@
 //! moonshot-folio-raster (L3): rasteriser and PNG encoder.
 //!
 //! Skeleton (task F0.1). Design: BRIEF-moonshot-folio-architecture.
+
+#![forbid(unsafe_code)]

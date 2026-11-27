@@ -4,3 +4,5 @@
 //! moonshot-folio-html (L4): IR to HTML/CSS.
 //!
 //! Skeleton (task F0.1). Design: BRIEF-moonshot-folio-architecture.
+
+#![forbid(unsafe_code)]
