@@ -58,4 +58,5 @@ members = [
     "crates/html",
     "crates/csv",
     "crates/conform",
+    "xtask",
 ]

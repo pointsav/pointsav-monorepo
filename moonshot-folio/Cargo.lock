@@ -153,3 +153,7 @@ dependencies = [
  "moonshot-folio-raster",
  "moonshot-folio-tokens",
 ]
+
+[[package]]
+name = "moonshot-folio-xtask"
+version = "0.1.0"
