@@ -158,6 +158,7 @@ fn append_commands_refuse_an_absolute_path_outside_the_root() {
 #[test]
 fn versions_out_refuses_an_escape_and_writes_nothing_outside() {
     let a = Area::new("versions");
+    fs::create_dir_all(a.root().join("outputs")).expect("outputs");
     let o = a.run(&["versions", "--out", "../outside/v.csv"]);
     assert!(!o.status.success());
     assert!(Area::names(&a.outside()).is_empty());

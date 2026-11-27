@@ -95,6 +95,15 @@ pub const CSS_END: &str = "/* @generated ts-geometry end */\n";
 fn g<'a>(r: &'a Row, k: &str) -> &'a str {
     r.get(k).map(|s| s.as_str()).unwrap_or("")
 }
+/// The value of column `k` of a row, or `None` when the cell is empty.
+fn cell<'a>(r: &'a Row, k: &str) -> Option<&'a str> {
+    let s = g(r, k);
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
+    }
+}
 fn ident(r: &Row) -> String {
     for k in [
         "id", "class", "label_id", "glyph_id", "section", "family", "row_id",
@@ -123,26 +132,88 @@ pub struct Registry {
     pub changes: Vec<Row>,
 }
 
+/// Record an error finding.
+fn bad(f: &mut Vec<Finding>, m: String) {
+    f.push(Finding {
+        error: true,
+        msg: m,
+    });
+}
+
+/// The lookup lists `check` builds once and its sections share.
+struct CheckTables<'a> {
+    class_names: Vec<&'a str>,
+    class_first: Vec<&'a str>,
+    alias_names: Vec<String>,
+    fam_names: Vec<&'a str>,
+    glyph_ids: Vec<&'a str>,
+    label_classes: Vec<&'a str>,
+    geom_ids: Vec<&'a str>,
+}
+
+impl<'a> CheckTables<'a> {
+    fn new(reg: &'a Registry) -> Self {
+        let class_names: Vec<&str> = reg.classes.iter().map(|r| g(r, "class")).collect();
+        let class_first: Vec<&str> = class_names
+            .iter()
+            .map(|c| c.split_whitespace().next().unwrap_or(""))
+            .collect();
+        let mut alias_names: Vec<String> = vec![];
+        for r in &reg.classes {
+            for a in toks(g(r, "aliases")) {
+                alias_names.push(a.rsplit('.').next().unwrap_or(a).to_string());
+            }
+        }
+        Self {
+            fam_names: reg.families.iter().map(|r| g(r, "family")).collect(),
+            glyph_ids: reg.glyphs.iter().map(|r| g(r, "glyph_id")).collect(),
+            label_classes: reg
+                .labels
+                .iter()
+                .flat_map(|r| {
+                    g(r, "label_class")
+                        .split('/')
+                        .map(|x| x.split_whitespace().next().unwrap_or(""))
+                        .collect::<Vec<_>>()
+                })
+                .collect(),
+            geom_ids: reg
+                .geometry
+                .iter()
+                .map(|r| g(r, "id").split('#').next().unwrap_or(""))
+                .collect(),
+            class_names,
+            class_first,
+            alias_names,
+        }
+    }
+}
+
 pub struct Finding {
     pub error: bool,
     pub msg: String,
 }
 
 fn read_table(path: &Path) -> Result<Vec<Row>, String> {
-    let s = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let mut rows = parse_csv(&s)
-        .into_iter()
-        .filter(|r| !(r.len() == 1 && r[0].is_empty()));
-    let head = rows
-        .next()
-        .ok_or_else(|| format!("{}: empty", path.display()))?;
+    let s = crate::csv::read_text(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    parse_table(&s).map_err(|e| format!("{}: {e}", path.display()))
+}
+
+/// One registry table from its text, without the file system (the fuzz entry point of `read_table`).
+/// Blank lines are skipped; an unbalanced quote, a missing header or a row whose width differs from
+/// the header is an error (a short row is never padded, a long one never cut).
+pub fn parse_table(s: &str) -> Result<Vec<Row>, String> {
+    let mut rows = crate::csv::parse_records(s)?;
+    rows.retain(|r| !(r.1.len() == 1 && r.1[0].is_empty()));
+    if rows.is_empty() {
+        return Err("empty".into());
+    }
+    let (_, head) = rows.remove(0);
+    let width = head.len();
+    crate::csv::check_widths(&rows, &width.to_string(), |n| n == width)?;
     Ok(rows
-        .map(|r| {
-            head.iter()
-                .enumerate()
-                .map(|(i, h)| (h.clone(), r.get(i).cloned().unwrap_or_default()))
-                .collect()
-        })
+        .into_iter()
+        .map(|(_, r)| head.iter().cloned().zip(r).collect())
         .collect())
 }
 
@@ -184,14 +255,6 @@ impl Registry {
     /// The generated geometry block of one registry row: CSS declarations, both break spellings (as the tokens use).
     pub fn geom_to_css(r: &Row) -> Vec<String> {
         let mut out = vec![];
-        let v = |k: &str| -> Option<&str> {
-            let s = g(r, k);
-            if s.is_empty() {
-                None
-            } else {
-                Some(s)
-            }
-        };
         for (k, p) in [
             ("font_size", "font-size"),
             ("line_height", "line-height"),
@@ -202,10 +265,28 @@ impl Registry {
             ("letter_spacing", "letter-spacing"),
             ("color", "color"),
         ] {
-            if let Some(x) = v(k) {
+            if let Some(x) = cell(r, k) {
                 out.push(format!("{p}:{x}"));
             }
         }
+        Self::box_css(r, &mut out);
+        for k in ["background", "width", "display"] {
+            if let Some(x) = cell(r, k) {
+                out.push(format!("{k}:{x}"));
+            }
+        }
+        Self::break_css(r, &mut out);
+        for k in ["orphans", "widows", "hyphens"] {
+            if let Some(x) = cell(r, k) {
+                out.push(format!("{k}:{x}"));
+            }
+        }
+        out
+    }
+
+    /// Margin, padding and border declarations: one shorthand when all four sides are set (and, for
+    /// the border, equal), otherwise one declaration per side that is set.
+    fn box_css(r: &Row, out: &mut Vec<String>) {
         for boxn in ["margin", "padding"] {
             let vals: Vec<&str> = SIDES.iter().map(|s| g(r, &format!("{boxn}_{s}"))).collect();
             if vals.iter().all(|x| !x.is_empty()) {
@@ -228,36 +309,29 @@ impl Registry {
                 }
             }
         }
-        for k in ["background", "width", "display"] {
-            if let Some(x) = v(k) {
-                out.push(format!("{k}:{x}"));
-            }
-        }
-        if let Some(x) = v("break_before") {
+    }
+
+    /// Page-break and keep declarations, in both the modern and the legacy spelling.
+    fn break_css(r: &Row, out: &mut Vec<String>) {
+        if let Some(x) = cell(r, "break_before") {
             out.push(format!("break-before:{x}"));
             out.push(format!(
                 "page-break-before:{}",
                 if x == "page" { "always" } else { x }
             ));
         }
-        if v("break_after").is_some() {
+        if cell(r, "break_after").is_some() {
             out.push("break-after:page".into());
             out.push("page-break-after:always".into());
         }
-        if let Some(x) = v("keep_next") {
+        if let Some(x) = cell(r, "keep_next") {
             out.push(format!("break-after:{x}"));
             out.push(format!("page-break-after:{x}"));
         }
-        if let Some(x) = v("keep_together") {
+        if let Some(x) = cell(r, "keep_together") {
             out.push(format!("break-inside:{x}"));
             out.push(format!("page-break-inside:{x}"));
         }
-        for k in ["orphans", "widows", "hyphens"] {
-            if let Some(x) = v(k) {
-                out.push(format!("{k}:{x}"));
-            }
-        }
-        out
     }
 
     /// Family inheritance (ts-families.csv column `parent`): a blank inheritable cell of a child takes the parent's value.
@@ -441,41 +515,22 @@ impl Registry {
     // ------------------------------------------------------------------------------------------------ check
     pub fn check(&self, root: &Path) -> Vec<Finding> {
         let mut f: Vec<Finding> = vec![];
-        let mut err = |m: String| {
-            f.push(Finding {
-                error: true,
-                msg: m,
-            })
-        };
-        let class_names: Vec<&str> = self.classes.iter().map(|r| g(r, "class")).collect();
-        let class_first: Vec<&str> = class_names
-            .iter()
-            .map(|c| c.split_whitespace().next().unwrap_or(""))
-            .collect();
-        let mut alias_names: Vec<String> = vec![];
-        for r in &self.classes {
-            for a in toks(g(r, "aliases")) {
-                alias_names.push(a.rsplit('.').next().unwrap_or(a).to_string());
-            }
+        for m in self.numeric_problems() {
+            bad(&mut f, m);
         }
-        let fam_names: Vec<&str> = self.families.iter().map(|r| g(r, "family")).collect();
-        let glyph_ids: Vec<&str> = self.glyphs.iter().map(|r| g(r, "glyph_id")).collect();
-        let label_classes: Vec<&str> = self
-            .labels
-            .iter()
-            .flat_map(|r| {
-                g(r, "label_class")
-                    .split('/')
-                    .map(|x| x.split_whitespace().next().unwrap_or(""))
-                    .collect::<Vec<_>>()
-            })
-            .collect();
-        let geom_ids: Vec<&str> = self
-            .geometry
-            .iter()
-            .map(|r| g(r, "id").split('#').next().unwrap_or(""))
-            .collect();
-        // statuses
+        let t = CheckTables::new(self);
+        self.check_statuses(&mut f);
+        self.check_classes(&t, &mut f);
+        self.check_geometry(&t, &mut f);
+        let mut comp_file = Self::check_components(root, &mut f);
+        self.check_families(&t, &mut comp_file, &mut f);
+        self.check_component_coverage(&comp_file, &mut f);
+        self.check_own_file_components(root, &comp_file, &mut f);
+        f
+    }
+
+    /// Every status column holds a value of its closed set.
+    fn check_statuses(&self, f: &mut Vec<Finding>) {
         for (name, rows, set) in [
             ("classes", &self.classes, CLASS_STATUS),
             ("geometry", &self.geometry, GEOM_STATUS),
@@ -488,25 +543,43 @@ impl Registry {
             for r in rows.iter() {
                 let s = g(r, "status");
                 if !set.contains(&s) {
-                    err(format!(
-                        "ts-{name}.csv: status '{s}' is not in the closed set ({}) at {}",
-                        set.join("|"),
-                        ident(r)
-                    ));
+                    bad(
+                        f,
+                        format!(
+                            "ts-{name}.csv: status '{s}' is not in the closed set ({}) at {}",
+                            set.join("|"),
+                            ident(r)
+                        ),
+                    );
                 }
             }
         }
-        // classes
+    }
+
+    /// ts-classes.csv: aliases, labels, glyphs and family names all resolve.
+    fn check_classes(&self, t: &CheckTables, f: &mut Vec<Finding>) {
+        let CheckTables {
+            class_first,
+            alias_names,
+            fam_names,
+            glyph_ids,
+            label_classes,
+            ..
+        } = t;
         for r in &self.classes {
             let c = g(r, "class");
             let a = g(r, "alias_of");
             if g(r, "status") == "alias" && a.is_empty() {
-                err(format!("ts-classes.csv: alias class '{c}' has no alias_of"));
+                bad(
+                    f,
+                    format!("ts-classes.csv: alias class '{c}' has no alias_of"),
+                );
             }
             if !a.is_empty() && !class_first.contains(&a) && !alias_names.iter().any(|x| x == a) {
-                err(format!(
-                    "ts-classes.csv: '{c}' alias_of '{a}' is not a class"
-                ));
+                bad(
+                    f,
+                    format!("ts-classes.csv: '{c}' alias_of '{a}' is not a class"),
+                );
             }
             for al in toks(g(r, "aliases")) {
                 let (tag, name) = match al.rsplit_once('.') {
@@ -514,36 +587,53 @@ impl Registry {
                     None => ("", al),
                 };
                 if !tag.is_empty() && !class_first.contains(&name) && name != c {
-                    err(format!(
-                        "ts-classes.csv: '{c}' alias '{al}' names an unknown class"
-                    ));
+                    bad(
+                        f,
+                        format!("ts-classes.csv: '{c}' alias '{al}' names an unknown class"),
+                    );
                 }
             }
             for l in toks(g(r, "label")) {
                 if !label_classes.contains(&l) {
-                    err(format!(
+                    bad(
+                        f,
+                        format!(
                         "ts-classes.csv: '{c}' label '{l}' is not a label_class in ts-labels.csv"
-                    ));
+                    ),
+                    );
                 }
             }
             for gl in toks(g(r, "glyph")) {
                 if !glyph_ids.contains(&gl) {
-                    err(format!(
-                        "ts-classes.csv: '{c}' glyph '{gl}' is not in ts-glyphs.csv"
-                    ));
+                    bad(
+                        f,
+                        format!("ts-classes.csv: '{c}' glyph '{gl}' is not in ts-glyphs.csv"),
+                    );
                 }
             }
             for k in ["families", "word_families"] {
                 for t in toks(g(r, k)) {
                     if t != "all" && !fam_names.contains(&t) {
-                        err(format!(
-                            "ts-classes.csv: '{c}' {k} names unknown family '{t}'"
-                        ));
+                        bad(
+                            f,
+                            format!("ts-classes.csv: '{c}' {k} names unknown family '{t}'"),
+                        );
                     }
                 }
             }
         }
-        // geometry
+    }
+
+    /// ts-geometry.csv: unique ids, closed sources, known families, classes and alias targets resolve.
+    fn check_geometry(&self, t: &CheckTables, f: &mut Vec<Finding>) {
+        let CheckTables {
+            class_names,
+            class_first,
+            alias_names,
+            fam_names,
+            geom_ids,
+            ..
+        } = t;
         let mut seen: Vec<&str> = vec![];
         let elems: Vec<String> = self
             .classes
@@ -554,18 +644,21 @@ impl Registry {
         for r in &self.geometry {
             let id = g(r, "id");
             if seen.contains(&id) {
-                err(format!("ts-geometry.csv: duplicate id '{id}'"));
+                bad(f, format!("ts-geometry.csv: duplicate id '{id}'"));
             }
             seen.push(id);
             if !GEOM_SOURCES.contains(&g(r, "source")) {
-                err(format!(
-                    "ts-geometry.csv: {id}: source '{}' is not in the closed set",
-                    g(r, "source")
-                ));
+                bad(
+                    f,
+                    format!(
+                        "ts-geometry.csv: {id}: source '{}' is not in the closed set",
+                        g(r, "source")
+                    ),
+                );
             }
             for t in toks(g(r, "family")) {
                 if t != "all" && !fam_names.contains(&t) {
-                    err(format!("ts-geometry.csv: {id}: unknown family '{t}'"));
+                    bad(f, format!("ts-geometry.csv: {id}: unknown family '{t}'"));
                 }
             }
             let cl = g(r, "class");
@@ -579,9 +672,10 @@ impl Registry {
                     || elems.iter().any(|e| e == first)
                     || g(r, "source") == "word";
                 if !ok {
-                    err(format!(
-                        "ts-geometry.csv: {id}: class '{cl}' is not in ts-classes.csv"
-                    ));
+                    bad(
+                        f,
+                        format!("ts-geometry.csv: {id}: class '{cl}' is not in ts-classes.csv"),
+                    );
                 }
             }
             let a = g(r, "alias_of");
@@ -590,13 +684,17 @@ impl Registry {
                 && !alias_names.iter().any(|x| x == a)
                 && !geom_ids.contains(&a)
             {
-                err(format!(
-                    "ts-geometry.csv: {id}: alias_of '{a}' resolves to no class or row"
-                ));
+                bad(
+                    f,
+                    format!("ts-geometry.csv: {id}: alias_of '{a}' resolves to no class or row"),
+                );
             }
         }
-        // components.csv: files and hashes; generated own-file components reproduce from the table
-        let comps = std::fs::read_to_string(root.join("precedent/components.csv"))
+    }
+
+    /// precedent/components.csv: every file exists and its hash matches; returns component -> file.
+    fn check_components(root: &Path, f: &mut Vec<Finding>) -> BTreeMap<String, String> {
+        let comps = crate::csv::read_text(&root.join("precedent/components.csv"))
             .map(|s| parse_csv(&s))
             .unwrap_or_default();
         let mut comp_ids: Vec<String> = vec![];
@@ -604,41 +702,63 @@ impl Registry {
         if let Some((head, rows)) = comps.split_first() {
             let ix = |n: &str| head.iter().position(|h| h == n);
             for r in rows.iter().filter(|r| r.len() > 4) {
-                let (id, file, hash) = (
-                    &r[ix("id").unwrap_or(0)],
-                    &r[ix("file").unwrap_or(2)],
-                    &r[ix("hash").unwrap_or(4)],
-                );
+                let cell = |name: &str, at: usize| r.get(ix(name).unwrap_or(at));
+                let (Some(id), Some(file), Some(hash)) =
+                    (cell("id", 0), cell("file", 2), cell("hash", 4))
+                else {
+                    bad(
+                        f,
+                        format!(
+                            "components.csv: a row has {} fields, too few for the id, file and hash columns",
+                            r.len()
+                        ),
+                    );
+                    continue;
+                };
                 comp_ids.push(id.clone());
                 comp_file.insert(id.clone(), file.clone());
-                match std::fs::read_to_string(root.join(file)) {
-                    Err(e) => err(format!("components.csv: {id}: {file}: {e}")),
+                match crate::csv::read_text(&root.join(file)) {
+                    Err(e) => bad(f, format!("components.csv: {id}: {file}: {e}")),
                     Ok(t) => {
                         if fnv(t.trim_end()) != *hash {
-                            err(format!("components.csv: {id}: hash differs from {file} (file changed: re-run, then update the row)"));
+                            bad(f, format!("components.csv: {id}: hash differs from {file} (file changed: re-run, then update the row)"));
                         }
                     }
                 }
             }
         } else {
-            err("precedent/components.csv missing or empty".into());
+            bad(f, "precedent/components.csv missing or empty".into());
         }
+        comp_file
+    }
+
+    /// ts-families.csv: parents exist and do not loop; each family token is a known component file.
+    fn check_families(
+        &self,
+        t: &CheckTables,
+        comp_file: &mut BTreeMap<String, String>,
+        f: &mut Vec<Finding>,
+    ) {
+        let fam_names = &t.fam_names;
         for r in &self.families {
             let p = g(r, "parent");
             if !p.is_empty() && !fam_names.contains(&p) {
-                err(format!(
-                    "ts-families.csv: {}: parent '{p}' is not a family",
-                    g(r, "family")
-                ));
+                bad(
+                    f,
+                    format!(
+                        "ts-families.csv: {}: parent '{p}' is not a family",
+                        g(r, "family")
+                    ),
+                );
             }
             let lin = self.lineage(g(r, "family"));
             if let Some(last) = lin.last() {
                 if let Some(lr) = self.families.iter().find(|x| g(x, "family") == last) {
                     if !g(lr, "parent").is_empty() {
-                        err(format!(
-                            "ts-families.csv: {}: parent chain loops",
-                            g(r, "family")
-                        ));
+                        bad(
+                            f,
+                            format!("ts-families.csv: {}: parent chain loops", g(r, "family")),
+                        );
                     }
                 }
             }
@@ -647,6 +767,10 @@ impl Registry {
                 g(r, "token_css").to_string(),
             );
         }
+    }
+
+    /// Every component with css rows is in components.csv or is a family token.
+    fn check_component_coverage(&self, comp_file: &BTreeMap<String, String>, f: &mut Vec<Finding>) {
         let mut seen_comp: Vec<&str> = vec![];
         for r in &self.geometry {
             let c = g(r, "component");
@@ -659,9 +783,18 @@ impl Registry {
                 .iter()
                 .any(|x| g(x, "component") == c && g(x, "source") == "css");
             if css_rows && !comp_file.contains_key(c) {
-                err(format!("ts-geometry.csv: component '{c}' has css rows but is neither in components.csv nor a family token (ts-families token_stem)"));
+                bad(f, format!("ts-geometry.csv: component '{c}' has css rows but is neither in components.csv nor a family token (ts-families token_stem)"));
             }
         }
+    }
+
+    /// Generated own-file components still contain the generated block, and their evidence lines match.
+    fn check_own_file_components(
+        &self,
+        root: &Path,
+        comp_file: &BTreeMap<String, String>,
+        f: &mut Vec<Finding>,
+    ) {
         for (c, text) in self
             .own_file_components()
             .iter()
@@ -669,16 +802,17 @@ impl Registry {
             .filter_map(|(c, v)| v.into_iter().next().map(|(_, t)| (c, t)))
         {
             let Some(file) = comp_file.get(&c) else {
-                err(format!(
-                    "engine css.own-file-components: '{c}' is not in components.csv"
-                ));
+                bad(
+                    f,
+                    format!("engine css.own-file-components: '{c}' is not in components.csv"),
+                );
                 continue;
             };
-            match std::fs::read_to_string(root.join(file)) {
-                Err(e) => err(format!("{file}: {e}")),
+            match crate::csv::read_text(&root.join(file)) {
+                Err(e) => bad(f, format!("{file}: {e}")),
                 Ok(body) => {
                     if !body.contains(&text) {
-                        err(format!("{file}: the generated block differs from ts-geometry.csv (re-run registry css --component {c})"));
+                        bad(f, format!("{file}: the generated block differs from ts-geometry.csv (re-run registry css --component {c})"));
                     }
                     let lines: Vec<&str> = body.lines().collect();
                     for r in self
@@ -698,22 +832,66 @@ impl Registry {
                                     .map(|l| l.starts_with(&format!("{}{{", g(r, "selector"))))
                                     .unwrap_or(false)
                                 {
-                                    err(format!("ts-geometry.csv: {}: evidence line {n} of {file} does not start with '{}{{'", g(r, "id"), g(r, "selector")));
+                                    bad(f, format!("ts-geometry.csv: {}: evidence line {n} of {file} does not start with '{}{{'", g(r, "id"), g(r, "selector")));
                                 }
                             }
-                            _ => err(format!(
+                            _ => bad(
+                                f,
+                                format!(
                                 "ts-geometry.csv: {}: evidence does not start with {file}:<line>",
                                 g(r, "id")
-                            )),
+                            ),
+                            ),
                         }
                     }
                 }
             }
         }
-        f
     }
 
     // ------------------------------------------------------------------------------------------------ DTCG
+    /// Numbers the token output reads (`body_size`, `body_line_height`, `page_margin`, a geometry
+    /// `line_height`) that are not finite numbers. `pf` would turn them into 0.0, and `nan` or `inf`
+    /// would be written into the JSON.
+    pub fn numeric_problems(&self) -> Vec<String> {
+        let finite = |t: &str| t.trim().parse::<f64>().is_ok_and(f64::is_finite);
+        let mut out = vec![];
+        for f in &self.families {
+            let name = g(f, "family");
+            let size = g(f, "body_size");
+            if size.is_empty() {
+                continue;
+            }
+            if !finite(size.trim_end_matches(['p', 't'])) {
+                out.push(format!(
+                    "ts-families.csv: {name}: body_size '{size}' is not a finite number"
+                ));
+            }
+            let lh = g(f, "body_line_height");
+            if !finite(lh) {
+                out.push(format!(
+                    "ts-families.csv: {name}: body_line_height '{lh}' is not a finite number"
+                ));
+            }
+            for m in g(f, "page_margin").split_whitespace() {
+                if !finite(m.trim_end_matches(['i', 'n'])) {
+                    out.push(format!(
+                        "ts-families.csv: {name}: page_margin '{m}' is not a finite number"
+                    ));
+                }
+            }
+        }
+        for r in &self.geometry {
+            let v = g(r, "line_height");
+            if !v.is_empty() && v.chars().all(|c| c.is_ascii_digit() || c == '.') && !finite(v) {
+                out.push(format!(
+                    "ts-geometry.csv: {}: line_height '{v}' is not a finite number",
+                    g(r, "id")
+                ));
+            }
+        }
+        out
+    }
     /// Design-token JSON (W3C DTCG draft): dimension / typography / fontWeight tokens; byte-identical to `script-typeset-reference.py dtcg`.
     pub fn dtcg(&self, family: Option<&str>) -> String {
         let mut fam_node = J::obj();
@@ -993,99 +1171,126 @@ impl Registry {
     }
 
     /// Lints one authored HTML document against the closed class list (the class rules of `script-typeset-lint.py`).
-    pub fn lint_html(&self, src: &str, family: Option<&str>) -> LintReport {
-        let scan = scan_html(src);
+    /// Refuses (typed) a document the scanner refuses: see `MAX_HTML_DEPTH` and `MAX_LABEL_BYTES`.
+    pub fn lint_html(&self, src: &str, family: Option<&str>) -> crate::error::Result<LintReport> {
+        let scan = scan_html(src)?;
         let fam = family
             .map(String::from)
             .or_else(|| self.detect_family(&scan.styles))
             .unwrap_or_else(|| "unknown".into());
-        let retired: Vec<String> = self
-            .classes
-            .iter()
-            .filter(|r| g(r, "status") == "retired")
-            .map(|r| {
-                g(r, "class")
-                    .split_whitespace()
-                    .next()
-                    .unwrap_or("")
-                    .to_string()
-            })
-            .collect();
-        let fam_retired = self.family_retired();
-        let known_fams: Vec<&str> = self.families.iter().map(|r| g(r, "family")).collect();
-        let (cmap, amap) = self.class_maps();
+        let cx = LintCtx {
+            retired: self
+                .classes
+                .iter()
+                .filter(|r| g(r, "status") == "retired")
+                .map(|r| {
+                    g(r, "class")
+                        .split_whitespace()
+                        .next()
+                        .unwrap_or("")
+                        .to_string()
+                })
+                .collect(),
+            fam_retired: self.family_retired(),
+            known_fams: self.families.iter().map(|r| g(r, "family")).collect(),
+            maps: self.class_maps(),
+            fam: fam.clone(),
+        };
         let mut rep = LintReport {
-            family: fam.clone(),
+            family: fam,
             findings: vec![],
         };
         for e in &scan.elements {
-            if let Some(st) = &e.style {
-                rep.add(
-                    "inline-style",
-                    e.line,
-                    format!(
-                        "<{} style=\"{}\">",
-                        e.tag,
-                        st.chars().take(50).collect::<String>()
-                    ),
-                );
-            }
-            if e.tag == "strong" && e.classes.iter().any(|c| c == "def-term") {
-                rep.add(
-                    "strong-def-term",
-                    e.line,
-                    "strong.def-term -> span.def-term".into(),
-                );
-            }
-            for c in &e.classes {
-                let (st, canon) = Self::lookup_in(&cmap, &amap, c);
-                if retired.iter().any(|x| x == c) {
-                    rep.add("retired-class", e.line, format!("{}.{}", e.tag, c));
-                } else if let Some((_, _, dec)) =
-                    fam_retired.iter().find(|(k, f, _)| k == c && *f == fam)
-                {
-                    rep.add(
-                        "retired-class",
-                        e.line,
-                        format!("{}.{}: retired for {} ({})", e.tag, c, fam, dec),
-                    );
-                } else if st == "unknown" {
-                    rep.add("unknown-class", e.line, format!("{}.{}", e.tag, c));
-                } else if st == "alias" {
-                    rep.add(
-                        "alias-use",
-                        e.line,
-                        format!("{} -> {}", c, canon.unwrap_or_default()),
-                    );
-                } else {
-                    if st == "proposed" {
-                        rep.add("proposed-class", e.line, format!("{}.{}", e.tag, c));
-                    }
-                    let fams = Self::families_in(&cmap, &amap, c);
-                    let lin = self.lineage(&fam);
-                    if known_fams.contains(&fam.as_str())
-                        && !fams.is_empty()
-                        && !fams.iter().any(|x| x == "all")
-                        && !fams.iter().any(|x| lin.contains(x))
-                    {
-                        let mut s = fams.clone();
-                        s.sort();
-                        rep.add(
-                            "family-scope",
-                            e.line,
-                            format!("{} (registered for {})", c, s.join(";")),
-                        );
-                    }
-                }
-            }
-            if let Some(t) = &e.label_text {
-                if t.trim_end_matches([' ', '\t', '\n', '\u{a0}']) != t {
-                    rep.add("label-space", e.line, format!("{:?}", t));
-                }
+            self.lint_element(&cx, e, &mut rep);
+        }
+        Ok(rep)
+    }
+
+    /// The findings for one element: inline style, `strong.def-term`, each class, a label's trailing space.
+    fn lint_element(&self, cx: &LintCtx, e: &El, rep: &mut LintReport) {
+        if let Some(st) = &e.style {
+            rep.add(
+                "inline-style",
+                e.line,
+                format!(
+                    "<{} style=\"{}\">",
+                    e.tag,
+                    st.chars().take(50).collect::<String>()
+                ),
+            );
+        }
+        if e.tag == "strong" && e.classes.iter().any(|c| c == "def-term") {
+            rep.add(
+                "strong-def-term",
+                e.line,
+                "strong.def-term -> span.def-term".into(),
+            );
+        }
+        for c in &e.classes {
+            self.lint_class(cx, e, c, rep);
+        }
+        if let Some(t) = &e.label_text {
+            if t.trim_end_matches([' ', '\t', '\n', '\u{a0}']) != t {
+                rep.add("label-space", e.line, format!("{:?}", t));
             }
         }
-        rep
     }
+
+    /// The finding for one class on one element: retired, unknown, alias, proposed, or out of family scope.
+    fn lint_class(&self, cx: &LintCtx, e: &El, c: &str, rep: &mut LintReport) {
+        let (cmap, amap) = &cx.maps;
+        let (st, canon) = Self::lookup_in(cmap, amap, c);
+        if cx.retired.iter().any(|x| x == c) {
+            rep.add("retired-class", e.line, format!("{}.{}", e.tag, c));
+        } else if let Some((_, _, dec)) = cx
+            .fam_retired
+            .iter()
+            .find(|(k, f, _)| k == c && *f == cx.fam)
+        {
+            rep.add(
+                "retired-class",
+                e.line,
+                format!("{}.{}: retired for {} ({})", e.tag, c, cx.fam, dec),
+            );
+        } else if st == "unknown" {
+            rep.add("unknown-class", e.line, format!("{}.{}", e.tag, c));
+        } else if st == "alias" {
+            rep.add(
+                "alias-use",
+                e.line,
+                format!("{} -> {}", c, canon.unwrap_or_default()),
+            );
+        } else {
+            if st == "proposed" {
+                rep.add("proposed-class", e.line, format!("{}.{}", e.tag, c));
+            }
+            let fams = Self::families_in(cmap, amap, c);
+            let lin = self.lineage(&cx.fam);
+            if cx.known_fams.contains(&cx.fam.as_str())
+                && !fams.is_empty()
+                && !fams.iter().any(|x| x == "all")
+                && !fams.iter().any(|x| lin.contains(x))
+            {
+                let mut s = fams.clone();
+                s.sort();
+                rep.add(
+                    "family-scope",
+                    e.line,
+                    format!("{} (registered for {})", c, s.join(";")),
+                );
+            }
+        }
+    }
+}
+
+/// What `lint_html` looks up for every class: the retired classes, the per-family retirements, the
+/// known family names, the class and alias maps, and the family being linted.
+struct LintCtx<'a> {
+    retired: Vec<String>,
+    fam_retired: Vec<(String, String, String)>,
+    known_fams: Vec<&'a str>,
+    maps: (BTreeMap<String, &'a Row>, BTreeMap<String, String>),
+    fam: String,
 }
 
 // ---------------------------------------------------------------------------------------------------- lint report
@@ -1193,7 +1398,8 @@ fn decode(s: &str) -> String {
     while let Some(i) = rest.find('&') {
         o.push_str(&rest[..i]);
         let tail = &rest[i..];
-        match tail.find(';').filter(|e| *e <= 10) {
+        // the first ';' within ten bytes (an unbounded `find` made "&&&&..." quadratic)
+        match tail.bytes().take(11).position(|c| c == b';') {
             Some(e) => {
                 let ent = &tail[1..e];
                 let rep = match ent {
@@ -1231,15 +1437,42 @@ fn decode(s: &str) -> String {
     o
 }
 
+/// The deepest stack of open elements `scan_html` accepts. The scanner keeps an explicit stack (no
+/// recursion), but each close tag searches it, so hostile depth costs time; an unclosed non-void
+/// element (`<p>` without `</p>`) also counts until a parent closes it.
+pub const MAX_HTML_DEPTH: usize = 1024;
+/// The most label text (span.clm, span.clm-r) one scan captures in total. Labels that do not nest
+/// capture at most the input size, so a file within `csv::MAX_FILE_BYTES` only reaches this when
+/// labels nest inside labels, where every open label copies the same text.
+pub const MAX_LABEL_BYTES: usize = crate::csv::MAX_FILE_BYTES as usize;
+
+/// The first match of an ASCII `needle` in `hay`, ignoring ASCII case, without lower-casing a copy
+/// of the rest of the input (which made many `<style>` tags quadratic).
+fn find_ascii_ci(hay: &str, needle: &str) -> Option<usize> {
+    let (h, n) = (hay.as_bytes(), needle.as_bytes());
+    if n.is_empty() {
+        return Some(0);
+    }
+    h.windows(n.len()).position(|w| w.eq_ignore_ascii_case(n))
+}
+
+/// The fuzz entry point of the HTML scanner: how many body elements it reads, or why it refused.
+pub fn scan_html_count(src: &str) -> crate::error::Result<usize> {
+    scan_html(src).map(|s| s.elements.len())
+}
+
 /// Minimal tolerant HTML scanner (no dependencies): elements of the `<body>` with line, class list, `style=` and (for span.clm / span.clm-r) their text.
-fn scan_html(src: &str) -> Scan {
+/// Refuses (typed) input nested deeper than `MAX_HTML_DEPTH` or capturing more than `MAX_LABEL_BYTES` of label text.
+fn scan_html(src: &str) -> crate::error::Result<Scan> {
+    use crate::error::CoreError;
+    let mut label_bytes = 0usize;
     let b = src.as_bytes();
     let mut i = 0usize;
     let mut line = 1usize;
     let mut elements: Vec<El> = vec![];
     let mut styles = String::new();
     let mut stack: Vec<(String, Option<usize>)> = vec![]; // (tag, index into elements when a label capture is open)
-    let mut in_body = !src.to_ascii_lowercase().contains("<body");
+    let mut in_body = find_ascii_ci(src, "<body").is_none();
     let mut label_buf: BTreeMap<usize, String> = BTreeMap::new();
     while i < b.len() {
         if b[i] != b'<' {
@@ -1247,6 +1480,12 @@ fn scan_html(src: &str) -> Scan {
             let text = &src[i..j];
             if !label_buf.is_empty() {
                 let d = decode(text);
+                label_bytes = label_bytes.saturating_add(d.len().saturating_mul(label_buf.len()));
+                if label_bytes > MAX_LABEL_BYTES {
+                    return Err(CoreError::TooLarge(format!(
+                        "line {line}: nested labels capture more than {MAX_LABEL_BYTES} bytes"
+                    )));
+                }
                 for v in label_buf.values_mut() {
                     v.push_str(&d);
                 }
@@ -1270,19 +1509,19 @@ fn scan_html(src: &str) -> Scan {
         }
         let close = rest.starts_with("</");
         let name_start = if close { 2 } else { 1 };
-        let name_len = rest[name_start..]
-            .find(|c: char| c.is_whitespace() || c == '>' || c == '/')
-            .unwrap_or(rest.len() - name_start);
-        if name_len == 0
-            || !rest[name_start..]
-                .chars()
-                .next()
-                .map(|c| c.is_ascii_alphabetic())
-                .unwrap_or(false)
+        // the first-letter test comes before the name search: searching first made "<1<1<1..." quadratic
+        if !rest[name_start..]
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_alphabetic())
+            .unwrap_or(false)
         {
             i += 1;
             continue;
         }
+        let name_len = rest[name_start..]
+            .find(|c: char| c.is_whitespace() || c == '>' || c == '/')
+            .unwrap_or(rest.len() - name_start);
         let tag = rest[name_start..name_start + name_len].to_ascii_lowercase();
         // end of the tag, honouring quotes
         let mut q = 0u8;
@@ -1326,9 +1565,7 @@ fn scan_html(src: &str) -> Scan {
             continue;
         }
         if tag == "style" || tag == "script" {
-            let end = src[i..]
-                .to_ascii_lowercase()
-                .find(&format!("</{tag}"))
+            let end = find_ascii_ci(&src[i..], &format!("</{tag}"))
                 .map(|p| i + p)
                 .unwrap_or(b.len());
             if tag == "style" {
@@ -1361,10 +1598,16 @@ fn scan_html(src: &str) -> Scan {
             }
         }
         if !selfclose && !VOID.contains(&tag.as_str()) {
+            if stack.len() >= MAX_HTML_DEPTH {
+                return Err(CoreError::TooDeep {
+                    limit: MAX_HTML_DEPTH,
+                    line: tag_line,
+                });
+            }
             stack.push((tag, cap));
         }
     }
-    Scan { elements, styles }
+    Ok(Scan { elements, styles })
 }
 
 fn parse_attrs(s: &str) -> (Vec<(String, String)>, bool) {
@@ -1416,6 +1659,9 @@ fn parse_attrs(s: &str) -> (Vec<(String, String)>, bool) {
 }
 
 // ---------------------------------------------------------------------------------------------------- JSON (Python json.dumps(indent=1, ensure_ascii=False) layout)
+/// The depth of the DTCG tree `dtcg` builds (root, ts, component, its name, node, $extensions,
+/// com.pointsav.typeset, value): fixed by the code, never by the registry contents.
+const J_MAX_DEPTH: usize = 8;
 enum J {
     Obj(Vec<(String, J)>),
     Arr(Vec<J>),
@@ -1445,17 +1691,27 @@ impl J {
     }
     /// The child object under `k`, created empty when absent (`dict.setdefault(k, {})`).
     fn entry(&mut self, k: &str) -> &mut J {
-        if let J::Obj(m) = self {
-            if let Some(p) = m.iter().position(|e| e.0 == k) {
-                return &mut m[p].1;
-            }
-            m.push((k.to_string(), J::obj()));
-            let n = m.len() - 1;
-            return &mut m[n].1;
+        if !matches!(self, J::Obj(_)) {
+            *self = J::obj();
         }
-        unreachable!("entry on a non-object")
+        match self {
+            J::Obj(m) => {
+                let at = match m.iter().position(|e| e.0 == k) {
+                    Some(p) => p,
+                    None => {
+                        m.push((k.to_string(), J::obj()));
+                        m.len() - 1
+                    }
+                };
+                &mut m[at].1
+            }
+            other => other,
+        }
     }
+    /// Recursive, but not on input depth: `dtcg` builds a tree of fixed shape (at most
+    /// `J_MAX_DEPTH` levels) whatever the registry holds, so the recursion is bounded by construction.
     fn dump(&self, o: &mut String, lvl: usize) {
+        debug_assert!(lvl <= J_MAX_DEPTH, "J tree deeper than its fixed shape");
         let pad = |n: usize| " ".repeat(n);
         match self {
             J::Str(s) => {
@@ -1614,145 +1870,180 @@ pub fn run(args: &[String], default_root: &Path) -> i32 {
     };
     let family = flag(rest, "--family");
     match sub.as_str() {
-        "check" => {
-            let f = reg.check(&root);
-            for x in &f {
-                println!("{} {}", if x.error { "ERROR" } else { "warn " }, x.msg);
-            }
-            let errs = f.iter().filter(|x| x.error).count();
-            println!(
-                "registry check: {} classes, {} geometry rows, {} errors, {} warnings",
-                reg.classes.len(),
-                reg.geometry.len(),
-                errs,
-                f.len() - errs
-            );
-            if errs > 0 {
-                1
-            } else {
-                0
-            }
-        }
+        "check" => cmd_check(&reg, &root),
         "classes" => {
             print!("{}", reg.classes_list(family.as_deref()));
             0
         }
-        "css" => {
-            let comp = flag(rest, "--component");
-            let files = reg.css_files(comp.as_deref());
-            if files.is_empty() {
-                eprintln!(
-                    "error: no CSS-sourced rows{}",
-                    comp.map(|c| format!(" for component {c}"))
-                        .unwrap_or_default()
-                );
-                return 2;
-            }
-            match flag(rest, "--out") {
-                Some(out) => {
-                    let d = match confine(&root, &format!("{out}/css")) {
-                        Ok(d) => d,
-                        Err(e) => {
-                            eprintln!("error: {e}");
-                            return 2;
-                        }
-                    };
-                    if let Some((c, _)) = files.iter().find(|(c, _)| !plain_name(c)) {
-                        eprintln!("error: component name is not a plain file name: {c}");
-                        return 2;
-                    }
-                    if let Err(e) = std::fs::create_dir_all(&d) {
-                        eprintln!("error: {e}");
-                        return 2;
-                    }
-                    for (c, t) in &files {
-                        if let Err(e) = std::fs::write(d.join(format!("{c}.css")), t) {
-                            eprintln!("error: {e}");
-                            return 2;
-                        }
-                    }
-                    println!("wrote {}", d.display());
-                }
-                None => {
-                    if files.len() > 1 {
-                        eprintln!("error: several components: name one with --component C or write all with --out DIR");
-                        return 2;
-                    }
-                    print!("{}", files[0].1);
-                }
-            }
-            0
-        }
-        "dtcg" => {
-            let js = reg.dtcg(family.as_deref());
-            match flag(rest, "--out") {
-                Some(p) => {
-                    let target = match confine(&root, &p) {
-                        Ok(t) => t,
-                        Err(e) => {
-                            eprintln!("error: {e}");
-                            return 2;
-                        }
-                    };
-                    if let Err(e) = std::fs::write(&target, format!("{js}\n")) {
-                        eprintln!("error: {e}");
-                        return 2;
-                    }
-                    println!("wrote {p}");
-                }
-                None => println!("{js}"),
-            }
-            0
-        }
-        "lint" => {
-            let value_flags = ["--root", "--registry", "--family"];
-            let mut files: Vec<String> = vec![];
-            let mut skip = false;
-            for a in rest {
-                if skip {
-                    skip = false;
-                    continue;
-                }
-                if value_flags.contains(&a.as_str()) {
-                    skip = true;
-                    continue;
-                }
-                if !a.starts_with("--") {
-                    files.push(a.clone());
-                }
-            }
-            if files.is_empty() {
-                eprintln!("{REG_USAGE}");
-                return 2;
-            }
-            let (legacy, strict, all) = (
-                rest.iter().any(|a| a == "--legacy"),
-                rest.iter().any(|a| a == "--strict"),
-                rest.iter().any(|a| a == "--all-lines"),
-            );
-            let mut bad = false;
-            for f in &files {
-                let src = match std::fs::read_to_string(f) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        eprintln!("error: {f}: {e}");
-                        return 2;
-                    }
-                };
-                let rep = reg.lint_html(&src, family.as_deref());
-                print!("{}", rep.print(f, legacy, all));
-                bad |= rep.failing(legacy, strict);
-            }
-            if bad {
-                1
-            } else {
-                0
-            }
-        }
+        "css" => cmd_css(&reg, rest, &root),
+        "dtcg" => cmd_dtcg(&reg, rest, &root, family.as_deref()),
+        "lint" => cmd_lint(&reg, rest, family.as_deref()),
         _ => {
             eprintln!("{REG_USAGE}");
             2
         }
+    }
+}
+
+/// `registry check`: print every finding and a summary line; exit 1 when there are errors.
+fn cmd_check(reg: &Registry, root: &Path) -> i32 {
+    let f = reg.check(root);
+    for x in &f {
+        println!("{} {}", if x.error { "ERROR" } else { "warn " }, x.msg);
+    }
+    let errs = f.iter().filter(|x| x.error).count();
+    println!(
+        "registry check: {} classes, {} geometry rows, {} errors, {} warnings",
+        reg.classes.len(),
+        reg.geometry.len(),
+        errs,
+        f.len() - errs
+    );
+    if errs > 0 {
+        1
+    } else {
+        0
+    }
+}
+
+/// `registry css`: print one component's CSS, or write every component's file under `--out`.
+fn cmd_css(reg: &Registry, rest: &[String], root: &Path) -> i32 {
+    let comp = flag(rest, "--component");
+    let files = reg.css_files(comp.as_deref());
+    if files.is_empty() {
+        eprintln!(
+            "error: no CSS-sourced rows{}",
+            comp.map(|c| format!(" for component {c}"))
+                .unwrap_or_default()
+        );
+        return 2;
+    }
+    match flag(rest, "--out") {
+        Some(out) => write_css_files(root, &out, &files),
+        None => {
+            if files.len() > 1 {
+                eprintln!("error: several components: name one with --component C or write all with --out DIR");
+                return 2;
+            }
+            print!("{}", files[0].1);
+            0
+        }
+    }
+}
+
+/// Write each `(component, css)` as `<out>/css/<component>.css`, confined to the root.
+fn write_css_files(root: &Path, out: &str, files: &[(String, String)]) -> i32 {
+    let d = match confine(root, &format!("{out}/css")) {
+        Ok(d) => d,
+        Err(e) => {
+            eprintln!("error: {e}");
+            return 2;
+        }
+    };
+    if let Some((c, _)) = files.iter().find(|(c, _)| !plain_name(c)) {
+        eprintln!("error: component name is not a plain file name: {c}");
+        return 2;
+    }
+    if let Err(e) = std::fs::create_dir_all(&d) {
+        eprintln!("error: {e}");
+        return 2;
+    }
+    for (c, t) in files {
+        if let Err(e) = crate::csv::write_file_atomic(&d.join(format!("{c}.css")), t) {
+            eprintln!("error: {e}");
+            return 2;
+        }
+    }
+    println!("wrote {}", d.display());
+    0
+}
+
+/// `registry dtcg`: print the token JSON, or write it to `--out`; refuses non-finite numbers.
+fn cmd_dtcg(reg: &Registry, rest: &[String], root: &Path, family: Option<&str>) -> i32 {
+    let problems = reg.numeric_problems();
+    if !problems.is_empty() {
+        for m in &problems {
+            eprintln!("error: {m}");
+        }
+        return 2;
+    }
+    let js = reg.dtcg(family);
+    match flag(rest, "--out") {
+        Some(p) => {
+            let target = match confine(root, &p) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    return 2;
+                }
+            };
+            if let Err(e) = crate::csv::write_file_atomic(&target, &format!("{js}\n")) {
+                eprintln!("error: {e}");
+                return 2;
+            }
+            println!("wrote {p}");
+        }
+        None => println!("{js}"),
+    }
+    0
+}
+
+/// The file arguments of `registry lint`: everything that is not a flag or a flag's value.
+fn lint_files(rest: &[String]) -> Vec<String> {
+    let value_flags = ["--root", "--registry", "--family"];
+    let mut files: Vec<String> = vec![];
+    let mut skip = false;
+    for a in rest {
+        if skip {
+            skip = false;
+            continue;
+        }
+        if value_flags.contains(&a.as_str()) {
+            skip = true;
+            continue;
+        }
+        if !a.starts_with("--") {
+            files.push(a.clone());
+        }
+    }
+    files
+}
+
+/// `registry lint FILE...`: print each report; exit 1 when any file fails.
+fn cmd_lint(reg: &Registry, rest: &[String], family: Option<&str>) -> i32 {
+    let files = lint_files(rest);
+    if files.is_empty() {
+        eprintln!("{REG_USAGE}");
+        return 2;
+    }
+    let (legacy, strict, all) = (
+        rest.iter().any(|a| a == "--legacy"),
+        rest.iter().any(|a| a == "--strict"),
+        rest.iter().any(|a| a == "--all-lines"),
+    );
+    let mut bad = false;
+    for f in &files {
+        let src = match crate::csv::read_text(Path::new(f)) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("error: {f}: {e}");
+                return 2;
+            }
+        };
+        let rep = match reg.lint_html(&src, family) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("error: {f}: {e}");
+                return 2;
+            }
+        };
+        print!("{}", rep.print(f, legacy, all));
+        bad |= rep.failing(legacy, strict);
+    }
+    if bad {
+        1
+    } else {
+        0
     }
 }
 
@@ -1944,7 +2235,7 @@ mod tests {
     fn lint_counts() {
         let r = reg();
         let html = "<html><head><style>/* constitutional-agreement.css — header */ .x{}</style></head><body>\n<p class=\"recital\" style=\"text-align:left\">A</p>\n<p class=\"cl1 nosuch\"><span class=\"clm\">(a)&nbsp;&nbsp;</span>x</p>\n<div class=\"change-annex\"></div><h3 style='a'>T</h3></body></html>";
-        let rep = r.lint_html(html, None);
+        let rep = r.lint_html(html, None).expect("scan");
         assert_eq!(rep.family, "canada");
         assert_eq!(rep.count("inline-style"), 2);
         assert_eq!(rep.count("retired-class"), 2, "{:?}", rep.findings);
@@ -1956,10 +2247,12 @@ mod tests {
     #[test]
     fn lint_ignores_head_style_attribute_and_style_text() {
         let r = reg();
-        let rep = r.lint_html(
-            "<html><head><style style=\"x\">p{}</style></head><body><p>ok</p></body></html>",
-            Some("canada"),
-        );
+        let rep = r
+            .lint_html(
+                "<html><head><style style=\"x\">p{}</style></head><body><p>ok</p></body></html>",
+                Some("canada"),
+            )
+            .expect("scan");
         assert!(rep.findings.is_empty(), "{:?}", rep.findings);
     }
     #[test]

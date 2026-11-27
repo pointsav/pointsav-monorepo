@@ -235,11 +235,13 @@ pub fn glossary(docs: &[Doc], near: f64) -> Vec<Entry> {
     glossary_with(docs, near, &Names::default())
 }
 
-/// The glossary, with a register and a residue list applied to the classification.
-pub fn glossary_with(docs: &[Doc], near: f64, names: &Names) -> Vec<Entry> {
-    // term -> (doc -> definition texts), and how often each class was seen
-    type ByDoc = BTreeMap<usize, Vec<(String, String)>>;
-    let mut defs: BTreeMap<String, (ByDoc, BTreeMap<TermClass, usize>)> = BTreeMap::new();
+/// term -> (document -> definition texts as (lowercase, as written)).
+type ByDoc = BTreeMap<usize, Vec<(String, String)>>;
+/// Every defined term with its definitions per document, and how often each class was seen.
+type Definitions = BTreeMap<String, (ByDoc, BTreeMap<TermClass, usize>)>;
+
+fn collect_definitions(docs: &[Doc]) -> Definitions {
+    let mut defs: Definitions = BTreeMap::new();
     for (d, doc) in docs.iter().enumerate() {
         for u in &doc.units {
             for item in defined_items(&u.raw) {
@@ -251,8 +253,35 @@ pub fn glossary_with(docs: &[Doc], near: f64, names: &Names) -> Vec<Entry> {
             }
         }
     }
+    defs
+}
+
+/// Group the first definition of each document by wording (documents whose definitions are at
+/// least `near` similar share a group); biggest groups first.
+fn group_wordings(by_doc: &ByDoc, near: f64) -> Vec<(BTreeSet<usize>, String)> {
+    let reps: Vec<(usize, BTreeSet<u64>, String)> = by_doc
+        .iter()
+        .map(|(d, v)| (*d, shingles(&v[0].0), v[0].1.clone()))
+        .collect();
+    let mut groups: Vec<(BTreeSet<u64>, BTreeSet<usize>, String)> = Vec::new();
+    for (d, sh, shown) in reps {
+        match groups.iter_mut().find(|(g, _, _)| similar(g, &sh, near)) {
+            Some((_, docs_in, _)) => {
+                docs_in.insert(d);
+            }
+            None => groups.push((sh, BTreeSet::from([d]), shown)),
+        }
+    }
+    let mut pairs: Vec<(BTreeSet<usize>, String)> =
+        groups.into_iter().map(|(_, g, t)| (g, t)).collect();
+    pairs.sort_by_key(|(g, _)| std::cmp::Reverse(g.len()));
+    pairs
+}
+
+/// The glossary, with a register and a residue list applied to the classification.
+pub fn glossary_with(docs: &[Doc], near: f64, names: &Names) -> Vec<Entry> {
     let mut out = Vec::new();
-    for (term, (by_doc, classes)) in defs {
+    for (term, (by_doc, classes)) in collect_definitions(docs) {
         let by_rule = if classes.get(&TermClass::Party).unwrap_or(&0)
             > classes.get(&TermClass::Term).unwrap_or(&0)
         {
@@ -269,24 +298,7 @@ pub fn glossary_with(docs: &[Doc], near: f64, names: &Names) -> Vec<Entry> {
             .filter(|(_, doc)| doc.units.iter().any(|u| occurrences(&u.text, &term) > 0))
             .map(|(d, _)| d)
             .collect();
-        // group the first definition of each document by wording
-        let reps: Vec<(usize, BTreeSet<u64>, String)> = by_doc
-            .iter()
-            .map(|(d, v)| (*d, shingles(&v[0].0), v[0].1.clone()))
-            .collect();
-        let mut groups: Vec<(BTreeSet<u64>, BTreeSet<usize>, String)> = Vec::new();
-        for (d, sh, shown) in reps {
-            match groups.iter_mut().find(|(g, _, _)| similar(g, &sh, near)) {
-                Some((_, docs_in, _)) => {
-                    docs_in.insert(d);
-                }
-                None => groups.push((sh, BTreeSet::from([d]), shown)),
-            }
-        }
-        let mut pairs: Vec<(BTreeSet<usize>, String)> =
-            groups.into_iter().map(|(_, g, t)| (g, t)).collect();
-        pairs.sort_by_key(|(g, _)| std::cmp::Reverse(g.len()));
-        let (wordings, texts): (Vec<_>, Vec<_>) = pairs.into_iter().unzip();
+        let (wordings, texts): (Vec<_>, Vec<_>) = group_wordings(&by_doc, near).into_iter().unzip();
         out.push(Entry {
             term,
             class,

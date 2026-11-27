@@ -65,3 +65,14 @@ fn language_report_prints_no_document_type_by_default() {
     let _ = fs::remove_dir_all(&r);
     assert!(named.contains("Zebracharter"), "{named}");
 }
+
+#[test]
+fn find_entity_counts_print_no_document_type_by_default() {
+    let r = corpus("find-entity");
+    let out = run(&r, "find", &["--entity", "ACMECO", "--counts"]);
+    assert!(out.contains("documents under that entity code: 2"), "{out}");
+    assert!(!out.contains("Zebracharter"), "type leaked: {out}");
+    let named = run(&r, "find", &["--entity", "ACMECO", "--counts", "--names"]);
+    let _ = fs::remove_dir_all(&r);
+    assert!(named.contains("Zebracharter"), "{named}");
+}

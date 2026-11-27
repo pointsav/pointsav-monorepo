@@ -34,27 +34,18 @@ fn csv_field(s: &str) -> String {
     }
 }
 
-use crate::csv::parse as parse_csv;
-
 pub fn read_changes(path: &Path) -> Result<Vec<ChangeRow>, String> {
-    let text = match std::fs::read_to_string(path) {
+    let text = match crate::csv::read_text(path) {
         Ok(t) => t,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(e) => return Err(format!("{}: {e}", path.display())),
     };
+    let at = |e: String| format!("{}: {e}", path.display());
+    let rows = crate::csv::parse_records(&text).map_err(at)?;
+    let body = rows.get(1..).unwrap_or_default(); // after the header
+    crate::csv::check_widths(body, "9", |n| n == 9).map_err(at)?;
     let mut out = Vec::new();
-    for (i, r) in parse_csv(&text).into_iter().enumerate() {
-        if i == 0 {
-            continue; // header
-        }
-        if r.len() != 9 {
-            return Err(format!(
-                "{}: row {} has {} fields, expected 9",
-                path.display(),
-                i + 1,
-                r.len()
-            ));
-        }
+    for (_, r) in body {
         out.push(ChangeRow {
             instrument: r[0].clone(),
             version: r[1].clone(),
@@ -78,6 +69,7 @@ pub fn append_change(path: &Path, row: &ChangeRow) -> Result<(), String> {
             row.tag
         ));
     }
+    read_changes(path)?; // never append to a file that does not read cleanly
     use std::io::Write;
     let mut f = crate::csv::open_for_append(path, CHANGES_HEADER)?;
     let fields = [

@@ -58,7 +58,9 @@ impl EditStore {
             after,
             stamp,
         });
-        Ok(self.pending.last().expect("just pushed"))
+        self.pending
+            .last()
+            .ok_or_else(|| CoreError::Other("the proposal just staged is missing".into()))
     }
 
     /// Write a proposal to disk on `approver`'s authority, whoever proposed it. Fails with

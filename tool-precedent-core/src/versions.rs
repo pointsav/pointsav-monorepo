@@ -46,7 +46,7 @@ pub fn write_versions(rows: &[(String, String, String, bool)], out: &Path) -> st
             p
         ));
     }
-    std::fs::write(out, s)
+    crate::csv::write_file_atomic(out, &s)
 }
 
 #[cfg(test)]

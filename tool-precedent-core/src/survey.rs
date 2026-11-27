@@ -33,15 +33,28 @@ fn list(root: &Root, dirs: &str) -> Result<Vec<(String, PathBuf)>> {
     Ok(out)
 }
 
-fn read_draws(root: &Root) -> Vec<Draw> {
+/// The same-document draw rows. A missing register is no rows; one that exists but cannot be read
+/// or parsed is an error, never silently "no rows".
+fn read_draws(root: &Root) -> Result<Vec<Draw>> {
     match root.resolve("precedent/draws.csv") {
-        Ok(p) if p.is_file() => draws::read_draws(Path::new(&p))
-            .unwrap_or_default()
+        Ok(p) if p.is_file() => Ok(draws::read_draws(Path::new(&p))?
             .into_iter()
             .filter(|r| r.drew_from == r.instrument)
             .map(|r| (r.instrument, r.version, r.drew_from_version))
-            .collect(),
-        _ => vec![],
+            .collect()),
+        _ => Ok(vec![]),
+    }
+}
+/// The draw rows for a report, plus a line saying so when the register could not be read.
+fn read_draws_noted(root: &Root) -> (Vec<Draw>, String) {
+    match read_draws(root) {
+        Ok(d) => (d, String::new()),
+        Err(e) => (
+            vec![],
+            format!(
+                "draw register could not be read ({e}); the lineage below uses file names only\n"
+            ),
+        ),
     }
 }
 
@@ -62,46 +75,9 @@ fn pct(n: usize, of: usize) -> String {
         .map_or_else(|| "0%".to_string(), |v| format!("{v}%"))
 }
 
-pub fn lineage_report(
-    root: &Root,
-    dirs: &str,
-    initials: Option<String>,
-    show_names: bool,
-) -> Result<String> {
-    let files: Vec<String> = list(root, dirs)?.into_iter().map(|(n, _)| n).collect();
-    let ini = initials_arg(initials);
-    let ini: Vec<&str> = ini.iter().map(String::as_str).collect();
-    let draws = read_draws(root);
-    let r = lineage::report(&files, &ini, &draws);
-    let mut o = String::new();
-    o.push_str(&format!(
-        "files listed: {}   without a version chain: {}\n",
-        r.files, r.unparsed
-    ));
-    o.push_str(&format!(
-        "instruments: {}   versions: {}   chained versions (2+ people): {}   longest chain: {}\n",
-        r.instruments, r.versions, r.chained_versions, r.max_chain
-    ));
-    o.push_str(&format!(
-        "draw rows read (same-document): {}\n",
-        draws.len()
-    ));
-    let heads: Vec<String> = r
-        .heads
-        .iter()
-        .map(|(h, n)| format!("{h} head: {n}"))
-        .collect();
-    o.push_str(&format!(
-        "heads per instrument: {}   forks (2+ heads): {}\n",
-        heads.join(", "),
-        r.forks
-    ));
-    o.push_str(&format!("instruments starting above 1 (earlier versions absent): {}   with a bridged number gap: {}\n", r.instruments_starting_above_one, r.instruments_with_gaps));
-    o.push_str(&format!(
-        "longest spine (versions on the path to a head): {}\n",
-        r.longest_spine
-    ));
-    // Words taken from file names (initials, variant words, extensions) are shown only on request.
+/// The author-initials, variant-word and rendition lines of the lineage report: words from file
+/// names are listed only on request, otherwise only how many distinct ones there are.
+fn push_name_counts(o: &mut String, r: &lineage::Report, show_names: bool) {
     if show_names {
         o.push_str(&format!("versions by author initials: {:?}\n", r.by_author));
         o.push_str(&format!(
@@ -117,47 +93,79 @@ pub fn lineage_report(
             r.exts.len()
         ));
     }
-    Ok(o)
 }
 
-pub fn language_report(
+pub fn lineage_report(
     root: &Root,
     dirs: &str,
     initials: Option<String>,
-    min_words: usize,
-    near: f64,
     show_names: bool,
 ) -> Result<String> {
-    let listed = list(root, dirs)?;
-    let names: Vec<String> = listed.iter().map(|(n, _)| n.clone()).collect();
+    let files: Vec<String> = list(root, dirs)?.into_iter().map(|(n, _)| n).collect();
     let ini = initials_arg(initials);
     let ini: Vec<&str> = ini.iter().map(String::as_str).collect();
-    let draws = read_draws(root);
-    let (inst, _) = lineage::build(&names, &ini, &draws);
-    let path_of: BTreeMap<&str, &PathBuf> = listed.iter().map(|(n, p)| (n.as_str(), p)).collect();
-    // the current version(s) of every instrument: its heads, HTML rendition only
+    let (draws, note) = read_draws_noted(root);
+    let r = lineage::report(&files, &ini, &draws);
+    let mut o = String::new();
+    o.push_str(&note);
+    o.push_str(&format!(
+        "files listed: {}   without a version chain: {}\n",
+        r.files, r.unparsed
+    ));
+    o.push_str(&format!(
+        "instruments: {}   versions: {}   chained versions (2+ people): {}   longest chain: {}\n",
+        r.instruments, r.versions, r.chained_versions, r.max_chain
+    ));
+    o.push_str(&format!(
+        "draw rows read (same-document): {}\n",
+        draws.len()
+    ));
+    if r.draws_ignored > 0 {
+        o.push_str(&format!(
+            "draw rows ignored (they closed a loop): {}\n",
+            r.draws_ignored
+        ));
+    }
+    let heads: Vec<String> = r
+        .heads
+        .iter()
+        .map(|(h, n)| format!("{h} head: {n}"))
+        .collect();
+    o.push_str(&format!(
+        "heads per instrument: {}   forks (2+ heads): {}\n",
+        heads.join(", "),
+        r.forks
+    ));
+    o.push_str(&format!("instruments starting above 1 (earlier versions absent): {}   with a bridged number gap: {}\n", r.instruments_starting_above_one, r.instruments_with_gaps));
+    o.push_str(&format!(
+        "longest spine (versions on the path to a head): {}\n",
+        r.longest_spine
+    ));
+    push_name_counts(&mut o, &r, show_names);
+    Ok(o)
+}
+
+/// The HTML text of the current version(s) of every instrument: its heads, HTML rendition only.
+fn current_documents(
+    inst: &BTreeMap<String, lineage::Instrument>,
+    path_of: &BTreeMap<&str, &PathBuf>,
+) -> Result<Vec<(String, String)>> {
     let mut docs: Vec<(String, String)> = Vec::new();
-    for (base, i) in &inst {
+    for (base, i) in inst {
         for h in i.heads() {
             if let Some(f) = i.versions[h].files.iter().find(|f| f.ends_with(".html")) {
                 if let Some(p) = path_of.get(f.as_str()) {
-                    let html =
-                        std::fs::read_to_string(p).map_err(|e| CoreError::Io(e.to_string()))?;
+                    let html = crate::csv::read_text(p).map_err(CoreError::from)?;
                     docs.push((base.clone(), html));
                 }
             }
         }
     }
-    let r = language::report(&docs, min_words, near);
-    let mut o = String::new();
-    o.push_str(&format!(
-        "current HTML documents read (one per head): {}\n",
-        r.documents
-    ));
-    o.push_str(&format!(
-        "units: headings {}, paragraphs {}, table cells {}\n",
-        r.headings, r.paragraphs, r.cells
-    ));
+    Ok(docs)
+}
+
+/// How many paragraphs have an exact twin, a near twin or no counterpart in another document.
+fn push_twin_lines(o: &mut String, r: &language::Report, min_words: usize, near: f64) {
     o.push_str(&format!(
         "paragraphs of {min_words}+ words considered: {}\n",
         r.considered
@@ -182,6 +190,25 @@ pub fn language_report(
         "documents sharing at least one exact paragraph with another: {} of {}\n",
         r.docs_sharing_exact, r.documents
     ));
+}
+
+/// The numbers of the language report, one line each.
+fn push_language_lines(
+    o: &mut String,
+    r: &language::Report,
+    min_words: usize,
+    near: f64,
+    show_names: bool,
+) {
+    o.push_str(&format!(
+        "current HTML documents read (one per head): {}\n",
+        r.documents
+    ));
+    o.push_str(&format!(
+        "units: headings {}, paragraphs {}, table cells {}\n",
+        r.headings, r.paragraphs, r.cells
+    ));
+    push_twin_lines(o, r, min_words, near);
     o.push_str(&format!(
         "defined terms found: {}   used in 2+ documents: {}\n",
         r.defined_terms, r.terms_in_2plus_docs
@@ -202,6 +229,28 @@ pub fn language_report(
             r.kinds.len()
         ));
     }
+}
+
+pub fn language_report(
+    root: &Root,
+    dirs: &str,
+    initials: Option<String>,
+    min_words: usize,
+    near: f64,
+    show_names: bool,
+) -> Result<String> {
+    let listed = list(root, dirs)?;
+    let names: Vec<String> = listed.iter().map(|(n, _)| n.clone()).collect();
+    let ini = initials_arg(initials);
+    let ini: Vec<&str> = ini.iter().map(String::as_str).collect();
+    let (draws, note) = read_draws_noted(root);
+    let (inst, _) = lineage::build(&names, &ini, &draws);
+    let path_of: BTreeMap<&str, &PathBuf> = listed.iter().map(|(n, p)| (n.as_str(), p)).collect();
+    let docs = current_documents(&inst, &path_of)?;
+    let r = language::report(&docs, min_words, near);
+    let mut o = String::new();
+    o.push_str(&note);
+    push_language_lines(&mut o, &r, min_words, near, show_names);
     Ok(o)
 }
 
@@ -225,6 +274,8 @@ pub struct FindOpts {
     pub all_versions: bool,
     pub near: f64,
     pub min_docs: usize,
+    /// With `counts_only`, also list the words taken from file names (document types).
+    pub show_names: bool,
 }
 
 fn load_docs(
@@ -237,7 +288,7 @@ fn load_docs(
     let names: Vec<String> = listed.iter().map(|(n, _)| n.clone()).collect();
     let ini = initials_arg(initials);
     let ini: Vec<&str> = ini.iter().map(String::as_str).collect();
-    let (inst, _) = lineage::build(&names, &ini, &read_draws(root));
+    let (inst, _) = lineage::build(&names, &ini, &read_draws(root)?);
     let path_of: BTreeMap<&str, &PathBuf> = listed.iter().map(|(n, p)| (n.as_str(), p)).collect();
     let mut docs = Vec::new();
     for (base, i) in &inst {
@@ -249,8 +300,7 @@ fn load_docs(
         for l in labels {
             if let Some(f) = i.versions[l].files.iter().find(|f| f.ends_with(".html")) {
                 if let Some(p) = path_of.get(f.as_str()) {
-                    let html =
-                        std::fs::read_to_string(p).map_err(|e| CoreError::Io(e.to_string()))?;
+                    let html = crate::csv::read_text(p).map_err(CoreError::from)?;
                     docs.push(Doc {
                         name: f.clone(),
                         base: base.clone(),
@@ -275,8 +325,7 @@ fn load_names(root: &Root, o: &FindOpts) -> Result<find::Names> {
     };
     if let Some(list) = &o.entities {
         for p in list.split(',').filter(|p| !p.trim().is_empty()) {
-            let text =
-                std::fs::read_to_string(abs(p)).map_err(|e| CoreError::Io(format!("{p}: {e}")))?;
+            let text = crate::csv::read_text(&abs(p)).map_err(|e| crate::error::io_at(p, e))?;
             find::read_register(&text, &mut names);
         }
     }
@@ -288,8 +337,7 @@ fn load_names(root: &Root, o: &FindOpts) -> Result<find::Names> {
             .filter(|p| p.is_file()),
     };
     if let Some(p) = residue {
-        let text = std::fs::read_to_string(&p)
-            .map_err(|e| CoreError::Io(format!("{}: {e}", p.display())))?;
+        let text = crate::csv::read_text(&p).map_err(|e| crate::error::io_at(p.display(), e))?;
         find::read_residue(&text, &mut names);
     }
     Ok(names)
@@ -324,142 +372,177 @@ pub fn find_report(
             " (current versions)"
         }
     );
-    match q {
+    match &q {
         Query::Glossary | Query::Parties | Query::Term(_) => {
-            let names = load_names(root, o)?;
-            let mut g = find::glossary_with(&docs, o.near, &names);
-            let (terms_n, parties_n) = (
-                g.iter()
-                    .filter(|e| e.defining.len() >= o.min_docs && e.class == TermClass::Term)
-                    .count(),
-                g.iter()
-                    .filter(|e| e.defining.len() >= o.min_docs && e.class == TermClass::Party)
-                    .count(),
-            );
-            if let Query::Term(t) = &q {
-                let t = t.to_lowercase();
-                g.retain(|e| e.term.contains(&t));
-            } else {
-                let want = if matches!(q, Query::Parties) {
-                    TermClass::Party
-                } else {
-                    TermClass::Term
-                };
-                g.retain(|e| e.defining.len() >= o.min_docs && e.class == want);
-            }
-            if o.counts_only {
-                out.push_str(&format!("defined in {}+ documents: {} defined terms and {} parties or entities (the list below is one of the two)\n", o.min_docs, terms_n, parties_n));
-            }
-            g.sort_by(|a, b| {
-                b.defining
-                    .len()
-                    .cmp(&a.defining.len())
-                    .then(a.term.cmp(&b.term))
-            });
-            let with_variants = g.iter().filter(|e| e.wordings.len() > 1).count();
-            if o.counts_only && g.iter().any(|e| e.class == TermClass::Party) {
-                let n = |f: fn(&find::Source) -> bool| {
-                    g.iter()
-                        .filter(|e| e.class == TermClass::Party && f(&e.source))
-                        .count()
-                };
-                out.push_str(&format!(
-                    "parties by source: entity register {}, your list {}, suggested by the rules {}\n",
-                    n(|s| matches!(s, find::Source::Register(_))),
-                    n(|s| matches!(s, find::Source::List)),
-                    n(|s| matches!(s, find::Source::Rule))
-                ));
-            }
-            if o.counts_only {
-                out.push_str(&format!("terms listed: {}   with more than one wording: {}   most documents defining one term: {}\n", g.len(), with_variants, g.first().map_or(0, |e| e.defining.len())));
-                out.push_str(&format!(
-                    "documents that use a listed term without defining it (sum over terms): {}\n",
-                    g.iter().map(|e| e.using.len()).sum::<usize>()
-                ));
-            } else {
-                for e in &g {
-                    out.push_str(&format!(
-                        "\"{}\"  defined in {}   used in {} more   wordings: {}{}\n",
-                        e.term,
-                        e.defining.len(),
-                        e.using.len(),
-                        e.wordings.len(),
-                        source_tag(e)
-                    ));
-                    if o.show || o.show_text {
-                        for (k, w) in e.wordings.iter().enumerate() {
-                            let names = w
-                                .iter()
-                                .map(|d| docs[*d].name.as_str())
-                                .collect::<Vec<_>>()
-                                .join(", ");
-                            if o.show_text {
-                                out.push_str(&format!(
-                                    "   wording {} ({} document{}): {}\n      in: {}\n",
-                                    k + 1,
-                                    w.len(),
-                                    if w.len() == 1 { "" } else { "s" },
-                                    e.texts.get(k).map_or("", String::as_str),
-                                    names
-                                ));
-                                if k > 0 {
-                                    if let (Some(first), Some(this)) =
-                                        (e.texts.first(), e.texts.get(k))
-                                    {
-                                        out.push_str(&format!(
-                                            "      differs from wording 1: {}\n",
-                                            find::word_diff(first, this)
-                                        ));
-                                    }
-                                }
-                            } else {
-                                out.push_str(&format!("   wording {}: {}\n", k + 1, names));
-                            }
-                        }
-                    }
-                }
-            }
+            find_glossary(root, &docs, &q, o, &mut out)?;
         }
-        Query::Entity(e) => {
-            let hit = find::by_entity(&docs, &e);
-            if o.counts_only {
-                let mut kinds: BTreeMap<String, usize> = BTreeMap::new();
-                for d in &hit {
-                    if let Some(c) = classify_base(&docs[*d].base) {
-                        *kinds.entry(c.kind).or_default() += 1;
-                    }
-                }
-                out.push_str(&format!(
-                    "documents under that entity code: {}   by type: {:?}\n",
-                    hit.len(),
-                    kinds
-                ));
-            } else {
-                for d in hit {
-                    out.push_str(&format!("{}\n", docs[d].name));
-                }
-            }
-        }
-        Query::Text(p) => {
-            let hit = find::by_text(&docs, &p);
-            if o.counts_only {
-                out.push_str(&format!(
-                    "documents containing the phrase: {}   units: {}   occurrences: {}\n",
-                    hit.len(),
-                    hit.iter().map(|h| h.1).sum::<usize>(),
-                    hit.iter().map(|h| h.2).sum::<usize>()
-                ));
-            } else {
-                for (d, units, n) in hit {
-                    out.push_str(&format!(
-                        "{}   {} unit(s), {} occurrence(s)\n",
-                        docs[d].name, units, n
-                    ));
-                }
-            }
-        }
+        Query::Entity(e) => find_entity(&docs, e, o, &mut out),
+        Query::Text(p) => find_text(&docs, p, o, &mut out),
     }
     Ok(out)
+}
+
+/// The glossary, the party list or one term: counts, or one line per term (and its wordings).
+fn find_glossary(
+    root: &Root,
+    docs: &[Doc],
+    q: &Query,
+    o: &FindOpts,
+    out: &mut String,
+) -> Result<()> {
+    let names = load_names(root, o)?;
+    let mut g = find::glossary_with(docs, o.near, &names);
+    let (terms_n, parties_n) = (
+        g.iter()
+            .filter(|e| e.defining.len() >= o.min_docs && e.class == TermClass::Term)
+            .count(),
+        g.iter()
+            .filter(|e| e.defining.len() >= o.min_docs && e.class == TermClass::Party)
+            .count(),
+    );
+    if let Query::Term(t) = q {
+        let t = t.to_lowercase();
+        g.retain(|e| e.term.contains(&t));
+    } else {
+        let want = if matches!(q, Query::Parties) {
+            TermClass::Party
+        } else {
+            TermClass::Term
+        };
+        g.retain(|e| e.defining.len() >= o.min_docs && e.class == want);
+    }
+    if o.counts_only {
+        out.push_str(&format!("defined in {}+ documents: {} defined terms and {} parties or entities (the list below is one of the two)\n", o.min_docs, terms_n, parties_n));
+    }
+    g.sort_by(|a, b| {
+        b.defining
+            .len()
+            .cmp(&a.defining.len())
+            .then(a.term.cmp(&b.term))
+    });
+    if o.counts_only {
+        push_glossary_counts(out, &g);
+    } else {
+        for e in &g {
+            push_term_lines(out, e, docs, o);
+        }
+    }
+    Ok(())
+}
+
+/// The counts-only lines of the glossary: parties by source, terms listed, uses without definition.
+fn push_glossary_counts(out: &mut String, g: &[find::Entry]) {
+    let with_variants = g.iter().filter(|e| e.wordings.len() > 1).count();
+    if g.iter().any(|e| e.class == TermClass::Party) {
+        let n = |f: fn(&find::Source) -> bool| {
+            g.iter()
+                .filter(|e| e.class == TermClass::Party && f(&e.source))
+                .count()
+        };
+        out.push_str(&format!(
+            "parties by source: entity register {}, your list {}, suggested by the rules {}\n",
+            n(|s| matches!(s, find::Source::Register(_))),
+            n(|s| matches!(s, find::Source::List)),
+            n(|s| matches!(s, find::Source::Rule))
+        ));
+    }
+    out.push_str(&format!("terms listed: {}   with more than one wording: {}   most documents defining one term: {}\n", g.len(), with_variants, g.first().map_or(0, |e| e.defining.len())));
+    out.push_str(&format!(
+        "documents that use a listed term without defining it (sum over terms): {}\n",
+        g.iter().map(|e| e.using.len()).sum::<usize>()
+    ));
+}
+
+/// One glossary entry: the term line, then its wordings when `--show` or `--show-text` is on.
+fn push_term_lines(out: &mut String, e: &find::Entry, docs: &[Doc], o: &FindOpts) {
+    out.push_str(&format!(
+        "\"{}\"  defined in {}   used in {} more   wordings: {}{}\n",
+        e.term,
+        e.defining.len(),
+        e.using.len(),
+        e.wordings.len(),
+        source_tag(e)
+    ));
+    if !(o.show || o.show_text) {
+        return;
+    }
+    for (k, w) in e.wordings.iter().enumerate() {
+        let names = w
+            .iter()
+            .map(|d| docs[*d].name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
+        if o.show_text {
+            out.push_str(&format!(
+                "   wording {} ({} document{}): {}\n      in: {}\n",
+                k + 1,
+                w.len(),
+                if w.len() == 1 { "" } else { "s" },
+                e.texts.get(k).map_or("", String::as_str),
+                names
+            ));
+            if k > 0 {
+                if let (Some(first), Some(this)) = (e.texts.first(), e.texts.get(k)) {
+                    out.push_str(&format!(
+                        "      differs from wording 1: {}\n",
+                        find::word_diff(first, this)
+                    ));
+                }
+            }
+        } else {
+            out.push_str(&format!("   wording {}: {}\n", k + 1, names));
+        }
+    }
+}
+
+/// Documents under one entity code: how many (and by type), or their names.
+fn find_entity(docs: &[Doc], e: &str, o: &FindOpts, out: &mut String) {
+    let hit = find::by_entity(docs, e);
+    if o.counts_only {
+        let mut kinds: BTreeMap<String, usize> = BTreeMap::new();
+        for d in &hit {
+            if let Some(c) = classify_base(&docs[*d].base) {
+                *kinds.entry(c.kind).or_default() += 1;
+            }
+        }
+        if o.show_names {
+            out.push_str(&format!(
+                "documents under that entity code: {}   by type: {:?}\n",
+                hit.len(),
+                kinds
+            ));
+        } else {
+            out.push_str(&format!(
+                "documents under that entity code: {}   document types: {} distinct   (add --names to list them)\n",
+                hit.len(),
+                kinds.len()
+            ));
+        }
+    } else {
+        for d in hit {
+            out.push_str(&format!("{}\n", docs[d].name));
+        }
+    }
+}
+
+/// Documents containing a phrase: counts, or one line per document.
+fn find_text(docs: &[Doc], p: &str, o: &FindOpts, out: &mut String) {
+    let hit = find::by_text(docs, p);
+    if o.counts_only {
+        out.push_str(&format!(
+            "documents containing the phrase: {}   units: {}   occurrences: {}\n",
+            hit.len(),
+            hit.iter().map(|h| h.1).sum::<usize>(),
+            hit.iter().map(|h| h.2).sum::<usize>()
+        ));
+    } else {
+        for (d, units, n) in hit {
+            out.push_str(&format!(
+                "{}   {} unit(s), {} occurrence(s)\n",
+                docs[d].name, units, n
+            ));
+        }
+    }
 }
 
 #[cfg(test)]
@@ -554,6 +637,7 @@ mod tests {
             all_versions: false,
             near: 0.5,
             min_docs: 2,
+            show_names: false,
         };
         let g = find_report(&root, "wip", None, Query::Glossary, &o).unwrap();
         assert!(g.contains("terms listed: 1   with more than one wording: 0   most documents defining one term: 2"), "{g}");

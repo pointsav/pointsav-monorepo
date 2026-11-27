@@ -23,7 +23,9 @@ pub const OVR_CLOSE: &str = "/* === END PER-DOCUMENT OVERRIDES === */";
 /// Existing per-document overrides in a style block (text between the markers), if any.
 pub fn overrides(style: &str) -> String {
     match (style.find(OVR_OPEN), style.find(OVR_CLOSE)) {
-        (Some(a), Some(b)) if b > a => style[a + OVR_OPEN.len()..b].trim_matches('\n').to_string(),
+        (Some(a), Some(b)) if b >= a + OVR_OPEN.len() => {
+            style[a + OVR_OPEN.len()..b].trim_matches('\n').to_string()
+        }
         _ => String::new(),
     }
 }
@@ -32,7 +34,9 @@ pub fn overrides(style: &str) -> String {
 pub fn overrides_checked(style: &str) -> Result<String, String> {
     match (style.find(OVR_OPEN), style.find(OVR_CLOSE)) {
         (None, None) => Ok(String::new()),
-        (Some(a), Some(b)) if b > a => Ok(style[a + OVR_OPEN.len()..b].trim_matches('\n').to_string()),
+        (Some(a), Some(b)) if b >= a + OVR_OPEN.len() => {
+            Ok(style[a + OVR_OPEN.len()..b].trim_matches('\n').to_string())
+        }
         _ => Err("the per-document override markers are unbalanced (one missing, or the end before the start); fix them by hand, nothing was changed".to_string()),
     }
 }
@@ -55,7 +59,7 @@ pub fn compose(token: &str, comps: &[(String, String)], ovr: &str) -> String {
 }
 /// Components named in precedent/manifest.csv for an instrument ("instrument,family,components").
 pub fn manifest(root: &Path, instrument: &str) -> Option<(String, Vec<String>)> {
-    let t = std::fs::read_to_string(root.join("precedent/manifest.csv")).ok()?;
+    let t = crate::csv::read_text(&root.join("precedent/manifest.csv")).ok()?;
     for r in crate::csv::parse(&t).into_iter().skip(1) {
         if r.len() >= 3 && r[0] == instrument {
             return Some((
@@ -80,7 +84,7 @@ pub fn instrument_of(stem: &str) -> String {
 pub fn load_components(root: &Path, ids: &[String]) -> Result<Vec<(String, String)>, String> {
     ids.iter()
         .map(|id| {
-            std::fs::read_to_string(root.join("templates/components").join(format!("{id}.css")))
+            crate::csv::read_text(&root.join("templates/components").join(format!("{id}.css")))
                 .map(|c| (id.clone(), c))
                 .map_err(|e| format!("component {id}: {e}"))
         })
@@ -92,34 +96,45 @@ pub fn style_range(html: &str) -> Option<(usize, usize)> {
     Some((a, b))
 }
 
-/// apply <html>: replace the first <style> block with family token + fenced components + the file's own overrides.
-pub fn apply(target: &str, root: &Path, args: &[String]) -> ExitCode {
-    let html = match std::fs::read_to_string(target) {
-        Ok(h) => h,
-        Err(e) => {
-            eprintln!("error: {e}");
-            return ExitCode::FAILURE;
-        }
-    };
+/// What `apply` needs besides the page: the family name, its token CSS and its components.
+type ApplyInputs = (String, String, Vec<(String, String)>);
+
+fn apply_inputs(target: &str, root: &Path) -> Result<ApplyInputs, String> {
     let stem = Path::new(target)
         .file_stem()
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_default();
     let inst = instrument_of(&stem);
     let Some((family, ids)) = manifest(root, &inst) else {
-        eprintln!("error: {inst} is not in precedent/manifest.csv");
-        return ExitCode::FAILURE;
+        return Err(format!("{inst} is not in precedent/manifest.csv"));
     };
-    let token = match std::fs::read_to_string(root.join("templates").join(format!("{family}.css")))
+    // The family and component names become file names under `templates/`: plain names only.
+    let plain = |n: &str| !n.is_empty() && n != "." && n != ".." && !n.contains(['/', '\\']);
+    if let Some(bad) = std::iter::once(&family)
+        .chain(ids.iter())
+        .find(|n| !plain(n))
     {
-        Ok(t) => t,
+        return Err(format!(
+            "precedent/manifest.csv: '{bad}' is not a plain name"
+        ));
+    }
+    let token = crate::csv::read_text(&root.join("templates").join(format!("{family}.css")))
+        .map_err(|e| format!("family token {family}: {e}"))?;
+    let comps = load_components(root, &ids)?;
+    Ok((family, token, comps))
+}
+
+/// apply <html>: replace the first <style> block with family token + fenced components + the file's own overrides.
+pub fn apply(target: &str, root: &Path, args: &[String]) -> ExitCode {
+    let html = match crate::csv::read_text(Path::new(target)) {
+        Ok(h) => h,
         Err(e) => {
-            eprintln!("error: family token {family}: {e}");
+            eprintln!("error: {e}");
             return ExitCode::FAILURE;
         }
     };
-    let comps = match load_components(root, &ids) {
-        Ok(c) => c,
+    let (family, token, comps) = match apply_inputs(target, root) {
+        Ok(i) => i,
         Err(e) => {
             eprintln!("error: {e}");
             return ExitCode::FAILURE;
@@ -153,7 +168,7 @@ pub fn apply(target: &str, root: &Path, args: &[String]) -> ExitCode {
             ExitCode::FAILURE
         };
     }
-    if let Err(e) = std::fs::write(target, out) {
+    if let Err(e) = crate::csv::write_file_atomic(Path::new(target), &out) {
         eprintln!("error: {e}");
         return ExitCode::FAILURE;
     }

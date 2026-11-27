@@ -77,6 +77,7 @@ pub const COMMANDS: &[Cmd] = &[
             Flag { name: "--show", value: "", help: "list the documents under each wording" },
             Flag { name: "--show-text", value: "", help: "print each wording's defining sentence as written, with the documents under it (prints your text: for you to run, not to share)" },
             Flag { name: "--all-versions", value: "", help: "read every version, not only the current one" },
+            Flag { name: "--names", value: "", help: "with --counts, also list the document types taken from file names; off by default so counts are numbers only" },
             Flag { name: "--near", value: "N", help: "similarity (0 to 1) at which two definitions count as one wording (default 0.5)" },
             Flag { name: "--min-docs", value: "N", help: "list terms defined in at least N documents (default 2)" },
             Flag { name: "--dir", value: "D[,D]", help: "folders to read, relative to the root (default service-wip)" },

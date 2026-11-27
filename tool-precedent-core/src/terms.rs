@@ -4,7 +4,6 @@
 //! version used, what it replaced, and whether it is live or retired. Keyed
 //! like `changes.csv` (instrument + version); no master, no new file extension.
 
-use crate::csv::parse as parse_csv;
 use std::path::Path;
 
 pub const TERMS_HEADER: &str = "instrument,version,term,replaces,status,date,context";
@@ -33,22 +32,17 @@ fn csv_field(s: &str) -> String {
 }
 
 pub fn read_terms(path: &Path) -> Result<Vec<TermRow>, String> {
-    let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let mut rows = parse_csv(&text);
+    let text = crate::csv::read_text(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let at = |e: String| format!("{}: {e}", path.display());
+    let mut rows = crate::csv::parse_records(&text).map_err(at)?;
     if rows.is_empty() {
         return Ok(vec![]);
     }
     rows.remove(0);
+    rows.retain(|r| r.1.iter().any(|c| !c.is_empty()));
+    crate::csv::check_widths(&rows, "6 or 7", |n| n == 6 || n == 7).map_err(at)?;
     rows.into_iter()
-        .filter(|r| r.iter().any(|c| !c.is_empty()))
-        .map(|r| {
-            if r.len() != 6 && r.len() != 7 {
-                return Err(format!(
-                    "{}: a row has {} fields, expected 6 or 7",
-                    path.display(),
-                    r.len()
-                ));
-            }
+        .map(|(_, r)| {
             Ok(TermRow {
                 instrument: r[0].clone(),
                 version: r[1].clone(),

@@ -25,6 +25,13 @@ pub enum CoreError {
     StructuredBlocked(String),
     /// No pending proposal with this id.
     NoProposal(u64),
+    /// An input is larger than its documented cap (`csv::MAX_FILE_BYTES` for files).
+    TooLarge(String),
+    /// Elements nest deeper than the documented limit (`registry::MAX_HTML_DEPTH`).
+    TooDeep {
+        limit: usize,
+        line: usize,
+    },
     Io(String),
     Other(String),
 }
@@ -46,6 +53,11 @@ impl fmt::Display for CoreError {
                 "structured data may not be edited by AI (SYS-ADR-07): {p}"
             ),
             CoreError::NoProposal(id) => write!(f, "no pending proposal {id}"),
+            CoreError::TooLarge(m) => write!(f, "input too large: {m}"),
+            CoreError::TooDeep { limit, line } => write!(
+                f,
+                "line {line}: elements nest deeper than the limit of {limit}"
+            ),
             CoreError::Io(m) | CoreError::Other(m) => f.write_str(m),
         }
     }
@@ -61,7 +73,20 @@ impl From<String> for CoreError {
 
 impl From<std::io::Error> for CoreError {
     fn from(e: std::io::Error) -> Self {
-        CoreError::Io(e.to_string())
+        if e.kind() == std::io::ErrorKind::FileTooLarge {
+            CoreError::TooLarge(e.to_string())
+        } else {
+            CoreError::Io(e.to_string())
+        }
+    }
+}
+
+/// An I/O error about `what` (a path), typed like `From<std::io::Error>`: a file past the cap is
+/// `TooLarge`, anything else `Io`.
+pub fn io_at(what: impl fmt::Display, e: std::io::Error) -> CoreError {
+    match CoreError::from(e) {
+        CoreError::TooLarge(m) => CoreError::TooLarge(format!("{what}: {m}")),
+        other => CoreError::Io(format!("{what}: {other}")),
     }
 }
 

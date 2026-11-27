@@ -31,7 +31,16 @@ pub const STRUCTURED_EXTENSIONS: &[&str] = &[
 ];
 
 pub fn is_structured(path: &str) -> bool {
-    let name = path.rsplit('/').next().unwrap_or(path);
+    // The last real name in the path, as the file system will resolve it: a trailing `/`, `/.`
+    // or `./` does not change which file is written.
+    let name = std::path::Path::new(path)
+        .components()
+        .rev()
+        .find_map(|c| match c {
+            std::path::Component::Normal(n) => n.to_str(),
+            _ => None,
+        })
+        .unwrap_or("");
     match name.rsplit_once('.') {
         Some((stem, ext)) if !stem.is_empty() => {
             STRUCTURED_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str())
@@ -52,6 +61,23 @@ pub fn check(path: &str, origin: Origin) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_trailing_slash_or_dot_does_not_hide_a_structured_file() {
+        for p in [
+            "a.json/",
+            "a.json/.",
+            "d/a.csv/./",
+            "d//a.yaml//",
+            "./a.toml/",
+        ] {
+            assert!(is_structured(p), "{p} must count as structured");
+            assert!(
+                check(p, Origin::Ai).is_err(),
+                "{p} must be blocked for an AI"
+            );
+        }
+    }
 
     #[test]
     fn classifies_by_extension() {

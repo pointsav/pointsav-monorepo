@@ -49,12 +49,16 @@ impl Root {
             return Err(out());
         }
         let full = parts.iter().fold(self.base.clone(), |p, c| p.join(c));
+        // `symlink_metadata`, not `exists`: a dangling symlink exists as a link but not as a target.
         let mut existing = full.as_path();
-        while !existing.exists() {
+        while fs::symlink_metadata(existing).is_err() {
             existing = existing.parent().ok_or_else(out)?;
         }
-        if !fs::canonicalize(existing)?.starts_with(&self.base) {
-            return Err(out());
+        // A link is followed to where it really points; one that points nowhere cannot be shown
+        // to stay inside the root, so it is refused.
+        match fs::canonicalize(existing) {
+            Ok(c) if c.starts_with(&self.base) => {}
+            _ => return Err(out()),
         }
         Ok(full)
     }
@@ -71,7 +75,7 @@ impl Root {
     pub fn read(&self, rel: &str) -> Result<(String, Stamp)> {
         let p = self.resolve(rel)?;
         let stamp = self.stamp(rel)?;
-        Ok((fs::read_to_string(p)?, stamp))
+        Ok((crate::csv::read_text(&p)?, stamp))
     }
 
     /// Atomically replace (or create) `rel`. If `expected` is given, the file must still carry

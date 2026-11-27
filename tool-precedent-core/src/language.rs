@@ -487,6 +487,59 @@ pub struct Report {
 }
 
 /// One document: its base name (for classification) and its HTML.
+/// Which paragraphs have an exact twin in another document (one flag per paragraph), and how many
+/// documents share at least one exact paragraph with another.
+fn exact_twins(paras: &[(usize, String)]) -> (Vec<bool>, usize) {
+    let mut by_text: HashMap<&str, BTreeSet<usize>> = HashMap::new();
+    for (d, t) in paras {
+        by_text.entry(t.as_str()).or_default().insert(*d);
+    }
+    let exact: Vec<bool> = paras
+        .iter()
+        .map(|(_, t)| by_text[t.as_str()].len() > 1)
+        .collect();
+    let mut sharing: BTreeSet<usize> = BTreeSet::new();
+    for docs_of in by_text.values().filter(|s| s.len() > 1) {
+        sharing.extend(docs_of.iter().copied());
+    }
+    (exact, sharing.len())
+}
+
+/// The paragraphs that have a near twin in another document: 4-word shingles, candidate pairs
+/// through an inverted index, Jaccard similarity in `near..1.0`.
+fn near_twins(paras: &[(usize, String)], near: f64) -> BTreeSet<usize> {
+    let sh: Vec<BTreeSet<u64>> = paras.iter().map(|(_, t)| shingles(t)).collect();
+    let mut inv: HashMap<u64, Vec<usize>> = HashMap::new();
+    for (i, s) in sh.iter().enumerate() {
+        for x in s {
+            inv.entry(*x).or_default().push(i);
+        }
+    }
+    let mut cand: HashMap<(usize, usize), usize> = HashMap::new();
+    for l in inv.values().filter(|l| l.len() > 1 && l.len() <= 40) {
+        for a in 0..l.len() {
+            for b in a + 1..l.len() {
+                if paras[l[a]].0 != paras[l[b]].0 {
+                    *cand.entry((l[a], l[b])).or_default() += 1;
+                }
+            }
+        }
+    }
+    let mut near_set: BTreeSet<usize> = BTreeSet::new();
+    for ((a, b), c) in cand {
+        if c >= 3 {
+            let inter = sh[a].intersection(&sh[b]).count() as f64;
+            let uni = sh[a].union(&sh[b]).count() as f64;
+            let j = inter / uni;
+            if (near..1.0).contains(&j) {
+                near_set.insert(a);
+                near_set.insert(b);
+            }
+        }
+    }
+    near_set
+}
+
 pub fn report(docs: &[(String, String)], min_words: usize, near: f64) -> Report {
     let mut r = Report {
         documents: docs.len(),
@@ -522,51 +575,10 @@ pub fn report(docs: &[(String, String)], min_words: usize, near: f64) -> Report 
     r.entities = ent_docs.len();
     r.entities_in_2plus_docs = ent_docs.values().filter(|n| **n > 1).count();
     r.max_docs_one_entity = ent_docs.values().copied().max().unwrap_or(0);
-    // exact twins
-    let mut by_text: HashMap<&str, BTreeSet<usize>> = HashMap::new();
-    for (d, t) in &paras {
-        by_text.entry(t.as_str()).or_default().insert(*d);
-    }
-    let exact: Vec<bool> = paras
-        .iter()
-        .map(|(_, t)| by_text[t.as_str()].len() > 1)
-        .collect();
+    let (exact, docs_sharing) = exact_twins(&paras);
     r.exact_twin = exact.iter().filter(|b| **b).count();
-    let mut sharing: BTreeSet<usize> = BTreeSet::new();
-    for docs_of in by_text.values().filter(|s| s.len() > 1) {
-        sharing.extend(docs_of.iter().copied());
-    }
-    r.docs_sharing_exact = sharing.len();
-    // near twins: 4-word shingles, candidate pairs through an inverted index
-    let sh: Vec<BTreeSet<u64>> = paras.iter().map(|(_, t)| shingles(t)).collect();
-    let mut inv: HashMap<u64, Vec<usize>> = HashMap::new();
-    for (i, s) in sh.iter().enumerate() {
-        for x in s {
-            inv.entry(*x).or_default().push(i);
-        }
-    }
-    let mut cand: HashMap<(usize, usize), usize> = HashMap::new();
-    for l in inv.values().filter(|l| l.len() > 1 && l.len() <= 40) {
-        for a in 0..l.len() {
-            for b in a + 1..l.len() {
-                if paras[l[a]].0 != paras[l[b]].0 {
-                    *cand.entry((l[a], l[b])).or_default() += 1;
-                }
-            }
-        }
-    }
-    let mut near_set: BTreeSet<usize> = BTreeSet::new();
-    for ((a, b), c) in cand {
-        if c >= 3 {
-            let inter = sh[a].intersection(&sh[b]).count() as f64;
-            let uni = sh[a].union(&sh[b]).count() as f64;
-            let j = inter / uni;
-            if (near..1.0).contains(&j) {
-                near_set.insert(a);
-                near_set.insert(b);
-            }
-        }
-    }
+    r.docs_sharing_exact = docs_sharing;
+    let near_set = near_twins(&paras, near);
     r.near_twin = near_set.iter().filter(|i| !exact[**i]).count();
     r.unique = r.considered - r.exact_twin - r.near_twin;
     r

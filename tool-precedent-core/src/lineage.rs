@@ -153,6 +153,8 @@ pub struct Version {
     pub files: BTreeSet<String>,
     pub parent: Option<String>,
     pub inferred: bool,
+    /// A draw row named this version but closed a loop (or named itself), so it was not used.
+    pub draw_ignored: bool,
 }
 
 #[derive(Debug, Default)]
@@ -163,7 +165,68 @@ pub struct Instrument {
 /// A draw row: (base, version label, drew_from version label in the same document).
 pub type Draw = (String, String, String);
 
-fn infer_parent(chain: &[Seg], have: &BTreeSet<String>) -> Option<String> {
+/// The labels of one instrument, with the single-number labels indexed by their number, so the
+/// parent searches below are a lookup instead of a scan of every label per version (which made a
+/// folder of a few thousand versions take seconds).
+struct Have {
+    all: BTreeSet<String>,
+    /// number -> the first single-segment label with it (label order), as the scan used to pick.
+    numbered: BTreeMap<u32, String>,
+}
+
+impl Have {
+    fn new(labels: impl Iterator<Item = String>) -> Have {
+        let all: BTreeSet<String> = labels.collect();
+        let mut numbered: BTreeMap<u32, String> = BTreeMap::new();
+        for l in &all {
+            if l.contains('_') {
+                continue;
+            }
+            let Some(at) = l.find(|c: char| c.is_ascii_digit()) else {
+                continue;
+            };
+            if let Ok(n) = l[at..].parse::<u32>() {
+                numbered.entry(n).or_insert_with(|| l.clone());
+            }
+        }
+        Have { all, numbered }
+    }
+    fn contains(&self, l: &str) -> bool {
+        self.all.contains(l)
+    }
+}
+
+/// The running number: one counter shared by all people, so the parent is the highest single
+/// number below this one, whoever made it (JW25 -> MW26 -> JW27).
+fn running_number_parent(last: &Seg, have: &Have) -> Option<String> {
+    have.numbered
+        .range(..last.n)
+        .next_back()
+        .map(|(_, l)| l.clone())
+}
+
+/// A gap: the highest existing number below this one for the same person on the same prefix.
+/// Only labels of the form `<prefix>_<who><k>` can match, so those are read off the known labels
+/// (largest k first) instead of trying every integer below `last.n`, which can be billions.
+fn gap_parent(chain: &[Seg], last: &Seg, have: &Have) -> Option<String> {
+    let prefix = &chain[..chain.len() - 1];
+    let head = if prefix.is_empty() {
+        last.who.clone()
+    } else {
+        format!("{}_{}", label_of(prefix), last.who)
+    };
+    have.all
+        .iter()
+        .filter_map(|l| {
+            let rest = l.strip_prefix(head.as_str())?;
+            let k = rest.parse::<u32>().ok()?;
+            (k >= 1 && k < last.n && k.to_string() == rest).then_some((k, l))
+        })
+        .max_by_key(|(k, _)| *k)
+        .map(|(_, l)| l.clone())
+}
+
+fn infer_parent(chain: &[Seg], have: &Have) -> Option<String> {
     let last = chain.last()?;
     if last.n > 1 {
         let mut c = chain.to_vec();
@@ -180,59 +243,13 @@ fn infer_parent(chain: &[Seg], have: &BTreeSet<String>) -> Option<String> {
             return Some(l);
         }
     }
-    // the running number: one counter shared by all people, so the parent is the highest single
-    // number below this one, whoever made it (JW25 -> MW26 -> JW27)
     if chain.len() == 1 {
-        let mut best: Option<(u32, &String)> = None;
-        for l in have {
-            if l.contains('_') {
-                continue;
-            }
-            let Some(at) = l.find(|c: char| c.is_ascii_digit()) else {
-                continue;
-            };
-            let Ok(n) = l[at..].parse::<u32>() else {
-                continue;
-            };
-            if n < last.n && best.is_none_or(|(b, _)| n > b) {
-                best = Some((n, l));
-            }
-        }
-        if let Some((_, l)) = best {
-            return Some(l.clone());
-        }
-    }
-    // a gap: the highest existing number below this one for the same person on the same prefix
-    if last.n > 1 {
-        let prefix = &chain[..chain.len() - 1];
-        let mut best: Option<(u32, String)> = None;
-        // Only numbers that occur in a known label can match, so walk those (largest first)
-        // instead of every integer below `last.n`, which can be billions.
-        let mut candidates: BTreeSet<u32> = BTreeSet::new();
-        for l in have {
-            for run in l.split(|c: char| !c.is_ascii_digit()) {
-                if let Ok(k) = run.parse::<u32>() {
-                    if k >= 1 && k < last.n {
-                        candidates.insert(k);
-                    }
-                }
-            }
-        }
-        for k in candidates.into_iter().rev() {
-            let mut c = prefix.to_vec();
-            c.push(Seg {
-                who: last.who.clone(),
-                n: k,
-            });
-            let l = label_of(&c);
-            if have.contains(&l) {
-                best = Some((k, l));
-                break;
-            }
-        }
-        if let Some((_, l)) = best {
+        if let Some(l) = running_number_parent(last, have) {
             return Some(l);
         }
+    }
+    if last.n > 1 {
+        return gap_parent(chain, last, have);
     }
     None
 }
@@ -262,6 +279,7 @@ pub fn build(
                         files: BTreeSet::new(),
                         parent: None,
                         inferred: true,
+                        draw_ignored: false,
                     });
                 v.variants.extend(p.variants.iter().cloned());
                 v.exts.insert(p.ext.clone());
@@ -270,14 +288,16 @@ pub fn build(
         }
     }
     for (base, i) in inst.iter_mut() {
-        let have: BTreeSet<String> = i.versions.keys().cloned().collect();
+        let have = Have::new(i.versions.keys().cloned());
         let labels: Vec<String> = i.versions.keys().cloned().collect();
         for l in labels {
             let drawn = draws
                 .iter()
                 .find(|(b, v, _)| b == base && *v == l)
                 .map(|(_, _, from)| from.clone());
-            let v = i.versions.get_mut(&l).expect("label from keys");
+            let Some(v) = i.versions.get_mut(&l) else {
+                continue;
+            };
             match drawn {
                 Some(from) => {
                     v.parent = Some(from);
@@ -286,8 +306,61 @@ pub fn build(
                 None => v.parent = infer_parent(&v.chain, &have),
             }
         }
+        break_draw_loops(i, &have);
     }
     (inst, unparsed)
+}
+
+/// A draw row can close a loop (A drew from B and B from A, or a version from itself), which would
+/// leave the instrument with no head. While a loop exists, ignore the draw of the highest-numbered
+/// version in it that has one and fall back to the inferred parent; the version is marked so the
+/// report can say so. Each pass removes one drawn parent, so it ends.
+fn break_draw_loops(i: &mut Instrument, have: &Have) {
+    for _ in 0..=i.versions.len() {
+        let Some(cycle) = find_loop(i) else { return };
+        let victim = cycle
+            .iter()
+            .rev()
+            .find(|l| i.versions.get(*l).is_some_and(|v| !v.inferred))
+            .or_else(|| cycle.last())
+            .cloned();
+        let Some(l) = victim else { return };
+        if let Some(v) = i.versions.get_mut(&l) {
+            let from = v.parent.take();
+            let inferred =
+                infer_parent(&v.chain, have).filter(|p| Some(p) != from.as_ref() && *p != l);
+            v.parent = inferred;
+            v.inferred = true;
+            v.draw_ignored = true;
+        }
+    }
+}
+
+/// The labels of one loop of parent links, if any: the loop reached first when the walks start
+/// from each label in order. A label whose walk ended without a loop is not walked again, so this
+/// is near linear (the earlier walk-everything form was cubic: 600 versions took seconds).
+fn find_loop(i: &Instrument) -> Option<Vec<String>> {
+    let mut done: BTreeSet<&str> = BTreeSet::new();
+    for start in i.versions.keys() {
+        let mut seen: Vec<&str> = vec![start.as_str()];
+        let mut at: BTreeMap<&str, usize> = BTreeMap::from([(start.as_str(), 0)]);
+        let mut cur = start.as_str();
+        while let Some(p) = i.versions.get(cur).and_then(|v| v.parent.as_deref()) {
+            if done.contains(p) {
+                break;
+            }
+            if let Some(&k) = at.get(p) {
+                let mut cyc: Vec<String> = seen[k..].iter().map(|s| s.to_string()).collect();
+                cyc.sort();
+                return Some(cyc);
+            }
+            at.insert(p, seen.len());
+            seen.push(p);
+            cur = p;
+        }
+        done.extend(seen);
+    }
+    None
 }
 
 impl Instrument {
@@ -307,9 +380,10 @@ impl Instrument {
     /// The path from a version back to its root, oldest first.
     pub fn spine(&self, head: &str) -> Vec<String> {
         let mut out = vec![head.to_string()];
+        let mut seen: BTreeSet<String> = BTreeSet::from([head.to_string()]);
         let mut cur = head.to_string();
         while let Some(p) = self.versions.get(&cur).and_then(|v| v.parent.clone()) {
-            if out.contains(&p) {
+            if !seen.insert(p.clone()) {
                 break;
             }
             out.push(p.clone());
@@ -342,10 +416,50 @@ pub struct Report {
     /// number of heads -> number of instruments
     pub heads: BTreeMap<usize, usize>,
     pub forks: usize,
+    /// Draw rows not used because they closed a loop.
+    pub draws_ignored: usize,
     pub instruments_with_gaps: usize,
     pub instruments_starting_above_one: usize,
     pub max_chain: usize,
     pub longest_spine: usize,
+}
+
+/// Count the versions of one instrument: chains, authors, variant words and renditions.
+fn tally_versions(r: &mut Report, i: &Instrument) {
+    r.versions += i.versions.len();
+    for v in i.versions.values() {
+        if v.chain.len() > 1 {
+            r.chained_versions += 1;
+        }
+        r.max_chain = r.max_chain.max(v.chain.len());
+        if let Some(last) = v.chain.last() {
+            *r.by_author.entry(last.who.clone()).or_default() += 1;
+        }
+        for w in &v.variants {
+            *r.variants.entry(w.clone()).or_default() += 1;
+        }
+        for e in &v.exts {
+            *r.exts.entry(e.clone()).or_default() += 1;
+        }
+    }
+}
+
+/// True when a single-person version's parent is not the number just below it (a bridged gap).
+fn has_gap(i: &Instrument) -> bool {
+    i.versions.values().any(|v| {
+        v.parent.as_ref().is_some_and(|p| {
+            let Some(last) = v.chain.last() else {
+                return false;
+            };
+            let want = {
+                let mut c = v.chain.clone();
+                let n = c.len();
+                c[n - 1].n = last.n.saturating_sub(1);
+                label_of(&c)
+            };
+            last.n > 1 && *p != want && v.chain.len() == 1
+        })
+    })
 }
 
 pub fn report(files: &[String], initials: &[&str], draws: &[Draw]) -> Report {
@@ -357,22 +471,8 @@ pub fn report(files: &[String], initials: &[&str], draws: &[Draw]) -> Report {
         ..Default::default()
     };
     for i in inst.values() {
-        r.versions += i.versions.len();
-        for v in i.versions.values() {
-            if v.chain.len() > 1 {
-                r.chained_versions += 1;
-            }
-            r.max_chain = r.max_chain.max(v.chain.len());
-            if let Some(last) = v.chain.last() {
-                *r.by_author.entry(last.who.clone()).or_default() += 1;
-            }
-            for w in &v.variants {
-                *r.variants.entry(w.clone()).or_default() += 1;
-            }
-            for e in &v.exts {
-                *r.exts.entry(e.clone()).or_default() += 1;
-            }
-        }
+        tally_versions(&mut r, i);
+        r.draws_ignored += i.versions.values().filter(|v| v.draw_ignored).count();
         let heads = i.heads();
         *r.heads.entry(heads.len()).or_default() += 1;
         if heads.len() > 1 {
@@ -388,20 +488,7 @@ pub fn report(files: &[String], initials: &[&str], draws: &[Draw]) -> Report {
         }) {
             r.instruments_starting_above_one += 1;
         }
-        if i.versions.values().any(|v| {
-            v.parent.as_ref().is_some_and(|p| {
-                let Some(last) = v.chain.last() else {
-                    return false;
-                };
-                let want = {
-                    let mut c = v.chain.clone();
-                    let n = c.len();
-                    c[n - 1].n = last.n.saturating_sub(1);
-                    label_of(&c)
-                };
-                last.n > 1 && *p != want && v.chain.len() == 1
-            })
-        }) {
+        if has_gap(i) {
             r.instruments_with_gaps += 1;
         }
     }
