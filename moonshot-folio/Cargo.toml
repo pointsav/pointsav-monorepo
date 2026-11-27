@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "moonshot-folio"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+description = "moonshot-folio facade: render(&Document, Target) -> Artifact"
+
+[dependencies]
+moonshot-folio-ir = { path = "crates/ir" }
+moonshot-folio-tokens = { path = "crates/tokens" }
+moonshot-folio-pdf = { path = "crates/pdf" }
+moonshot-folio-docx = { path = "crates/docx" }
+moonshot-folio-xlsx = { path = "crates/xlsx" }
+moonshot-folio-html = { path = "crates/html" }
+moonshot-folio-csv = { path = "crates/csv" }
+
+[workspace]
+resolver = "2"
+members = [
+    ".",
+    "crates/core",
+    "crates/codec",
+    "crates/ir",
+    "crates/tokens",
+    "crates/font",
+    "crates/text",
+    "crates/draw",
+    "crates/fonts-tinos",
+    "crates/raster",
+    "crates/layout",
+    "crates/pdf",
+    "crates/docx",
+    "crates/xlsx",
+    "crates/html",
+    "crates/csv",
+    "crates/conform",
+]

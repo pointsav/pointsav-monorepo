@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "moonshot-folio-html"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+description = "moonshot-folio L4: IR to HTML/CSS"
+
+[dependencies]
+moonshot-folio-core = { path = "../core" }
+moonshot-folio-ir = { path = "../ir" }
+moonshot-folio-tokens = { path = "../tokens" }
+moonshot-folio-draw = { path = "../draw" }
+moonshot-folio-layout = { path = "../layout" }

@@ -95,6 +95,8 @@ exclude = [
     # reason, so os-totebox can path-depend on slm-doorman-server
     # (BRIEF-os-totebox-platform.md section 8/10, Phase 2 dogfood bundle).
     "service-slm",
+    # moonshot-folio: owned rendering-engine family; own nested [workspace] (same pattern as service-slm).
+    "moonshot-folio",
     # Held-out crates that physically nest under the workspace root
     # but are deliberately not workspace members.
     # - service-fs: see members comment above
