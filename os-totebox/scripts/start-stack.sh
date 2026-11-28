@@ -91,7 +91,8 @@ wait_http service-content "http://127.0.0.1:9081/health"
 # ── Tier 3: service-people (personnel ledger HTTP API) ───────────────────────
 start_svc service-people \
     env SERVICE_PEOPLE_PORT="9091" \
-        SERVICE_PEOPLE_LEDGER_PATH="$DATA_DIR/service-people/ledger_personnel.json" \
+        SERVICE_PEOPLE_LEDGER_PATH="$DATA_DIR/$TOTEBOX_ARCHIVE/service-people/ledger_personnel.json" \
+        SERVICE_PEOPLE_SUBSTRATE_PATH="$DATA_DIR/$TOTEBOX_ARCHIVE/service-people/substrate/ledger_personnel.jsonl" \
         "$BIN_DIR/server"
 wait_http service-people "http://127.0.0.1:9091/v1/people"
 
