@@ -307,6 +307,7 @@ pub fn enqueue(cfg: &QueueConfig, brief: &ApprenticeshipBrief) -> QueueResult<Qu
     f.write_all(line.as_bytes())
         .and_then(|_| f.write_all(b"\n"))
         .and_then(|_| f.flush())
+        .and_then(|_| f.sync_data())
         .map_err(|e| DoormanError::QueueIo {
             path: queue_path.display().to_string(),
             reason: e.to_string(),
@@ -369,6 +370,7 @@ pub fn enqueue_shadow(cfg: &QueueConfig, entry: &ShadowQueueEntry) -> QueueResul
     f.write_all(line.as_bytes())
         .and_then(|_| f.write_all(b"\n"))
         .and_then(|_| f.flush())
+        .and_then(|_| f.sync_data())
         .map_err(|e| DoormanError::QueueIo {
             path: queue_path.display().to_string(),
             reason: e.to_string(),

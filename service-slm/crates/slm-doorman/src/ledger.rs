@@ -153,6 +153,9 @@ fn write_with_hash(writer: &mut BufWriter<std::fs::File>, bytes: &[u8]) -> Resul
     writer.write_all(&out)?;
     writer.write_all(b"\n")?;
     writer.flush()?;
+    // Flush only hands the line to the OS; sync so an acknowledged audit
+    // entry survives a crash or power loss.
+    writer.get_ref().sync_data()?;
     Ok(())
 }
 
@@ -189,7 +192,7 @@ impl AuditLedger {
         entry.entry_type = ENTRY_TYPE_CHAT_COMPLETION.to_string();
         let path = self.path_for(&entry.timestamp_utc);
         let line = serde_json::to_vec(&entry)?;
-        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let _guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
         write_with_hash(&mut writer, &line)
@@ -401,7 +404,7 @@ impl AuditLedger {
         entry.entry_type = ENTRY_TYPE_AUDIT_PROXY_STUB.to_string();
         let path = self.path_for(&entry.inbound_at);
         let line = serde_json::to_vec(&entry)?;
-        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let _guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
         write_with_hash(&mut writer, &line)
@@ -421,7 +424,7 @@ impl AuditLedger {
         entry.entry_type = ENTRY_TYPE_AUDIT_PROXY.to_string();
         let path = self.path_for(&entry.completed_at);
         let line = serde_json::to_vec(&entry)?;
-        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let _guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
         write_with_hash(&mut writer, &line)
@@ -439,7 +442,7 @@ impl AuditLedger {
         entry.entry_type = ENTRY_TYPE_AUDIT_CAPTURE.to_string();
         let path = self.path_for(&entry.captured_at);
         let line = serde_json::to_vec(&entry)?;
-        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let _guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
         write_with_hash(&mut writer, &line)
@@ -455,7 +458,7 @@ impl AuditLedger {
         entry.entry_type = ENTRY_TYPE_EXTRACT.to_string();
         let path = self.path_for(&entry.timestamp_utc);
         let line = serde_json::to_vec(&entry)?;
-        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let _guard = self.inner.lock().unwrap_or_else(|e| e.into_inner());
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
         write_with_hash(&mut writer, &line)
@@ -496,6 +499,35 @@ mod tests {
             buffer_deleted_at: None,
         };
         ledger.append_job_entry(&entry).unwrap();
+        let path = ledger.path_for(&entry.timestamp_utc);
+        assert_eq!(std::fs::read_to_string(path).unwrap().lines().count(), 1);
+    }
+
+    #[test]
+    fn append_survives_a_poisoned_mutex() {
+        let ledger = std::sync::Arc::new(AuditLedger::new(tempdir()).unwrap());
+        let l2 = ledger.clone();
+        let _ = std::thread::spawn(move || {
+            let _g = l2.inner.lock().unwrap();
+            panic!("poison the ledger mutex");
+        })
+        .join();
+        assert!(ledger.inner.is_poisoned());
+        let entry = AuditEntry {
+            entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
+            timestamp_utc: Utc::now(),
+            request_id: RequestId::new(),
+            module_id: ModuleId::from_str("foundry").unwrap(),
+            tier: InferenceRoute::Local,
+            model: "m".into(),
+            inference_ms: 1,
+            cost_usd: 0.0,
+            sanitised_outbound: true,
+            completion_status: CompletionStatus::Ok,
+            error_message: None,
+            archive_name: None,
+        };
+        ledger.append(&entry).unwrap();
         let path = ledger.path_for(&entry.timestamp_utc);
         assert_eq!(std::fs::read_to_string(path).unwrap().lines().count(), 1);
     }
