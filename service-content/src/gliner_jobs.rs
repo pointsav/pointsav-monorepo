@@ -23,6 +23,12 @@
 //!   Doorman applies to its credentials file.
 //! - `SERVICE_CONTENT_GLINER_ENGINE_PREFIX`: engine id is this prefix plus
 //!   the domain (default `gliner-`, so `gliner-projects`).
+//! - `SERVICE_CONTENT_GLINER_ENGINE`: one engine id for every domain. When
+//!   set (non-blank) the prefix is ignored, every job goes to this engine and
+//!   names its domain in `params.domain_id`; the registry entry must list
+//!   the domains in `domains`. One engine means one permit and one queue in
+//!   front of the single-inference GLiNER service. Unset keeps the
+//!   per-domain engines.
 //! - `SERVICE_CONTENT_GLINER_JOB_DEADLINE_SECS`: whole-job wait (default 60).
 //!
 //! The registry entry for each engine must set `chunk_bytes` at or below
@@ -54,6 +60,8 @@ pub(crate) struct DoormanGliner {
     base: String,
     token: String,
     engine_prefix: String,
+    /// One engine for every domain (the domain travels as a job param).
+    single_engine: Option<String>,
     deadline: Duration,
 }
 
@@ -85,12 +93,15 @@ impl Mode {
             .and_then(|v| v.parse::<u64>().ok())
             .filter(|s| *s > 0)
             .unwrap_or(DEFAULT_DEADLINE_SECS);
-        Mode::On(DoormanGliner::new(
-            &base,
-            token,
-            engine_prefix,
-            Duration::from_secs(deadline),
-        ))
+        let single_engine = std::env::var("SERVICE_CONTENT_GLINER_ENGINE")
+            .ok()
+            .map(|v| v.trim().to_string())
+            .filter(|v| !v.is_empty());
+        let mut g = DoormanGliner::new(&base, token, engine_prefix, Duration::from_secs(deadline));
+        if let Some(engine) = single_engine {
+            g = g.with_single_engine(engine);
+        }
+        Mode::On(g)
     }
 }
 
@@ -122,8 +133,15 @@ impl DoormanGliner {
             base: base.trim_end_matches('/').to_string(),
             token,
             engine_prefix,
+            single_engine: None,
             deadline,
         }
+    }
+
+    /// Send every domain to one engine, naming the domain in the job params.
+    pub(crate) fn with_single_engine(mut self, engine_id: String) -> Self {
+        self.single_engine = Some(engine_id);
+        self
     }
 
     /// Runs one document through the engine registered for `domain`. `Ok`
@@ -157,7 +175,7 @@ impl DoormanGliner {
             return Err("stage response lacks staged_ref or sha256".into());
         };
 
-        let body = json!({
+        let mut body = json!({
             "engine_id": format!("{}{}", self.engine_prefix, domain),
             "kind": "extract-spans",
             "input": {
@@ -166,6 +184,10 @@ impl DoormanGliner {
                 "staged_ref": staged_ref,
             },
         });
+        if let Some(engine) = &self.single_engine {
+            body["engine_id"] = json!(engine);
+            body["params"] = json!({ "domain_id": domain });
+        }
         let submitted = client
             .post(format!("{}/v1/jobs", self.base))
             .header("Authorization", &bearer)
@@ -280,6 +302,10 @@ mod tests {
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     const JOB: &str = "00000000-0000-4000-8000-000000000001";
+
+    /// Tests that set the `SERVICE_CONTENT_*` variables read by
+    /// `Mode::from_env` must not interleave.
+    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     fn client() -> Client {
         Client::builder()
@@ -595,8 +621,9 @@ mod tests {
 
     #[test]
     fn mode_is_off_by_default_and_misconfigured_without_a_token_file() {
-        // These two variables are read only by `Mode::from_env`; no other
-        // test depends on them.
+        let _env = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        // These variables are read only by `Mode::from_env`; no other test
+        // depends on them.
         std::env::remove_var("SERVICE_CONTENT_GLINER_VIA_DOORMAN");
         std::env::remove_var("SERVICE_CONTENT_JOBS_TOKEN_FILE");
         assert!(matches!(Mode::from_env(), Mode::Off));
@@ -622,7 +649,84 @@ mod tests {
         std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o600)).unwrap();
         assert_eq!(read_token(p.to_str().unwrap()).unwrap(), "secret");
         std::fs::write(&p, "  \n").unwrap();
-        assert!(read_token(p.to_str().unwrap()).unwrap_err().contains("empty"));
+        assert!(read_token(p.to_str().unwrap())
+            .unwrap_err()
+            .contains("empty"));
         assert!(read_token("/nonexistent/token").is_err());
+    }
+    async fn submitted_body(server: &MockServer) -> Value {
+        let reqs = server.received_requests().await.unwrap();
+        let r = reqs
+            .iter()
+            .find(|r| r.url.path() == "/v1/jobs")
+            .expect("a submit request");
+        serde_json::from_slice(&r.body).unwrap()
+    }
+
+    async fn run_empty(server: &MockServer, g: DoormanGliner, domain: &'static str) {
+        Mock::given(method("GET"))
+            .and(path(format!("/v1/jobs/{JOB}")))
+            .respond_with(status("empty"))
+            .mount(server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path(format!("/v1/jobs/{JOB}/ack")))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({})))
+            .mount(server)
+            .await;
+        let out = tokio::task::spawn_blocking(move || g.run_domain(&client(), "x", domain))
+            .await
+            .unwrap();
+        assert_eq!(out.unwrap().len(), 0);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn single_engine_mode_submits_one_engine_with_the_domain_as_a_param() {
+        let server = MockServer::start().await;
+        stage_and_submit(&server, "\"gliner\"").await;
+        let g = gl(&server).with_single_engine("gliner".into());
+        run_empty(&server, g, "corporate").await;
+        let body = submitted_body(&server).await;
+        assert_eq!(body["engine_id"], "gliner");
+        assert_eq!(body["params"]["domain_id"], "corporate");
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn legacy_mode_keeps_prefix_plus_domain_and_sends_no_params() {
+        let server = MockServer::start().await;
+        stage_and_submit(&server, "gliner-corporate").await;
+        let g = gl(&server);
+        run_empty(&server, g, "corporate").await;
+        let body = submitted_body(&server).await;
+        assert_eq!(body["engine_id"], "gliner-corporate");
+        assert!(body.get("params").is_none(), "legacy body must not change");
+    }
+
+    #[test]
+    fn single_engine_env_selects_the_mode_and_blank_is_ignored() {
+        let _env = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("tok");
+        std::fs::write(&p, "secret\n").unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&p, std::fs::Permissions::from_mode(0o600)).unwrap();
+        }
+        std::env::set_var("SERVICE_CONTENT_GLINER_VIA_DOORMAN", "1");
+        std::env::set_var("SERVICE_CONTENT_JOBS_TOKEN_FILE", &p);
+        std::env::set_var("SERVICE_CONTENT_GLINER_ENGINE", "gliner");
+        let Mode::On(g) = Mode::from_env() else {
+            panic!("expected On")
+        };
+        assert_eq!(g.single_engine.as_deref(), Some("gliner"));
+        std::env::set_var("SERVICE_CONTENT_GLINER_ENGINE", "  ");
+        let Mode::On(g) = Mode::from_env() else {
+            panic!("expected On")
+        };
+        assert_eq!(g.single_engine, None);
+        std::env::remove_var("SERVICE_CONTENT_GLINER_ENGINE");
+        std::env::remove_var("SERVICE_CONTENT_GLINER_VIA_DOORMAN");
+        std::env::remove_var("SERVICE_CONTENT_JOBS_TOKEN_FILE");
     }
 }
