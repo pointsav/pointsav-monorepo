@@ -1151,7 +1151,7 @@ OK.
                 local: Some(local.into()),
                 yoyo: {
                     let mut m = std::collections::HashMap::new();
-                    m.insert("default".to_string(), yoyo);
+                    m.insert("default".to_string(), crate::tier::shared_tier(yoyo));
                     m
                 },
                 external: None,
@@ -1464,7 +1464,7 @@ Shadow attempt via Tier B.
                 local: Some(local.into()),
                 yoyo: {
                     let mut m = std::collections::HashMap::new();
-                    m.insert("trainer".to_string(), yoyo);
+                    m.insert("trainer".to_string(), crate::tier::shared_tier(yoyo));
                     m
                 },
                 external: None,

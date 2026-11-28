@@ -1300,7 +1300,10 @@ async fn build_doorman() -> anyhow::Result<Doorman> {
     )
     .map(|c| c.with_concurrency_sem(Arc::clone(&tier_b_sem)))
     {
-        yoyo.insert("default".to_string(), client);
+        yoyo.insert(
+            "default".to_string(),
+            slm_doorman::tier::shared_tier(client),
+        );
     }
 
     // 2. Check for specialized Multi-Yo-Yo endpoints (Leapfrog 2030)
@@ -1313,7 +1316,10 @@ async fn build_doorman() -> anyhow::Result<Doorman> {
     .map(|c| c.with_concurrency_sem(Arc::clone(&tier_b_sem)))
     {
         info!("Yo-Yo 'trainer' node configured");
-        yoyo.insert("trainer".to_string(), client);
+        yoyo.insert(
+            "trainer".to_string(),
+            slm_doorman::tier::shared_tier(client),
+        );
     }
 
     if let Some(client) = build_yoyo_client(
@@ -1325,7 +1331,7 @@ async fn build_doorman() -> anyhow::Result<Doorman> {
     .map(|c| c.with_concurrency_sem(Arc::clone(&tier_b_sem)))
     {
         info!("Yo-Yo 'graph' node configured");
-        yoyo.insert("graph".to_string(), client);
+        yoyo.insert("graph".to_string(), slm_doorman::tier::shared_tier(client));
     }
 
     let external = build_external_tier_client();

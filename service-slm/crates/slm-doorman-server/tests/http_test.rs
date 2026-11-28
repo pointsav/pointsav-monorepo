@@ -868,7 +868,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             local: None,
             yoyo: {
                 let mut m = std::collections::HashMap::new();
-                m.insert("default".to_string(), yoyo);
+                m.insert("default".to_string(), slm_doorman::tier::shared_tier(yoyo));
                 m
             },
             external: None,
@@ -1218,7 +1218,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             local: None,
             yoyo: {
                 let mut m = std::collections::HashMap::new();
-                m.insert("default".to_string(), yoyo);
+                m.insert("default".to_string(), slm_doorman::tier::shared_tier(yoyo));
                 m
             },
             external: None,

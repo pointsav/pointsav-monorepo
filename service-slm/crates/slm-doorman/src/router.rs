@@ -21,7 +21,7 @@ use crate::grammar_validation::LarkValidator;
 use crate::graph::GraphContextClient;
 use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_COMPLETION};
 use crate::mesh::MeshRegistry;
-use crate::tier::{ExternalTierClient, LocalTierClient, OrchestrationTierClient, YoYoTierClient};
+use crate::tier::{ComputeTier, ExternalTierClient, LocalTierClient, OrchestrationTierClient};
 
 use serde::Serialize;
 use std::collections::HashMap;
@@ -53,7 +53,7 @@ pub struct TierBInfo {
 #[derive(Default)]
 pub struct DoormanConfig {
     pub local: Option<LocalBackend>,
-    pub yoyo: HashMap<String, YoYoTierClient>,
+    pub yoyo: HashMap<String, Arc<dyn ComputeTier>>,
     pub external: Option<ExternalTierClient>,
     /// Optional Lark grammar pre-validator (PS.3 step 5). When `Some`,
     /// the router validates any Lark grammar before dispatching to Tier B.
@@ -169,7 +169,7 @@ impl LocalBackend {
 
 pub struct Doorman {
     local: Option<LocalBackend>,
-    yoyo: HashMap<String, YoYoTierClient>,
+    yoyo: HashMap<String, Arc<dyn ComputeTier>>,
     external: Option<ExternalTierClient>,
     ledger: AuditLedger,
     lark_validator: Option<LarkValidator>,
@@ -243,25 +243,23 @@ impl Doorman {
     /// Returns runtime state for each configured Tier B node.
     /// Exposes circuit breaker state and health probe outcome for use in /readyz.
     pub fn tier_b_status(&self) -> HashMap<String, TierBInfo> {
-        use std::sync::atomic::Ordering;
         self.yoyo
             .iter()
             .map(|(label, client)| {
-                let health_up = client.health_up.load(Ordering::Relaxed);
-                let circuit = client.circuit.state_label();
-                let reason = match circuit {
-                    "open" if !health_up => Some("health-probe-failures"),
+                let st = client.status();
+                let reason = match st.circuit {
+                    "open" if !st.health_up => Some("health-probe-failures"),
                     "open" => Some("request-failures"),
                     _ => None,
                 };
                 let info = TierBInfo {
                     configured: true,
-                    health_up,
-                    health_down_secs: client.health_down_secs(),
-                    circuit,
-                    opened_for_secs: client.circuit.opened_for_secs(),
+                    health_up: st.health_up,
+                    health_down_secs: st.health_down_secs,
+                    circuit: st.circuit,
+                    opened_for_secs: st.opened_for_secs,
                     reason,
-                    zone: client.zone.clone(),
+                    zone: st.zone,
                 };
                 (label.clone(), info)
             })
@@ -1020,6 +1018,7 @@ fn should_log_tier_unavailable(last_logged_ms: &AtomicU64, interval: Duration) -
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tier::YoYoTierClient;
     use slm_core::{ChatMessage, ModuleId, RequestId};
     use std::str::FromStr;
 
@@ -1081,6 +1080,88 @@ mod tests {
             chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0)
         ));
         AuditLedger::new(dir).unwrap()
+    }
+
+    /// A tier that is not a `YoYoTierClient`: the router must work through
+    /// the `ComputeTier` trait alone.
+    struct FakeTier {
+        allow: bool,
+        calls: std::sync::atomic::AtomicU32,
+    }
+
+    #[async_trait::async_trait]
+    impl ComputeTier for FakeTier {
+        fn allow_request(&self) -> bool {
+            self.allow
+        }
+
+        async fn complete(&self, _req: &ComputeRequest) -> Result<ComputeResponse> {
+            self.calls.fetch_add(1, Ordering::Relaxed);
+            Err(DoormanError::TierUnavailable(InferenceRoute::Yoyo))
+        }
+
+        fn status(&self) -> crate::tier::TierStatus {
+            crate::tier::TierStatus {
+                health_up: self.allow,
+                health_down_secs: None,
+                circuit: if self.allow { "closed" } else { "open" },
+                opened_for_secs: None,
+                zone: Some("fake-zone".into()),
+            }
+        }
+    }
+
+    fn doorman_with_fake(allow: bool) -> (Doorman, Arc<FakeTier>) {
+        let fake = Arc::new(FakeTier {
+            allow,
+            calls: std::sync::atomic::AtomicU32::new(0),
+        });
+        let mut yoyo: HashMap<String, Arc<dyn ComputeTier>> = HashMap::new();
+        yoyo.insert("fake".to_string(), fake.clone());
+        let doorman = Doorman::new(
+            DoormanConfig {
+                yoyo,
+                ..DoormanConfig::default()
+            },
+            ledger(),
+        );
+        (doorman, fake)
+    }
+
+    #[tokio::test]
+    async fn router_reaches_a_non_yoyo_tier_through_the_trait() {
+        let (doorman, fake) = doorman_with_fake(true);
+        assert!(doorman.has_yoyo());
+        assert!(doorman.yoyo_node_ready("fake"));
+        let st = doorman.tier_b_status();
+        assert_eq!(st["fake"].circuit, "closed");
+        assert_eq!(st["fake"].zone.as_deref(), Some("fake-zone"));
+        let r = req(
+            Complexity::High,
+            Some(InferenceRoute::Yoyo),
+            Some("fake".into()),
+        );
+        let out = doorman.route_yoyo_only(&r, "fake").await;
+        assert!(matches!(out, Err(DoormanError::TierUnavailable(_))));
+        assert_eq!(fake.calls.load(Ordering::Relaxed), 1);
+    }
+
+    #[tokio::test]
+    async fn router_does_not_call_a_tier_that_refuses_requests() {
+        let (doorman, fake) = doorman_with_fake(false);
+        assert!(!doorman.yoyo_node_ready("fake"));
+        assert_eq!(
+            doorman.tier_b_status()["fake"].reason,
+            Some("health-probe-failures")
+        );
+        let r = req(
+            Complexity::High,
+            Some(InferenceRoute::Yoyo),
+            Some("fake".into()),
+        );
+        let out = doorman.route_yoyo_only(&r, "fake").await;
+        assert!(matches!(out, Err(DoormanError::TierUnavailable(_))));
+        assert_eq!(fake.calls.load(Ordering::Relaxed), 0);
     }
 
     /// Regression: `LocalBackend::Orchestrated`'s `complete_background` must
@@ -1174,7 +1255,7 @@ mod tests {
             std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
         );
         let mut yoyo_map = HashMap::new();
-        yoyo_map.insert("default".to_string(), yoyo);
+        yoyo_map.insert("default".to_string(), crate::tier::shared_tier(yoyo));
         let doorman = Doorman::new(
             DoormanConfig {
                 local: None,
@@ -1220,7 +1301,7 @@ mod tests {
         }
 
         let mut map = HashMap::new();
-        map.insert("default".to_string(), yoyo);
+        map.insert("default".to_string(), crate::tier::shared_tier(yoyo));
         let doorman = Doorman::new(
             DoormanConfig {
                 yoyo: map,
@@ -1246,7 +1327,7 @@ mod tests {
         }
 
         let mut map = HashMap::new();
-        map.insert("default".to_string(), yoyo);
+        map.insert("default".to_string(), crate::tier::shared_tier(yoyo));
         let doorman = Doorman::new(
             DoormanConfig {
                 yoyo: map,
@@ -1264,7 +1345,7 @@ mod tests {
     fn tier_b_status_no_reason_when_closed() {
         let yoyo = make_yoyo(Some("us-central1-a".into()));
         let mut map = HashMap::new();
-        map.insert("default".to_string(), yoyo);
+        map.insert("default".to_string(), crate::tier::shared_tier(yoyo));
         let doorman = Doorman::new(
             DoormanConfig {
                 yoyo: map,
@@ -1305,7 +1386,10 @@ mod tests {
             .unwrap();
 
         let mut yoyo_map = HashMap::new();
-        yoyo_map.insert("default".to_string(), make_yoyo(None));
+        yoyo_map.insert(
+            "default".to_string(),
+            crate::tier::shared_tier(make_yoyo(None)),
+        );
         let doorman = Doorman::new(
             DoormanConfig {
                 local: None,
@@ -1354,7 +1438,10 @@ mod tests {
             .unwrap();
 
         let mut yoyo_map = HashMap::new();
-        yoyo_map.insert("default".to_string(), make_yoyo(None));
+        yoyo_map.insert(
+            "default".to_string(),
+            crate::tier::shared_tier(make_yoyo(None)),
+        );
         let doorman = Doorman::new(
             DoormanConfig {
                 local: None,
@@ -1607,7 +1694,10 @@ mod tests {
     #[test]
     fn select_tier_default_policy_never_produces_external() {
         let mut yoyo_map = HashMap::new();
-        yoyo_map.insert("default".to_string(), make_yoyo(None));
+        yoyo_map.insert(
+            "default".to_string(),
+            crate::tier::shared_tier(make_yoyo(None)),
+        );
         let doorman = Doorman::new(
             DoormanConfig {
                 local: Some(LocalBackend::Direct(LocalTierClient::new(

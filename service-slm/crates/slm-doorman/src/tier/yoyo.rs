@@ -777,6 +777,27 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
+#[async_trait::async_trait]
+impl crate::tier::ComputeTier for YoYoTierClient {
+    fn allow_request(&self) -> bool {
+        YoYoTierClient::allow_request(self)
+    }
+
+    async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        YoYoTierClient::complete(self, req).await
+    }
+
+    fn status(&self) -> crate::tier::TierStatus {
+        crate::tier::TierStatus {
+            health_up: self.health_up.load(Ordering::Relaxed),
+            health_down_secs: self.health_down_secs(),
+            circuit: self.circuit.state_label(),
+            opened_for_secs: self.circuit.opened_for_secs(),
+            zone: self.zone.clone(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

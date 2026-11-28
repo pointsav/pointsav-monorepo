@@ -205,7 +205,7 @@ pub mod test_helpers {
             std::sync::Arc::new(StaticBearer::new("test-bearer-token")),
         );
         let mut yoyo_map = std::collections::HashMap::new();
-        yoyo_map.insert("default".to_string(), yoyo);
+        yoyo_map.insert("default".to_string(), slm_doorman::tier::shared_tier(yoyo));
         let doorman = Doorman::new(
             DoormanConfig {
                 local: None,

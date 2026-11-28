@@ -8,6 +8,7 @@
 //! without them and the router routes around them.
 
 mod circuit_breaker;
+mod compute_tier;
 mod external;
 mod local;
 /// Tier 0 orchestration client — routes through `app-orchestration-slm`'s
@@ -18,6 +19,7 @@ mod local;
 mod orchestration;
 mod yoyo;
 
+pub use compute_tier::{shared as shared_tier, ComputeTier, TierStatus};
 pub use external::{
     ExternalAllowlist, ExternalTierClient, ExternalTierConfig, TierCPricing, TierCProvider,
     FOUNDRY_DEFAULT_ALLOWLIST,
