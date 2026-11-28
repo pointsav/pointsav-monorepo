@@ -778,6 +778,64 @@ async fn draft_generate_doorman_unreachable_returns_502() {
 }
 
 #[tokio::test]
+async fn draft_generate_uses_local_doorman_chat_route_and_returns_request_id() {
+    use wiremock::matchers::{body_partial_json, header, method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+
+    let doorman = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .and(header("X-Foundry-Module-ID", "pointsav"))
+        .and(body_partial_json(json!({"model": "doorman-tier-a"})))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "request_id": "01900000-0000-7000-8000-000000000042",
+            "tier_used": "local",
+            "model": "olmo",
+            "content": "<think>plan</think>Summary of X.",
+            "inference_ms": 5,
+            "cost_usd": 0.0
+        })))
+        .expect(1)
+        .mount(&doorman)
+        .await;
+    // The old external route must never be called.
+    Mock::given(method("POST"))
+        .and(path("/v1/audit/proxy"))
+        .respond_with(ResponseTemplate::new(500))
+        .expect(0)
+        .mount(&doorman)
+        .await;
+
+    let (store, dir) = temp_graph_store();
+    let corpus_dir = dir.join("corpus");
+    std::fs::create_dir_all(&corpus_dir).expect("create corpus dir");
+    let mut state = test_http_state(store, dir.to_str().unwrap(), corpus_dir.to_str().unwrap());
+    Arc::get_mut(&mut state).unwrap().doorman_endpoint = doorman.uri();
+    state
+        .graph
+        .upsert_entities("pointsav", &[entity("X", "pointsav")])
+        .expect("seed");
+    let app = router(state);
+
+    let body = json!({"module_id": "pointsav", "query_hint": "X"});
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/draft/generate")
+        .header("content-type", "application/json")
+        .body(Body::from(body.to_string()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = body_json(resp).await;
+    assert_eq!(body["draft"], json!("Summary of X."));
+    assert_eq!(
+        body["audit_id"],
+        json!("01900000-0000-7000-8000-000000000042")
+    );
+    assert_eq!(body["entity_count"], json!(1));
+}
+
+#[tokio::test]
 async fn ingest_document_writes_corpus_file_returns_202() {
     let (app, _state, dir) = test_app();
     let body = json!({"text": "Some real document text.", "module_id": "pointsav"});

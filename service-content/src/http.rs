@@ -347,14 +347,19 @@ async fn graph_verdict(
     })
 }
 
-/// Tier C Drafting Pipeline.
+/// Drafting pipeline.
 ///
 /// Queries the LadybugDB graph for entities matching the request's module and
-/// query_hint, packages them into a ≤2 000-token structured prompt, then
-/// proxies the request to Claude 3.5 Sonnet via Doorman /v1/audit/proxy.
+/// query_hint, packages them into a ≤2 000-token structured prompt, then sends
+/// it to the Doorman's local chat route (`/v1/chat/completions`, model
+/// `doorman-tier-a`, low complexity). No external provider is called
+/// (operator ruling 2026-10-26, audit row 213 / Q287 A; the fleet has no Claude
+/// API key). The handler surfaces the upstream status and message rather than
+/// masking it.
 ///
-/// Pre-D4: the Doorman will return 503 (provider unconfigured). The handler
-/// surfaces the upstream status and message rather than masking it.
+/// `audit_id` in the response is the Doorman's `request_id` for this call: the
+/// chat route does not return a separate `audit_id` (that is `/v1/audit/proxy`
+/// only), and the request id is the key of the inference ledger entry.
 async fn draft_generate(
     State(state): State<Arc<HttpState>>,
     Json(body): Json<DraftRequest>,
@@ -414,21 +419,10 @@ async fn draft_generate(
         user_message
     };
 
-    // 3. Build the AuditProxyRequest JSON (matches slm-core wire format).
-    let request_id = format!(
-        "sc-draft-{}-{}",
-        body.module_id,
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .subsec_nanos()
-    );
-
-    let proxy_body = serde_json::json!({
-        "provider": "anthropic",
-        "model": "anthropic:claude-haiku-4-5-20251001",
-        "purpose": body.purpose,
-        "caller_request_id": request_id,
+    // 3. Build the chat-completions JSON. `purpose` is accepted on the request
+    // for compatibility but is not sent: the local route has no purpose field.
+    let chat_body = serde_json::json!({
+        "model": "doorman-tier-a",
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message}
@@ -437,14 +431,15 @@ async fn draft_generate(
         "temperature": 0.3
     });
 
-    // 4. POST to Doorman /v1/audit/proxy.
-    let url = format!("{}/v1/audit/proxy", state.doorman_endpoint);
+    // 4. POST to the Doorman local chat route. The Doorman assigns the
+    // request id (it must be a UUID, so none is sent).
+    let url = format!("{}/v1/chat/completions", state.doorman_endpoint);
     let client = reqwest::Client::new();
     let res = client
         .post(&url)
         .header("X-Foundry-Module-ID", &body.module_id)
-        .header("X-Foundry-Request-ID", &request_id)
-        .json(&proxy_body)
+        .header("X-Foundry-Complexity", "low")
+        .json(&chat_body)
         .timeout(Duration::from_secs(120))
         .send()
         .await
@@ -464,13 +459,13 @@ async fn draft_generate(
             .to_string();
         return Err((
             StatusCode::from_u16(status.as_u16()).unwrap_or(StatusCode::BAD_GATEWAY),
-            format!("audit_proxy {}: {}", status.as_u16(), msg),
+            format!("doorman chat {}: {}", status.as_u16(), msg),
         ));
     }
 
     // 5. Extract the draft text from the completion.
     let audit_id = resp_json
-        .get("audit_id")
+        .get("request_id")
         .and_then(|v| v.as_str())
         .map(str::to_string);
 
@@ -478,8 +473,8 @@ async fn draft_generate(
         .pointer("/choices/0/message/content")
         .or_else(|| resp_json.get("content"))
         .and_then(|v| v.as_str())
-        .unwrap_or("(no content returned)")
-        .to_string();
+        .map(strip_think_blocks)
+        .unwrap_or_else(|| "(no content returned)".to_string());
 
     Ok(Json(DraftResponse {
         draft,
@@ -819,6 +814,25 @@ async fn graph_enrich(
 /// boundary. A raw byte-index slice (`&s[..max_bytes]`) panics if `max_bytes` lands
 /// mid-character — guaranteed eventually given multi-byte content (accented names, em-dashes,
 /// the bilingual mandate) landing near the truncation point.
+/// Remove `<think>…</think>` reasoning blocks that a think-model may leave in
+/// `content` when the upstream did not split them into `reasoning_content`.
+fn strip_think_blocks(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(start) = rest.find("<think>") {
+        out.push_str(&rest[..start]);
+        match rest[start..].find("</think>") {
+            Some(end) => rest = &rest[start + end + "</think>".len()..],
+            None => {
+                rest = "";
+                break;
+            }
+        }
+    }
+    out.push_str(rest);
+    out.trim().to_string()
+}
+
 fn truncate_at_char_boundary(s: &str, max_bytes: usize) -> &str {
     if s.len() <= max_bytes {
         return s;
@@ -1526,6 +1540,15 @@ async fn shutdown_signal() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn strip_think_blocks_removes_reasoning_and_keeps_answer() {
+        assert_eq!(strip_think_blocks("<think>a</think>Answer."), "Answer.");
+        assert_eq!(strip_think_blocks("A<think>x</think>B<think>y</think>C"), "ABC");
+        assert_eq!(strip_think_blocks("no blocks"), "no blocks");
+        // An unclosed block drops the rest rather than leaking reasoning.
+        assert_eq!(strip_think_blocks("Hi <think>never closed"), "Hi");
+    }
 
     #[test]
     fn truncate_at_char_boundary_never_splits_a_multibyte_char() {
