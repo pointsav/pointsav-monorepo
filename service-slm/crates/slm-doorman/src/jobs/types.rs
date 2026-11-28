@@ -126,6 +126,11 @@ pub struct JobParams {
     /// Caller's label for the page this job reads (e.g. `statement-2024-03.p3`);
     /// echoed back in the record so each result JSON names its page.
     pub page_ref: Option<String>,
+    /// `extract-spans` only: the label domain for this job. Absent means the
+    /// engine's own `domain_id`. Must be one the engine's registry entry
+    /// serves (see `EngineSpec::served_domains`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub domain_id: Option<String>,
 }
 
 /// Where the job's input lives.

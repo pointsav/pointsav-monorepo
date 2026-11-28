@@ -98,6 +98,7 @@ async fn rig() -> Rig {
         chunk_bytes: Some(2000),
         chunk_overlap: Some(100),
         domain_id: Some("projects".into()),
+        domains: None,
         fallback: None,
         declared: Some(EngineDeclared {
             capability: Some("entity-spans".into()),
@@ -120,6 +121,7 @@ async fn rig() -> Rig {
         chunk_bytes: None,
         chunk_overlap: None,
         domain_id: None,
+        domains: None,
         fallback: None,
         declared: None,
     };
@@ -138,6 +140,7 @@ async fn rig() -> Rig {
         chunk_bytes: None,
         chunk_overlap: None,
         domain_id: None,
+        domains: None,
         fallback: None,
         declared: None,
     };

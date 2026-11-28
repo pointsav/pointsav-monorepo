@@ -298,7 +298,10 @@ impl JobEngine for SpanGlinerEngine {
     async fn run(&self, req: EngineRequest<'_>) -> Result<EngineOutput, EngineError> {
         let text = std::str::from_utf8(req.input)
             .map_err(|_| EngineError::Unreadable("input is not UTF-8 text".into()))?;
-        let body = json!({"text": text, "domain_id": self.domain_id, "entity_hints": null});
+        // The job may name a domain the registry entry serves; submit has
+        // already checked it. Without one the engine's own domain applies.
+        let domain = req.params.domain_id.as_deref().unwrap_or(&self.domain_id);
+        let body = json!({"text": text, "domain_id": domain, "entity_hints": null});
         let resp = self
             .http
             .post(format!("{}/v1/extract", self.endpoint))
@@ -565,5 +568,39 @@ mod tests {
             .await,
             Err(EngineError::Unavailable(_))
         ));
+    }
+    #[tokio::test]
+    async fn span_engine_sends_the_job_domain_when_given_else_its_own() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/extract"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({"entities": []})))
+            .mount(&server)
+            .await;
+        let engine = SpanGlinerEngine::new(
+            server.uri(),
+            Some("projects".into()),
+            Duration::from_secs(5),
+        );
+        for (job_domain, expect) in [(Some("documentation"), "documentation"), (None, "projects")] {
+            let params = JobParams {
+                domain_id: job_domain.map(str::to_string),
+                ..Default::default()
+            };
+            engine
+                .run(EngineRequest {
+                    input: b"x",
+                    media_type: "text/plain",
+                    params: &params,
+                    system_prompt: "",
+                    schema: None,
+                })
+                .await
+                .unwrap();
+            let reqs = server.received_requests().await.unwrap();
+            let body: serde_json::Value =
+                serde_json::from_slice(&reqs.last().unwrap().body).unwrap();
+            assert_eq!(body["domain_id"], expect);
+        }
     }
 }

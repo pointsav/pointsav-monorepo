@@ -90,6 +90,15 @@ closed) and no connection is made. Set it in `/etc/local-doorman/local-doorman.e
   `CPUAffinity=` / `Nice=`); keep the two in agreement.
 - `llm-local` jobs run only while Tier A is completely idle (P2), so interactive
   OLMo traffic is never delayed by a job.
+- `span-gliner` label domains: an engine serves its own `domain_id` (default
+  `projects`). To let one engine serve several domains, list them in `domains`
+  (for example `["projects", "corporate", "documentation"]`; each a label of
+  `a-z`, `0-9`, `-`, `_`; the engine's own `domain_id` must be in the list) and
+  have the caller send `params.domain_id` on each `extract-spans` job. A job
+  naming a domain the entry does not list is refused (400); a job with no
+  `domain_id` uses the engine's own. One engine has one permit, so the
+  domains queue behind each other instead of reaching a single-inference
+  service together.
 - Unknown fields are rejected.
 
 ## Credential table (`SLM_JOBS_CREDENTIALS_FILE`)

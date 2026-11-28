@@ -290,6 +290,23 @@ impl JobsService {
                 "extract-spans takes no prompt_id other than spans-v1".into(),
             ));
         }
+        if let Some(d) = &req.params.domain_id {
+            if req.kind != JobKind::ExtractSpans {
+                return Err(SubmitError::BadRequest(
+                    "domain_id applies only to extract-spans".into(),
+                ));
+            }
+            if !crate::jobs::registry::valid_domain_token(d) {
+                return Err(SubmitError::BadRequest(
+                    "domain_id must be 1-64 chars of a-z, 0-9, '-' or '_'".into(),
+                ));
+            }
+            if !slot.spec.served_domains().iter().any(|s| s == d) {
+                return Err(SubmitError::BadRequest(
+                    "domain_id is not served by this engine".into(),
+                ));
+            }
+        }
         if let Some(p) = &req.params.prompt_id {
             if prompts::prompt(p).is_none() {
                 return Err(SubmitError::BadRequest("unknown prompt_id".into()));
@@ -1504,5 +1521,131 @@ mod tests {
         );
         // Idempotent: a second pass finds nothing.
         assert_eq!(r.svc.reap_expired(later), 0);
+    }
+    /// A rig with one span-gliner engine `g` whose registry entry is `spec`.
+    fn span_rig(configure: impl FnOnce(&mut crate::jobs::registry::EngineSpec)) -> Rig {
+        let dir = tmp("span-rig");
+        let mut s = spec("g");
+        s.kind = EngineKind::SpanGliner;
+        s.max_input_bytes = 1024;
+        configure(&mut s);
+        let calls = Arc::new(AtomicUsize::new(0));
+        let mut map: HashMap<String, Arc<dyn JobEngine>> = HashMap::new();
+        map.insert(
+            "g".to_string(),
+            Arc::new(Fake {
+                delay: Duration::from_millis(1),
+                result: Ok(r#"{"entities":[]}"#.to_string()),
+                calls: calls.clone(),
+            }),
+        );
+        let audit = Arc::new(Mutex::new(Vec::new()));
+        let a2 = audit.clone();
+        let sink: AuditSink = Arc::new(move |e| a2.lock().unwrap().push(e));
+        let svc = JobsService::new(
+            Registry::from_specs(vec![s]).unwrap(),
+            JobStore::new(dir.join("store")).unwrap(),
+            map,
+            sink,
+            JobsConfig::default(),
+        )
+        .unwrap();
+        svc.start();
+        Rig {
+            svc,
+            audit,
+            calls: vec![calls],
+            dir,
+        }
+    }
+
+    fn submit_spans(r: &Rig, c: &Credential, domain: Option<&str>) -> Result<JobId, SubmitError> {
+        let (sref, sha) = r.svc.stage_input(c, "text/plain", b"Alice").unwrap();
+        r.svc.submit(
+            c,
+            SubmitRequest {
+                engine_id: "g".into(),
+                kind: JobKind::ExtractSpans,
+                input: InputRef {
+                    sha256: sha,
+                    media_type: "text/plain".into(),
+                    staged_ref: Some(sref),
+                    local_name: None,
+                },
+                params: crate::jobs::types::JobParams {
+                    domain_id: domain.map(str::to_string),
+                    ..Default::default()
+                },
+            },
+        )
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn job_domain_must_be_one_the_engine_serves() {
+        let r = span_rig(|s| {
+            s.domain_id = Some("projects".into());
+            s.domains = Some(vec!["projects".into(), "corporate".into()]);
+        });
+        let c = cred("c", "tok", "mod-a", &["g"]);
+        assert!(
+            submit_spans(&r, &c, None).is_ok(),
+            "no domain: engine default"
+        );
+        assert!(submit_spans(&r, &c, Some("corporate")).is_ok());
+        assert!(matches!(
+            submit_spans(&r, &c, Some("documentation")),
+            Err(SubmitError::BadRequest(_))
+        ));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn job_domain_defaults_to_the_engines_own_when_no_list_is_declared() {
+        let r = span_rig(|s| s.domain_id = Some("corporate".into()));
+        let c = cred("c", "tok", "mod-a", &["g"]);
+        assert!(submit_spans(&r, &c, Some("corporate")).is_ok());
+        assert!(matches!(
+            submit_spans(&r, &c, Some("projects")),
+            Err(SubmitError::BadRequest(_))
+        ));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn malformed_job_domain_is_refused() {
+        let r = span_rig(|s| s.domains = Some(vec!["projects".into()]));
+        let c = cred("c", "tok", "mod-a", &["g"]);
+        for bad in ["", "Projects", "a b", "../x", &"a".repeat(65)] {
+            assert!(
+                matches!(
+                    submit_spans(&r, &c, Some(bad)),
+                    Err(SubmitError::BadRequest(_))
+                ),
+                "{bad:?} must be refused"
+            );
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn job_domain_is_refused_on_other_job_kinds() {
+        let r = rig(vec![("e1", Duration::from_millis(1), Ok("{}".into()), 5)]);
+        let c = cred("c", "tok", "mod-a", &["e1"]);
+        let (sref, sha) = r.svc.stage_input(&c, "text/plain", b"x").unwrap();
+        let out = r.svc.submit(
+            &c,
+            SubmitRequest {
+                engine_id: "e1".into(),
+                kind: JobKind::ExtractLlm,
+                input: InputRef {
+                    sha256: sha,
+                    media_type: "text/plain".into(),
+                    staged_ref: Some(sref),
+                    local_name: None,
+                },
+                params: crate::jobs::types::JobParams {
+                    domain_id: Some("projects".into()),
+                    ..Default::default()
+                },
+            },
+        );
+        assert!(matches!(out, Err(SubmitError::BadRequest(_))));
     }
 }

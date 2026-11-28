@@ -52,6 +52,12 @@ pub struct EngineSpec {
     /// Span extractors only: the engine's label domain (default `projects`).
     #[serde(default)]
     pub domain_id: Option<String>,
+    /// Span extractors only: the label domains a job may ask for through
+    /// `params.domain_id`. Absent means only the engine's own `domain_id`
+    /// (so existing registries keep their meaning). The engine's own domain
+    /// must be in the list.
+    #[serde(default)]
+    pub domains: Option<Vec<String>>,
     /// Must be absent or null: there is no fallback between engines.
     #[serde(default)]
     pub fallback: Option<String>,
@@ -91,6 +97,30 @@ pub struct EngineDeclared {
     /// Whether the engine moves with the archive it serves.
     #[serde(default)]
     pub travels_with_archive: Option<bool>,
+}
+
+/// A domain label: 1 to 64 characters of `a-z`, `0-9`, `-` or `_`.
+pub fn valid_domain_token(s: &str) -> bool {
+    !s.is_empty()
+        && s.len() <= 64
+        && s.bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-' || b == b'_')
+}
+
+impl EngineSpec {
+    /// The engine's own label domain (default `projects`).
+    pub fn default_domain(&self) -> &str {
+        self.domain_id.as_deref().unwrap_or("projects")
+    }
+
+    /// Domains a span-extraction job may name: the declared list, else only
+    /// the engine's own domain.
+    pub fn served_domains(&self) -> Vec<String> {
+        match &self.domains {
+            Some(d) => d.clone(),
+            None => vec![self.default_domain().to_string()],
+        }
+    }
 }
 
 const DECLARED_TEXT_MAX: usize = 200;
@@ -180,6 +210,31 @@ impl Registry {
                     e.engine_id
                 ));
             }
+            if let Some(list) = &e.domains {
+                if e.kind != EngineKind::SpanGliner {
+                    return Err(format!(
+                        "engine {}: domains applies only to span-gliner engines",
+                        e.engine_id
+                    ));
+                }
+                if list.is_empty() || !list.iter().all(|d| valid_domain_token(d)) {
+                    return Err(format!(
+                        "engine {}: domains must be a non-empty list of labels (a-z, 0-9, '-', '_')",
+                        e.engine_id
+                    ));
+                }
+                let mut seen = std::collections::HashSet::new();
+                if !list.iter().all(|d| seen.insert(d.as_str())) {
+                    return Err(format!("engine {}: domains has a duplicate", e.engine_id));
+                }
+                if !list.iter().any(|d| d == e.default_domain()) {
+                    return Err(format!(
+                        "engine {}: its own domain {:?} must be in domains",
+                        e.engine_id,
+                        e.default_domain()
+                    ));
+                }
+            }
             if let Some(d) = &e.declared {
                 d.validate()
                     .map_err(|m| format!("engine {}: {m}", e.engine_id))?;
@@ -228,6 +283,7 @@ pub(crate) mod tests_support {
             chunk_bytes: None,
             chunk_overlap: None,
             domain_id: None,
+            domains: None,
             fallback: None,
             declared: None,
         }
@@ -319,5 +375,45 @@ mod tests {
         let j = r#"{"engines":[{"engine_id":"a","kind":"llm-local","endpoint":"http://x","model":"m","weights_sha256":"w","licence":"l","permits":1,"max_job_secs":1,"max_input_bytes":1,"bogus":1}]}"#;
         let f: Result<RegistryFile, _> = serde_json::from_str(j);
         assert!(f.is_err());
+    }
+    fn span(domain_id: Option<&str>, domains: Option<&[&str]>) -> EngineSpec {
+        let mut e = spec("g");
+        e.kind = EngineKind::SpanGliner;
+        e.domain_id = domain_id.map(str::to_string);
+        e.domains = domains.map(|d| d.iter().map(|s| s.to_string()).collect());
+        e
+    }
+
+    #[test]
+    fn served_domains_default_to_the_engines_own_domain() {
+        assert_eq!(span(None, None).served_domains(), vec!["projects"]);
+        assert_eq!(
+            span(Some("corporate"), None).served_domains(),
+            vec!["corporate"]
+        );
+        let many = span(
+            Some("projects"),
+            Some(&["projects", "corporate", "documentation"]),
+        );
+        assert_eq!(many.served_domains().len(), 3);
+    }
+
+    #[test]
+    fn domains_list_is_validated() {
+        let ok = span(Some("projects"), Some(&["projects", "corporate"]));
+        assert!(Registry::from_specs(vec![ok]).is_ok());
+        // empty list, malformed token, duplicate, default not in the list
+        for bad in [
+            span(None, Some(&[])),
+            span(None, Some(&["projects", "Bad Domain"])),
+            span(None, Some(&["projects", "projects"])),
+            span(Some("projects"), Some(&["corporate"])),
+        ] {
+            assert!(Registry::from_specs(vec![bad]).is_err());
+        }
+        // only span extractors may list domains
+        let mut llm = spec("a");
+        llm.domains = Some(vec!["projects".into()]);
+        assert!(Registry::from_specs(vec![llm]).is_err());
     }
 }
