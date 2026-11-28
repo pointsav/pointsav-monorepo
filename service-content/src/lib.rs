@@ -2602,7 +2602,9 @@ fn process_corpus(
         .send();
 
     // Helper: flush Tier A entities to graph when Tier B is unavailable.
-    // None  → Tier A was unreachable (no-SLM deployment) → DeferTransient (retry soon)
+    // None  → no extraction source answered (GLiNER down, no SLM): the file waits in
+    //         the dormant list and is probed each tick, never dead-lettered, so the
+    //         base tier loses nothing while GLiNER is away → DeferCircuitOpen
     // Some([]) → Tier A reachable but empty → DeferCircuitOpen (wait for circuit recovery)
     let flush_tier_a = |tier_a: &Option<Vec<serde_json::Value>>, reason: &str| -> ExtractResult {
         if let Some(ta_ents) = tier_a {
@@ -2638,10 +2640,10 @@ fn process_corpus(
             ExtractResult::DeferCircuitOpen
         } else {
             println!(
-                "  -> [TIER-A] Unavailable — deferring transiently ({}).",
+                "  -> [TIER-A] No extraction source available — holding dormant ({}).",
                 reason
             );
-            ExtractResult::DeferTransient
+            ExtractResult::DeferCircuitOpen
         }
     };
 
@@ -2899,7 +2901,9 @@ fn process_corpus(
             // Transport error — Tier B unreachable. Use Tier A to avoid losing the document.
             println!("  -> [SYS_HALT] Doorman routing failed (transient): {}", e);
             let result = flush_tier_a(&tier_0_entities, &format!("Tier B transport error: {}", e));
-            if matches!(result, ExtractResult::DeferCircuitOpen) {
+            // Tier A answered but was empty: retry soon rather than wait for a circuit.
+            // No source answered at all stays dormant (see flush_tier_a).
+            if tier_0_entities.is_some() && matches!(result, ExtractResult::DeferCircuitOpen) {
                 ExtractResult::DeferTransient
             } else {
                 result
@@ -3360,5 +3364,72 @@ mod tests {
                 panic!("expected Empty — Unavailable means the fallback wrongly fired against an unmocked domain")
             }
         }
+    }
+    // No-SLM base tier (operator rule): when no extraction source answers, the file must
+    // wait, not count toward the dead-letter cap. These drive the CSV path, which needs no
+    // GLINER_ENDPOINT global, so they are safe under parallel test execution.
+    fn run_csv_process_corpus(label: &str, doorman_endpoint: String) -> ExtractResult {
+        let dir = tmp_dir(label);
+        let corpus_path = dir.join("CORPUS_test.json");
+        let payload = serde_json::json!({
+            "worm_id": format!("TEST-{label}"),
+            "corpus": "Entity Name: Example Corp, Role: Vendor\nEntity Name: Sample Ltd, Role: Customer\n",
+            "module_id": format!("test-{label}"),
+        });
+        fs::write(&corpus_path, payload.to_string()).unwrap();
+        let graph_store: Arc<dyn GraphStore> =
+            Arc::new(LbugGraphStore::new(dir.join("lbug").to_str().unwrap()).unwrap());
+        graph_store.init_schema().unwrap();
+        let crm_dir = dir.join("crm");
+        fs::create_dir_all(&crm_dir).unwrap();
+        let feedback_dir = dir.join("feedback");
+        fs::create_dir_all(&feedback_dir).unwrap();
+        let mut tier_b_used = false;
+        let result = process_corpus(
+            &corpus_path,
+            crm_dir.to_str().unwrap(),
+            &doorman_endpoint,
+            &format!("test-{label}"),
+            &graph_store,
+            feedback_dir.to_str().unwrap(),
+            &mut tier_b_used,
+            0,
+            None,
+        );
+        fs::remove_dir_all(&dir).ok();
+        result
+    }
+
+    #[test]
+    fn process_corpus_with_no_backend_reachable_is_dormant_not_transient() {
+        // Nothing listens on port 1: Tier A and Tier B both fail to connect.
+        let result = run_csv_process_corpus("no-backend", "http://127.0.0.1:1".to_string());
+        assert!(
+            matches!(result, ExtractResult::DeferCircuitOpen),
+            "expected DeferCircuitOpen, got {:?}",
+            result
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn process_corpus_with_doorman_refusing_everything_is_dormant_not_transient() {
+        use wiremock::matchers::method;
+        use wiremock::{Mock, ResponseTemplate};
+        let mock_server = wiremock::MockServer::start().await;
+        Mock::given(method("POST"))
+            .respond_with(ResponseTemplate::new(503))
+            .mount(&mock_server)
+            .await;
+        let endpoint = mock_server.uri();
+        let result = tokio::task::spawn_blocking(move || {
+            run_csv_process_corpus("refusing", endpoint)
+        })
+        .await
+        .unwrap();
+        assert!(
+            matches!(result, ExtractResult::DeferCircuitOpen),
+            "expected DeferCircuitOpen, got {:?}",
+            result
+        );
     }
 }
