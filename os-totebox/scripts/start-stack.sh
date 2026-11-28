@@ -79,14 +79,14 @@ start_svc service-slm \
         SLM_LOCAL_ENDPOINT="http://127.0.0.1:8080" \
         SLM_MODULE_ID="data" \
         "$BIN_DIR/slm-doorman-server"
-wait_http service-slm "http://127.0.0.1:9080/health"
+wait_http service-slm "http://127.0.0.1:9080/healthz"
 
 # ── Tier 2: service-content (DataGraph / LadybugDB) ──────────────────────────
 start_svc service-content \
     env SERVICE_CONTENT_HTTP_BIND="127.0.0.1:9081" \
         SERVICE_CONTENT_BASE_DIR="$DATA_DIR/$TOTEBOX_ARCHIVE" \
         "$BIN_DIR/service-content"
-wait_http service-content "http://127.0.0.1:9081/health"
+wait_http service-content "http://127.0.0.1:9081/healthz"
 
 # ── Tier 3: service-people (personnel ledger HTTP API) ───────────────────────
 start_svc service-people \
