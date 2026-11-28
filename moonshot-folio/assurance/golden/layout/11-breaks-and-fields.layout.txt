@@ -1,0 +1,12 @@
+pagetree pages=2 substituted=0
+page 0 section=0 label=1 size=2540000x3810000 margin=254000
+  0.0.0.0 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=396049 asc=100305 desc=28918 ink=gray(0) "before"
+  0.0.2 Paragraph x=254000 y=3025007 text font=Regular size=139700 w=77673 asc=100305 desc=28918 ink=gray(0) "1"
+page 1 section=0 label=2 size=2540000x3810000 margin=254000
+  0.0.5.0 Heading2 x=254000 y=3338703 text font=Bold size=254000 w=1792478 asc=182372 desc=52578 ink=gray(0) "After the break"
+  0.0.6.0 Paragraph x=254000 y=3055487 text font=Regular size=139700 w=512559 asc=100305 desc=28918 ink=gray(0) hung "tab here"
+  0.0.6.0 Paragraph x=254000 y=2887847 text font=Regular size=139700 w=636752 asc=100305 desc=28918 ink=gray(0) "next line 1"
+block 0.0.0 Paragraph
+block 0.0.2 Paragraph
+block 0.0.5 Heading2
+block 0.0.6 Paragraph

@@ -1,0 +1,9 @@
+# covers: a_timeline_renders_its_leader_and_a_positioned_bar; a_bar_mark_reaches_the_stream_as_a_filled_rect
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: timeline not converted (charts arrive in F8); placeholder emitted
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    para role="placeholder" [t"timeline"]

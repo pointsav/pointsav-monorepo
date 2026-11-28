@@ -1,0 +1,9 @@
+# covers: bold_lead_span_stays_bold_while_running_text_keeps_its_face; a_bold_lead_in_keeps_its_stretch_in_step_with_the_rest_of_the_line
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: paragraph indent and spacing not carried
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    para role="body" [run("bold")"Lead. " t"Running text follows."]

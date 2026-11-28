@@ -1,0 +1,9 @@
+# covers: a_milestone_diamond_reaches_the_stream_as_a_filled_polygon; an_empty_row_still_occupies_its_slot_keeping_leader_and_plot_aligned
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: timeline not converted (charts arrive in F8); placeholder emitted
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    para role="placeholder" [t"timeline"]

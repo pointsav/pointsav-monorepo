@@ -1,0 +1,7 @@
+pagetree pages=2 substituted=0
+page 0 section=1 label=1 size=2540000x3810000 margin=254000
+  1.0.0.0 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=225057 asc=100305 desc=28918 ink=gray(0) "first"
+page 1 section=3 label=2 size=2540000x3810000 margin=254000
+  3.0.0.0 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=217373 asc=100305 desc=28918 ink=gray(0) "last"
+block 1.0.0 Paragraph
+block 3.0.0 Paragraph

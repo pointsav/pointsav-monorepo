@@ -1,1 +1,52 @@
 req	test	status
+FOLIO-REQ-004	cargo xtask fuzz (seeded mutants of zip, inflate, zlib, png, jpeg, ttf; corpus in assurance/fuzz-corpus)	partial: PDF reader pending; independent review of the TTF parser pending
+FOLIO-REQ-021	crates/core/tests/units.rs	verified
+FOLIO-REQ-022	crates/ir/tests/validate.rs	verified
+FOLIO-REQ-023	crates/ir/tests/capability.rs	verified
+FOLIO-REQ-024	compat/typeset/tests/convert.rs (run: cd compat/typeset && cargo test)	verified
+FOLIO-REQ-025	compat/typeset/tests/tt_corpus.rs; assurance/golden/tt/ (run: cd compat/typeset && cargo test)	verified
+FOLIO-REQ-014	assurance/golden/tt/ (synthetic only; tt_corpus.rs)	partial: other corpus groups pending
+FOLIO-REQ-026	crates/docx/tests/package.rs	verified
+FOLIO-REQ-027	crates/docx/tests/body.rs	verified
+FOLIO-REQ-028	crates/docx/tests/table.rs	verified
+FOLIO-REQ-029	crates/docx/tests/chrome.rs	verified
+FOLIO-REQ-030	crates/docx/tests/list.rs	verified
+FOLIO-REQ-031	crates/docx/tests/fields.rs	verified
+FOLIO-REQ-032	crates/docx/tests/rich.rs	verified
+FOLIO-REQ-033	crates/csv/tests/csv.rs	verified
+FOLIO-REQ-034	crates/ir/tests/validate.rs	verified
+FOLIO-REQ-035	crates/xlsx/tests/xlsx.rs	verified
+FOLIO-REQ-036	crates/xlsx/tests/xlsx.rs	verified
+FOLIO-REQ-037	crates/xlsx/tests/xlsx.rs	verified
+FOLIO-REQ-038	crates/font/tests/ttf.rs	verified
+FOLIO-REQ-039	crates/font/tests/subset.rs	verified
+FOLIO-REQ-040	crates/font/tests/policy.rs	verified
+FOLIO-REQ-041	crates/font/tests/std14.rs	verified
+FOLIO-REQ-044	crates/pdf/tests/pdf.rs	verified
+FOLIO-REQ-045	crates/pdf/tests/pdf.rs	verified
+FOLIO-REQ-046	crates/pdf/tests/pdf.rs	verified
+FOLIO-REQ-047	crates/pdf/tests/pdf.rs	verified
+FOLIO-REQ-048	crates/pdf/tests/pdf.rs	verified
+FOLIO-REQ-049	crates/docx/tests/review.rs	verified
+FOLIO-REQ-042	crates/text/src/oracle_tests.rs	verified
+FOLIO-REQ-043	crates/text/src/oracle_tests.rs	verified
+FOLIO-REQ-050	crates/text/tests/properties.rs	verified
+FOLIO-REQ-051	crates/text/tests/properties.rs	verified
+FOLIO-REQ-052	crates/text/tests/wrap.rs	verified
+FOLIO-REQ-053	crates/ir/tests/validate.rs; crates/xlsx/tests/xlsx.rs; crates/csv/tests/csv.rs	verified
+FOLIO-REQ-054	crates/font/tests/ttf.rs; crates/font/tests/subset.rs	verified
+FOLIO-REQ-008	crates/layout/tests/layout.rs; crates/layout/tests/review.rs	verified
+FOLIO-REQ-055	crates/layout/tests/layout.rs; crates/layout/tests/properties.rs; crates/layout/tests/review.rs	verified
+FOLIO-REQ-056	crates/layout/tests/layout.rs; crates/layout/tests/properties.rs; crates/layout/tests/regress.rs; crates/layout/tests/review.rs	verified
+FOLIO-REQ-057	crates/layout/tests/layout.rs; crates/layout/tests/properties.rs; crates/layout/tests/regress.rs; crates/layout/tests/review.rs	verified
+FOLIO-REQ-058	crates/layout/tests/layout.rs; crates/layout/tests/review.rs; crates/layout/src/lib.rs	verified
+FOLIO-REQ-059	crates/layout/tests/layout.rs; crates/layout/tests/review.rs	verified
+FOLIO-REQ-060	crates/layout/tests/golden.rs; crates/layout/tests/properties.rs	verified
+FOLIO-REQ-061	crates/layout/tests/layout.rs; crates/layout/tests/properties.rs; crates/layout/tests/regress.rs; crates/layout/tests/review.rs	verified
+FOLIO-REQ-062	crates/layout/tests/toc.rs	verified
+FOLIO-REQ-063	crates/pdf/tests/render.rs; crates/pdf/tests/pdf.rs	verified
+FOLIO-REQ-064	crates/pdf/tests/render.rs; crates/pdf/tests/pdf.rs	verified
+FOLIO-REQ-065	crates/pdf/tests/render.rs	verified
+FOLIO-REQ-066	crates/pdf/tests/tagged.rs	verified
+FOLIO-REQ-067	crates/layout/tests/layout.rs	verified
+FOLIO-REQ-068	crates/pdf/tests/tagged.rs	verified

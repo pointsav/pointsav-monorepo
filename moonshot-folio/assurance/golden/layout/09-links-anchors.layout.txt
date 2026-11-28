@@ -1,0 +1,16 @@
+pagetree pages=2 substituted=0
+page 0 section=0 label=1 size=2540000x3810000 margin=254000
+  0.0.0.1 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=380544 asc=100305 desc=28918 ink=gray(0) "Go to "
+  0.0.0.2 Link x=634544 y=3436487 text font=Regular size=139700 w=466039 asc=100305 desc=28918 ink=rgb(5,99,193) "the end"
+  0.0.0.3 Paragraph x=1100583 y=3436487 text font=Regular size=139700 w=481267 asc=100305 desc=28918 ink=gray(0) " or visit "
+  0.0.0.4 Link x=1581850 y=3436487 text font=Regular size=139700 w=527925 asc=100305 desc=28918 ink=rgb(5,99,193) hung "example"
+  0.0.0.5 Artifact x=254000 y=3239929 rect w=465759 h=129223 fill=rgb(255,255,0) stroke=none
+  0.0.0.5 Paragraph x=254000 y=3268847 text font=Regular size=139700 w=465759 asc=100305 desc=28918 ink=gray(0) "marked"
+  0.0.0.2 link x=634544 y=3407569 w=466039 h=129223 named "end"
+  0.0.0.4 link x=1581850 y=3407569 w=527925 h=129223 uri "https://example.org/a"
+page 1 section=0 label=2 size=2540000x3810000 margin=254000
+  0.0.2.1 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=248526 asc=100305 desc=28918 ink=gray(0) "End"
+block 0.0.0 Paragraph
+block 0.0.2 Paragraph
+dest "start" page=0 x=254000 y=3556000
+dest "end" page=1 x=254000 y=3556000

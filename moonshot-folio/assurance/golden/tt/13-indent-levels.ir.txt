@@ -1,0 +1,14 @@
+# covers: indent_level_is_a_real_offset_not_leading_spaces; indent_levels_3_and_4_no_longer_collapse_onto_level_2; indent_level_3_gets_its_own_measured_offset_not_a_missing_class
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: column widths and alignment not carried
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    table columns=2 repeat_header_rows=0
+      row split=true | text "Level" span=1 role="data" | text "1.00" span=1 role="figure"
+      row split=true | text "Level" span=1 role="data indent1" | text "1.00" span=1 role="figure"
+      row split=true | text "Level" span=1 role="data indent2" | text "1.00" span=1 role="figure"
+      row split=true | text "Level" span=1 role="data indent3" | text "1.00" span=1 role="figure"
+      row split=true | text "Level" span=1 role="data indent4" | text "1.00" span=1 role="figure"

@@ -24,6 +24,11 @@ pub(crate) fn read(path: &Path) -> Res<String> {
     fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))
 }
 
+/// Read a binary file, naming the path on error.
+pub(crate) fn read_bytes(path: &Path) -> Res<Vec<u8>> {
+    fs::read(path).map_err(|e| format!("{}: {e}", path.display()))
+}
+
 /// Family root: the parent of this crate's manifest directory.
 pub(crate) fn family_root() -> Res<PathBuf> {
     Path::new(env!("CARGO_MANIFEST_DIR"))

@@ -115,7 +115,8 @@ version = "0.1.0"
 dependencies = [
  "moonshot-folio-codec",
  "moonshot-folio-core",
- "moonshot-folio-draw",
+ "moonshot-folio-font",
+ "moonshot-folio-ir",
  "moonshot-folio-layout",
 ]
 
@@ -133,7 +134,6 @@ name = "moonshot-folio-text"
 version = "0.1.0"
 dependencies = [
  "moonshot-folio-core",
- "moonshot-folio-font",
 ]
 
 [[package]]
@@ -157,3 +157,8 @@ dependencies = [
 [[package]]
 name = "moonshot-folio-xtask"
 version = "0.1.0"
+dependencies = [
+ "moonshot-folio-codec",
+ "moonshot-folio-core",
+ "moonshot-folio-font",
+]

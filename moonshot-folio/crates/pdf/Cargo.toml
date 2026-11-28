@@ -7,12 +7,13 @@ version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
 publish = false
-description = "moonshot-folio L4: `PageTree` to PDF"
+description = "moonshot-folio L4: deterministic low-level PDF writer"
 
 [dependencies]
 moonshot-folio-core = { path = "../core" }
 moonshot-folio-codec = { path = "../codec" }
-moonshot-folio-draw = { path = "../draw" }
+moonshot-folio-font = { path = "../font" }
+moonshot-folio-ir = { path = "../ir" }
 moonshot-folio-layout = { path = "../layout" }
 
 [lints.rust]

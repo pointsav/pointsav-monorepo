@@ -6,18 +6,23 @@
 use crate::util::{crate_names, family_rust_files, read, walk, Res, Verdict};
 use std::path::{Path, PathBuf};
 
-/// (token, reason). Lines starting with `//` are ignored.
-const BANNED: [(&str, &str); 7] = [
+/// (token, reason, applies to tests too). Lines starting with `//` are ignored. Determinism
+/// tokens apply to shipped code under `src/` only: a test may time itself.
+const BANNED: [(&str, &str, bool); 10] = [
     (
         "macro_rules!",
         "macro_rules outside a const table generator",
+        true,
     ),
-    ("SystemTime", "wall clock read (determinism)"),
-    ("Instant::now", "clock read (determinism)"),
-    ("std::env::", "environment read (determinism)"),
-    ("HashMap", "unordered map (determinism)"),
-    ("HashSet", "unordered set (determinism)"),
-    ("unsafe ", "unsafe code"),
+    ("SystemTime", "wall clock read (determinism)", false),
+    ("Instant::now", "clock read (determinism)", false),
+    ("std::env::", "environment read (determinism)", false),
+    ("HashMap", "unordered map (determinism)", false),
+    ("HashSet", "unordered set (determinism)", false),
+    ("unsafe {", "unsafe block", true),
+    ("unsafe fn", "unsafe function", true),
+    ("unsafe impl", "unsafe impl", true),
+    ("unsafe trait", "unsafe trait", true),
 ];
 
 /// Manifests whose dependencies must all be family path dependencies.
@@ -82,12 +87,13 @@ fn source_problems(root: &Path) -> Res<Vec<String>> {
     }
     for file in family_rust_files(root)? {
         let text = read(&file)?;
+        let is_test = file.components().any(|c| c.as_os_str() == "tests");
         for (n, line) in text.lines().enumerate() {
             if line.trim_start().starts_with("//") {
                 continue;
             }
-            for (token, why) in BANNED {
-                if line.contains(token) {
+            for (token, why, in_tests) in BANNED {
+                if (in_tests || !is_test) && line.contains(token) {
                     let at = n.saturating_add(1);
                     problems.push(format!("{}:{at}: {why}", file.display()));
                 }

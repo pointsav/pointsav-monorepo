@@ -11,7 +11,6 @@ description = "moonshot-folio L2: shaper and UAX#14 line breaking"
 
 [dependencies]
 moonshot-folio-core = { path = "../core" }
-moonshot-folio-font = { path = "../font" }
 
 [lints.rust]
 unsafe_code = "forbid"

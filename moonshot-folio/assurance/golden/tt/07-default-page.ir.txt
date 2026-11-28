@@ -1,0 +1,7 @@
+# covers: every_doc_gets_an_explicit_portrait_print_page_size_and_sane_margins_by_default
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]

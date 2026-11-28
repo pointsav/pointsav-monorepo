@@ -7,6 +7,7 @@
 
 #![forbid(unsafe_code)]
 
+mod fuzz;
 mod rules;
 mod trace;
 mod util;
@@ -16,10 +17,11 @@ use std::path::Path;
 use std::process::ExitCode;
 use util::{family_root, Res, Verdict};
 
-const GATES: [&str; 6] = [
+const GATES: [&str; 7] = [
     "trace",
     "rules",
     "vendor-check",
+    "fuzz",
     "determinism",
     "golden",
     "uax-tables",
@@ -33,11 +35,12 @@ fn pending(name: &str) -> Verdict {
 }
 
 /// Run one gate by name.
-fn run_gate(name: &str, root: &Path) -> Res<Verdict> {
+fn run_gate(name: &str, root: &Path, args: &[String]) -> Res<Verdict> {
     match name {
         "trace" => trace::run(root),
         "rules" => rules::run(root),
         "vendor-check" => vendor::run(root),
+        "fuzz" => fuzz::run(root, args),
         "determinism" | "golden" | "uax-tables" => Ok(pending(name)),
         other => Err(format!("unknown gate: {other}")),
     }
@@ -79,7 +82,7 @@ fn main() -> ExitCode {
     };
     let mut failed = false;
     for name in names {
-        match run_gate(name, &root) {
+        match run_gate(name, &root, &args) {
             Ok(v) => failed |= report(name, &v, strict),
             Err(e) => {
                 println!("GATE {name}: ERROR {e}");

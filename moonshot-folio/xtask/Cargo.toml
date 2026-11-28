@@ -14,6 +14,9 @@ name = "folio-xtask"
 path = "src/main.rs"
 
 [dependencies]
+moonshot-folio-codec = { path = "../crates/codec" }
+moonshot-folio-core = { path = "../crates/core" }
+moonshot-folio-font = { path = "../crates/font" }
 
 [lints.rust]
 unsafe_code = "forbid"

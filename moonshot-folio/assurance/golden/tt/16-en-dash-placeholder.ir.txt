@@ -1,0 +1,10 @@
+# covers: en_dash_zero_placeholder_reaches_the_stream_as_winansi
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: column widths and alignment not carried
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    table columns=2 repeat_header_rows=0
+      row split=true | text "Nil" span=1 role="data" | text "–" span=1 role="figure"

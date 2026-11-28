@@ -1,0 +1,11 @@
+# covers: long_column_headings_wrap_instead_of_truncating; single_word_heading_wider_than_column_is_not_truncated; wrapped_heading_lines_bottom_align_onto_the_rule
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: column widths and alignment not carried
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    table columns=2 repeat_header_rows=1
+      row split=false | text "A very long column heading that must wrap" span=1 role="header" | text "Supercalifragilisticexpialidocious" span=1 role="header"
+      row split=true | text "1.00" span=1 role="figure" | text "2.00" span=1 role="figure"

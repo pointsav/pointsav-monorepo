@@ -1,0 +1,58 @@
+pagetree pages=3 substituted=0
+page 0 section=0 label=1 size=2540000x3810000 margin=254000
+  0.0.0.0 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=1692743 asc=100305 desc=28918 ink=gray(0) hung "alpha foxtrot kilo delta india"
+  0.0.0.0 Paragraph x=254000 y=3268847 text font=Regular size=139700 w=2026345 asc=100305 desc=28918 ink=gray(0) hung "bravo golf lima echo juliet charlie"
+  0.0.0.0 Paragraph x=254000 y=3101207 text font=Regular size=139700 w=1700567 asc=100305 desc=28918 ink=gray(0) hung "hotel alpha foxtrot kilo delta"
+  0.0.0.0 Paragraph x=254000 y=2933567 text font=Regular size=139700 w=1909975 asc=100305 desc=28918 ink=gray(0) hung "india bravo golf lima echo juliet"
+  0.0.0.0 Paragraph x=254000 y=2765927 text font=Regular size=139700 w=1809113 asc=100305 desc=28918 ink=gray(0) hung "charlie hotel alpha foxtrot kilo"
+  0.0.0.0 Paragraph x=254000 y=2598287 text font=Regular size=139700 w=1925622 asc=100305 desc=28918 ink=gray(0) hung "delta india bravo golf lima echo"
+  0.0.0.0 Paragraph x=254000 y=2430647 text font=Regular size=139700 w=1886786 asc=100305 desc=28918 ink=gray(0) hung "juliet charlie hotel alpha foxtrot"
+  0.0.0.0 Paragraph x=254000 y=2263007 text font=Regular size=139700 w=551255 asc=100305 desc=28918 ink=gray(0) "kilo delta"
+  0.0.1.0 Paragraph x=254000 y=2019167 text font=Regular size=139700 w=1700567 asc=100305 desc=28918 ink=gray(0) hung "hotel alpha foxtrot kilo delta"
+  0.0.1.0 Paragraph x=254000 y=1851527 text font=Regular size=139700 w=1909975 asc=100305 desc=28918 ink=gray(0) hung "india bravo golf lima echo juliet"
+  0.0.1.0 Paragraph x=254000 y=1683887 text font=Regular size=139700 w=1809113 asc=100305 desc=28918 ink=gray(0) hung "charlie hotel alpha foxtrot kilo"
+  0.0.1.0 Paragraph x=254000 y=1516247 text font=Regular size=139700 w=1925622 asc=100305 desc=28918 ink=gray(0) hung "delta india bravo golf lima echo"
+  0.0.1.0 Paragraph x=254000 y=1348607 text font=Regular size=139700 w=1886786 asc=100305 desc=28918 ink=gray(0) hung "juliet charlie hotel alpha foxtrot"
+  0.0.1.0 Paragraph x=254000 y=1180967 text font=Regular size=139700 w=1832302 asc=100305 desc=28918 ink=gray(0) hung "kilo delta india bravo golf lima"
+  0.0.1.0 Paragraph x=254000 y=1013327 text font=Regular size=139700 w=1801428 asc=100305 desc=28918 ink=gray(0) hung "echo juliet charlie hotel alpha"
+  0.0.1.0 Paragraph x=254000 y=845687 text font=Regular size=139700 w=636613 asc=100305 desc=28918 ink=gray(0) "foxtrot kilo"
+  0.0.2.0 Paragraph x=254000 y=601847 text font=Regular size=139700 w=1809113 asc=100305 desc=28918 ink=gray(0) hung "charlie hotel alpha foxtrot kilo"
+  0.0.2.0 Paragraph x=254000 y=434207 text font=Regular size=139700 w=1925622 asc=100305 desc=28918 ink=gray(0) hung "delta india bravo golf lima echo"
+page 1 section=0 label=2 size=2540000x3810000 margin=254000
+  0.0.2.0 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=1886786 asc=100305 desc=28918 ink=gray(0) hung "juliet charlie hotel alpha foxtrot"
+  0.0.2.0 Paragraph x=254000 y=3268847 text font=Regular size=139700 w=1832302 asc=100305 desc=28918 ink=gray(0) hung "kilo delta india bravo golf lima"
+  0.0.2.0 Paragraph x=254000 y=3101207 text font=Regular size=139700 w=1801428 asc=100305 desc=28918 ink=gray(0) hung "echo juliet charlie hotel alpha"
+  0.0.2.0 Paragraph x=254000 y=2933567 text font=Regular size=139700 w=1964460 asc=100305 desc=28918 ink=gray(0) hung "foxtrot kilo delta india bravo golf"
+  0.0.2.0 Paragraph x=254000 y=2765927 text font=Regular size=139700 w=1715792 asc=100305 desc=28918 ink=gray(0) hung "lima echo juliet charlie hotel"
+  0.0.2.0 Paragraph x=254000 y=2598287 text font=Regular size=139700 w=768769 asc=100305 desc=28918 ink=gray(0) "alpha foxtrot"
+  0.0.3.0 Paragraph x=254000 y=2354447 text font=Regular size=139700 w=1886786 asc=100305 desc=28918 ink=gray(0) hung "juliet charlie hotel alpha foxtrot"
+  0.0.3.0 Paragraph x=254000 y=2186807 text font=Regular size=139700 w=1832302 asc=100305 desc=28918 ink=gray(0) hung "kilo delta india bravo golf lima"
+  0.0.3.0 Paragraph x=254000 y=2019167 text font=Regular size=139700 w=1801428 asc=100305 desc=28918 ink=gray(0) hung "echo juliet charlie hotel alpha"
+  0.0.3.0 Paragraph x=254000 y=1851527 text font=Regular size=139700 w=1964460 asc=100305 desc=28918 ink=gray(0) hung "foxtrot kilo delta india bravo golf"
+  0.0.3.0 Paragraph x=254000 y=1683887 text font=Regular size=139700 w=1715792 asc=100305 desc=28918 ink=gray(0) hung "lima echo juliet charlie hotel"
+  0.0.3.0 Paragraph x=254000 y=1516247 text font=Regular size=139700 w=1692743 asc=100305 desc=28918 ink=gray(0) hung "alpha foxtrot kilo delta india"
+  0.0.3.0 Paragraph x=254000 y=1348607 text font=Regular size=139700 w=2026345 asc=100305 desc=28918 ink=gray(0) hung "bravo golf lima echo juliet charlie"
+  0.0.3.0 Paragraph x=254000 y=1180967 text font=Regular size=139700 w=683411 asc=100305 desc=28918 ink=gray(0) "hotel alpha"
+  0.0.4.0 Paragraph x=254000 y=937127 text font=Regular size=139700 w=1801428 asc=100305 desc=28918 ink=gray(0) hung "echo juliet charlie hotel alpha"
+  0.0.4.0 Paragraph x=254000 y=769487 text font=Regular size=139700 w=1964460 asc=100305 desc=28918 ink=gray(0) hung "foxtrot kilo delta india bravo golf"
+  0.0.4.0 Paragraph x=254000 y=601847 text font=Regular size=139700 w=1715792 asc=100305 desc=28918 ink=gray(0) hung "lima echo juliet charlie hotel"
+  0.0.4.0 Paragraph x=254000 y=434207 text font=Regular size=139700 w=1692743 asc=100305 desc=28918 ink=gray(0) hung "alpha foxtrot kilo delta india"
+page 2 section=0 label=3 size=2540000x3810000 margin=254000
+  0.0.4.0 Paragraph x=254000 y=3436487 text font=Regular size=139700 w=2026345 asc=100305 desc=28918 ink=gray(0) hung "bravo golf lima echo juliet charlie"
+  0.0.4.0 Paragraph x=254000 y=3268847 text font=Regular size=139700 w=1700567 asc=100305 desc=28918 ink=gray(0) hung "hotel alpha foxtrot kilo delta"
+  0.0.4.0 Paragraph x=254000 y=3101207 text font=Regular size=139700 w=1909975 asc=100305 desc=28918 ink=gray(0) hung "india bravo golf lima echo juliet"
+  0.0.4.0 Paragraph x=254000 y=2933567 text font=Regular size=139700 w=753121 asc=100305 desc=28918 ink=gray(0) "charlie hotel"
+  0.0.5.0 Paragraph x=254000 y=2689727 text font=Regular size=139700 w=1715792 asc=100305 desc=28918 ink=gray(0) hung "lima echo juliet charlie hotel"
+  0.0.5.0 Paragraph x=254000 y=2522087 text font=Regular size=139700 w=1692743 asc=100305 desc=28918 ink=gray(0) hung "alpha foxtrot kilo delta india"
+  0.0.5.0 Paragraph x=254000 y=2354447 text font=Regular size=139700 w=2026345 asc=100305 desc=28918 ink=gray(0) hung "bravo golf lima echo juliet charlie"
+  0.0.5.0 Paragraph x=254000 y=2186807 text font=Regular size=139700 w=1700567 asc=100305 desc=28918 ink=gray(0) hung "hotel alpha foxtrot kilo delta"
+  0.0.5.0 Paragraph x=254000 y=2019167 text font=Regular size=139700 w=1909975 asc=100305 desc=28918 ink=gray(0) hung "india bravo golf lima echo juliet"
+  0.0.5.0 Paragraph x=254000 y=1851527 text font=Regular size=139700 w=1809113 asc=100305 desc=28918 ink=gray(0) hung "charlie hotel alpha foxtrot kilo"
+  0.0.5.0 Paragraph x=254000 y=1683887 text font=Regular size=139700 w=1925622 asc=100305 desc=28918 ink=gray(0) hung "delta india bravo golf lima echo"
+  0.0.5.0 Paragraph x=254000 y=1516247 text font=Regular size=139700 w=737474 asc=100305 desc=28918 ink=gray(0) "juliet charlie"
+block 0.0.0 Paragraph
+block 0.0.1 Paragraph
+block 0.0.2 Paragraph
+block 0.0.3 Paragraph
+block 0.0.4 Paragraph
+block 0.0.5 Paragraph

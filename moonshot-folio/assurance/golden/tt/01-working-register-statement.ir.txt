@@ -1,0 +1,19 @@
+# covers: the_working_register_keeps_its_ragged_edge; working_register_keeps_its_banner_fill_and_accent
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: column widths and alignment not carried
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    para role="masthead-entity" [t"Example Entity"]
+    para role="masthead-title" [t"Statement"]
+    para role="masthead-period" [t"For the year"]
+    table columns=3 repeat_header_rows=2
+      row split=false | text "Item" span=1 role="header" | text "2026" span=1 role="header" | text "2025" span=1 role="header"
+      row split=false | empty span=1 role="header" | text "$" span=1 role="header" | text "$" span=1 role="header"
+      row split=true | text "Assets" span=3 role="banner"
+      row split=true | text "Cash" span=1 role="data indent1" | text "100.00" span=1 role="figure" | text "90.00" span=1 role="figure"
+      row split=true | text "Receivables" span=1 role="data indent2" | text "(36.00)" span=1 role="figure" | text "-" span=1 role="figure"
+      row split=true | text "Subtotal" span=1 role="subtotal bold" | text "64.00" span=1 role="figure" | text "90.00" span=1 role="figure"
+      row split=true | text "Total" span=1 role="total bold" | text "64.00" span=1 role="figure" | text "90.00" span=1 role="figure"

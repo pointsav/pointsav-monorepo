@@ -1,0 +1,8 @@
+# covers: page_size_tabloid_and_legal_are_landscape_usable_for_a_wide_report
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=15544800 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    heading level=2 [t"Wide report"]

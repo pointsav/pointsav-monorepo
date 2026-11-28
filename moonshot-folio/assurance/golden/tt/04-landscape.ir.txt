@@ -1,0 +1,8 @@
+# covers: landscape_swaps_page_dimensions; landscape_emits_the_print_page_size_hint
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=10058400 height=7772400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    heading level=1 [t"Landscape"]

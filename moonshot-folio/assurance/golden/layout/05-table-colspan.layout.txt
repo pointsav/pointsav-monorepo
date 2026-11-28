@@ -1,0 +1,17 @@
+pagetree pages=1 substituted=0
+page 0 section=0 label=1 size=2540000x3810000 margin=254000
+  0.0.0.0.0 Artifact x=257175 y=3315335 rect w=1348316 h=237490 fill=gray(230) stroke=gray(128)@6350
+  0.0.0.0.0 TableCell x=292100 y=3398387 text font=Bold size=139700 w=675309 asc=100305 desc=28918 ink=gray(0) "Statement"
+  0.0.0.0.1 Artifact x=1611841 y=3315335 rect w=670984 h=237490 fill=gray(230) stroke=gray(128)@6350
+  0.0.0.0.1 TableCell x=1646766 y=3398387 text font=Bold size=139700 w=310692 asc=100305 desc=28918 ink=gray(0) "2026"
+  0.0.0.1.0 Artifact x=257175 y=3071495 rect w=670983 h=237490 fill=none stroke=gray(128)@6350
+  0.0.0.1.0 TableCell x=292100 y=3154547 text font=Regular size=139700 w=326059 asc=100305 desc=28918 ink=gray(0) "Cash"
+  0.0.0.1.1 Artifact x=934508 y=3071495 rect w=670983 h=237490 fill=none stroke=gray(128)@6350
+  0.0.0.1.1 TableCell x=1143364 y=3154547 text font=Regular size=139700 w=427202 asc=100305 desc=28918 ink=gray(0) "100.00"
+  0.0.0.1.2 Artifact x=1611841 y=3071495 rect w=670984 h=237490 fill=none stroke=gray(128)@6350
+  0.0.0.1.2 TableCell x=1929524 y=3154547 text font=Regular size=139700 w=318376 asc=100305 desc=28918 ink=gray(0) "-12.5"
+  0.0.0.2.0 Artifact x=257175 y=2492375 rect w=2025650 h=572770 fill=none stroke=gray(128)@6350
+  0.0.0.2.0 TableCell x=292100 y=2910707 text font=Regular size=139700 w=1886786 asc=100305 desc=28918 ink=gray(0) hung "juliet charlie hotel alpha foxtrot"
+  0.0.0.2.0 TableCell x=292100 y=2743067 text font=Regular size=139700 w=1832302 asc=100305 desc=28918 ink=gray(0) hung "kilo delta india bravo golf lima"
+  0.0.0.2.0 TableCell x=292100 y=2575427 text font=Regular size=139700 w=302869 asc=100305 desc=28918 ink=gray(0) "echo"
+block 0.0.0 Table header_rows=1 spans=[[2, 1], [1, 1, 1], [3]]

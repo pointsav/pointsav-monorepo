@@ -1,0 +1,12 @@
+# covers: every_justified_line_but_the_last_ends_exactly_on_the_right_margin; consecutive_paragraphs_are_ten_points_apart; body_leading_is_exactly_twelve_points_not_a_multiple_of_the_font_size
+# note: register WorkingDocument not carried (style role mapping is a tokens task)
+# note: paragraph indent and spacing not carried
+# note: paragraph indent and spacing not carried
+document title="Synthetic" author="Synthetic" date=2026-01-01 lang=en
+  section width=7772400 height=10058400 margin=914400
+    different_first_page
+    footer
+    para role="page-number" [field:page]
+    para role="body" [t"A long paragraph that wraps across several lines when set justified."]
+    para role="body" [t"A second paragraph."]
+    para role="note" [t"Note text."]
