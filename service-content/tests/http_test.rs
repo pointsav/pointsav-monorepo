@@ -1102,6 +1102,7 @@ const CAPABILITY_GATED_ROUTES: &[(&str, &str, &str)] = &[
     ("GET", "/v1/graph/delta?module_id=pointsav&since=0", ""),
     ("GET", "/v1/graph/cleanup?module_id=pointsav&dry_run=true", ""),
     ("POST", "/v1/graph/enrich", r#"{"module_id":"pointsav"}"#),
+    ("POST", "/v1/draft/generate", r#"{"module_id":"pointsav"}"#),
     (
         "POST",
         "/v1/ingest",
@@ -1112,6 +1113,10 @@ const CAPABILITY_GATED_ROUTES: &[(&str, &str, &str)] = &[
 const ADMIN_GATED_ROUTES: &[(&str, &str, &str)] = &[
     ("GET", "/v1/config/domains", ""),
     ("GET", "/v1/pairs", ""),
+    ("GET", "/v1/graph/pending", ""),
+    // Malformed body on purpose: an allowed caller reaches the handler and gets
+    // a 4xx from the JSON extractor, never the 401/403 these tests look for.
+    ("POST", "/v1/graph/verdict", "{}"),
     ("GET", "/v1/pair/token?role=USER&node_label=n&archive_scope=pointsav", ""),
 ];
 
@@ -1248,4 +1253,36 @@ async fn admin_gated_routes_refuse_a_user_header_and_accept_an_admin_header() {
             resp.status()
         );
     }
+}
+
+// ── /v1/draft/generate scope check ────────────────────────────────────────────
+
+#[tokio::test]
+async fn draft_generate_refuses_a_capability_scoped_to_another_archive() {
+    let (app, state) = test_app_requiring_capability();
+    let token = fresh_token(&state, 100, "USER"); // scoped to "pointsav"
+    let resp = app
+        .oneshot(route_request(
+            ("POST", "/v1/draft/generate", r#"{"module_id":"tenant-a"}"#),
+            "203.0.113.5:4000",
+            Some(&token),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::FORBIDDEN);
+}
+
+#[tokio::test]
+async fn draft_generate_without_a_module_id_cannot_be_scoped_and_is_refused() {
+    let (app, state) = test_app_requiring_capability();
+    let token = fresh_token(&state, 101, "USER");
+    let resp = app
+        .oneshot(route_request(
+            ("POST", "/v1/draft/generate", r#"{"query_hint":"x"}"#),
+            "203.0.113.5:4000",
+            Some(&token),
+        ))
+        .await
+        .unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
 }

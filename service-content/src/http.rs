@@ -1283,8 +1283,11 @@ async fn capability_gate(
     // delta; needs the same body-parsing path as mutate, not the query-string
     // fallback below (which would always return None for a JSON POST).
     let is_ingest_route = req.method() == Method::POST && req.uri().path() == "/v1/ingest";
+    // /v1/draft/generate also carries module_id in the JSON body; it is a read
+    // (of the graph) so it is not a write route for the scope check.
+    let is_draft_route = req.method() == Method::POST && req.uri().path() == "/v1/draft/generate";
 
-    let (req, target_module_id) = if is_mutate_route || is_ingest_route {
+    let (req, target_module_id) = if is_mutate_route || is_ingest_route || is_draft_route {
         let (parts, body) = req.into_parts();
         let bytes = to_bytes(body, 10 * 1024 * 1024).await.map_err(|e| {
             (
@@ -1405,7 +1408,8 @@ pub fn router(state: Arc<HttpState>) -> Router {
     // SERVICE_CONTENT_REQUIRE_CAPABILITY is off, or from a loopback peer when it
     // is on (the co-resident Doorman). `/v1/graph/cleanup` deletes entities in
     // bulk when `dry_run=false`; `/v1/ingest` writes a corpus document and
-    // carries its module_id in the JSON body.
+    // carries its module_id in the JSON body. `/v1/draft/generate` reads one
+    // module's graph and spends model budget; its module_id is in the body too.
     let capability_gated = Router::new()
         .route("/v1/graph/context", get(graph_context))
         .route("/v1/graph/mutate", post(graph_mutate))
@@ -1414,17 +1418,21 @@ pub fn router(state: Arc<HttpState>) -> Router {
         .route("/v1/graph/cleanup", get(graph_cleanup))
         .route("/v1/graph/enrich", post(graph_enrich))
         .route("/v1/ingest", post(ingest_document))
+        .route("/v1/draft/generate", post(draft_generate))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             capability_gate,
         ));
 
     // Global routes with no per-archive module_id to scope against: the
-    // taxonomy config routes, minting invite tokens and listing pairings. A
-    // presented header must carry an ADMIN grant.
+    // taxonomy config routes, minting invite tokens, listing pairings, and the
+    // SYS-ADR-19 write-governance review pair (held writes across every module;
+    // a human reviewer's verdict). A presented header must carry an ADMIN grant.
     let admin_gated = config_routes()
         .route("/v1/pair/token", get(issue_pair_token))
         .route("/v1/pairs", get(list_pairs))
+        .route("/v1/graph/pending", get(graph_pending))
+        .route("/v1/graph/verdict", post(graph_verdict))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             admin_capability_gate,
@@ -1432,10 +1440,7 @@ pub fn router(state: Arc<HttpState>) -> Router {
 
     Router::new()
         .route("/healthz", get(healthz))
-        .route("/v1/draft/generate", post(draft_generate))
         .route("/v1/pair", post(pair_peer))
-        .route("/v1/graph/pending", get(graph_pending))
-        .route("/v1/graph/verdict", post(graph_verdict))
         .merge(capability_gated)
         .merge(admin_gated)
         .with_state(state)
