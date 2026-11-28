@@ -211,19 +211,68 @@ fn adapter_max_bytes() -> u64 {
         .unwrap_or(512 * 1024 * 1024)
 }
 
-/// True when `url` starts with one of the comma-separated allow-list
-/// prefixes and the match ends on a path boundary (so `http://h:9000` does not
-/// admit `http://h:9000.evil.example/`). An empty list admits nothing.
-fn source_allowed(url: &str, allowlist: &str) -> bool {
-    allowlist
+/// Why a pull `source_url` was refused before any connection was made.
+#[derive(Debug, PartialEq, Eq)]
+enum SourceRefusal {
+    /// Not a parseable absolute URL, or not `http`/`https`, or has no host.
+    Invalid(&'static str),
+    /// Carries `user[:password]@` userinfo.
+    Userinfo,
+    /// Parsed host (and port, when the entry names one) is not allow-listed.
+    NotListed,
+}
+
+/// One allow-list entry: a host, optionally with a port. Entries may be
+/// written `host`, `host:port`, `[v6]:port` or a full `http(s)://host[:port]`
+/// URL (only its host and port are used; a path is ignored).
+fn parse_allow_entry(entry: &str) -> Option<(String, Option<u16>)> {
+    let with_scheme = if entry.contains("://") {
+        entry.to_string()
+    } else {
+        format!("http://{entry}")
+    };
+    let u = reqwest::Url::parse(&with_scheme).ok()?;
+    if !u.username().is_empty() || u.password().is_some() {
+        return None;
+    }
+    let host = u.host_str()?.to_string();
+    let port = if entry.contains("://") {
+        u.port_or_known_default()
+    } else {
+        u.port()
+    };
+    Some((host, port))
+}
+
+/// Validate `url` against the comma-separated host allow-list. The URL is
+/// parsed first and the decision is made on the parsed host (and port, where
+/// the entry names one), never on a string prefix, so `http://good@evil/`,
+/// `http://good.evil.example/` and `http://good:80@evil/` cannot pass. An
+/// empty list admits nothing. Userinfo is refused outright.
+fn check_source(url: &str, allowlist: &str) -> Result<(), SourceRefusal> {
+    let u = reqwest::Url::parse(url)
+        .map_err(|_| SourceRefusal::Invalid("source_url is not a valid URL"))?;
+    if !matches!(u.scheme(), "http" | "https") {
+        return Err(SourceRefusal::Invalid("source_url must be http or https"));
+    }
+    if !u.username().is_empty() || u.password().is_some() {
+        return Err(SourceRefusal::Userinfo);
+    }
+    let host = u
+        .host_str()
+        .ok_or(SourceRefusal::Invalid("source_url has no host"))?;
+    let port = u.port_or_known_default();
+    let listed = allowlist
         .split(',')
         .map(str::trim)
-        .filter(|p| !p.is_empty())
-        .any(|prefix| {
-            url.strip_prefix(prefix).is_some_and(|rest| {
-                prefix.ends_with('/') || rest.is_empty() || rest.starts_with(['/', '?'])
-            })
-        })
+        .filter(|e| !e.is_empty())
+        .filter_map(parse_allow_entry)
+        .any(|(h, p)| h == host && p.is_none_or(|p| Some(p) == port));
+    if listed {
+        Ok(())
+    } else {
+        Err(SourceRefusal::NotListed)
+    }
 }
 
 fn bad_job_id() -> Response {
@@ -255,26 +304,46 @@ struct PullAdapterResponse {
 /// small follow-up, not done here to keep this change minimal and
 /// reviewable.
 async fn pull_adapter(Json(req): Json<PullAdapterRequest>) -> Response {
+    let allowlist = std::env::var("ADAPTER_SOURCE_ALLOWLIST").unwrap_or_default();
+    pull_adapter_from(req, &allowlist, &adapter_storage_dir()).await
+}
+
+async fn pull_adapter_from(
+    req: PullAdapterRequest,
+    allowlist: &str,
+    dir: &std::path::Path,
+) -> Response {
     if !valid_adapter_job_id(&req.job_id) {
         return bad_job_id();
     }
-    if !(req.source_url.starts_with("http://") || req.source_url.starts_with("https://")) {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(serde_json::json!({"error": "source_url must be http or https"})),
-        )
-            .into_response();
+    match check_source(&req.source_url, allowlist) {
+        Ok(()) => {}
+        Err(SourceRefusal::Invalid(msg)) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({ "error": msg })),
+            )
+                .into_response();
+        }
+        Err(SourceRefusal::Userinfo) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "source_url must not contain credentials"})),
+            )
+                .into_response();
+        }
+        Err(SourceRefusal::NotListed) => {
+            return (
+                StatusCode::FORBIDDEN,
+                Json(serde_json::json!({
+                    "error": "source_url host is not on ADAPTER_SOURCE_ALLOWLIST (unset = all refused)"
+                })),
+            )
+                .into_response();
+        }
     }
-    let allowlist = std::env::var("ADAPTER_SOURCE_ALLOWLIST").unwrap_or_default();
-    if !source_allowed(&req.source_url, &allowlist) {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(serde_json::json!({
-                "error": "source_url is not on ADAPTER_SOURCE_ALLOWLIST (unset = all refused)"
-            })),
-        )
-            .into_response();
-    }
+    // Redirects are never followed, so a listed host cannot bounce the pull to
+    // an unlisted one; a 3xx is reported as a failed fetch.
     let client = match ReqwestClient::builder()
         .redirect(reqwest::redirect::Policy::none())
         .timeout(std::time::Duration::from_secs(60))
@@ -330,8 +399,7 @@ async fn pull_adapter(Json(req): Json<PullAdapterRequest>) -> Response {
             }
         }
     }
-    let dir = adapter_storage_dir();
-    if let Err(e) = tokio::fs::create_dir_all(&dir).await {
+    if let Err(e) = tokio::fs::create_dir_all(dir).await {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({"error": format!("mkdir failed: {e}")})),
@@ -3103,29 +3171,155 @@ mod prometheus_line_tests {
 
 #[cfg(test)]
 mod adapter_source_allowlist_tests {
-    use super::source_allowed;
+    use super::{check_source, pull_adapter_from, PullAdapterRequest, SourceRefusal};
+    use axum::http::StatusCode;
+    use axum::response::IntoResponse;
+    use wiremock::matchers::method;
+    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[test]
     fn empty_or_unset_allowlist_admits_nothing() {
-        assert!(!source_allowed("http://10.0.0.5:9000/x", ""));
-        assert!(!source_allowed("http://10.0.0.5:9000/x", " , "));
+        for list in ["", " , ", ","] {
+            assert_eq!(
+                check_source("http://10.0.0.5:9000/x", list),
+                Err(SourceRefusal::NotListed)
+            );
+        }
     }
 
     #[test]
-    fn matches_prefix_on_a_path_boundary_only() {
-        let list = "http://10.0.0.5:9000, https://trainer.internal/api/";
-        assert!(source_allowed("http://10.0.0.5:9000", list));
-        assert!(source_allowed(
-            "http://10.0.0.5:9000/v1/jobs/1/download",
-            list
-        ));
-        assert!(source_allowed("https://trainer.internal/api/jobs/9", list));
-        assert!(!source_allowed("http://10.0.0.5:9000.evil.example/x", list));
-        assert!(!source_allowed("http://10.0.0.5:90001/x", list));
-        assert!(!source_allowed(
+    fn listed_host_passes_and_unlisted_is_refused() {
+        let list = "10.0.0.5:9000, trainer.internal, https://shim.internal/api/";
+        assert!(check_source("http://10.0.0.5:9000/v1/jobs/1/download", list).is_ok());
+        assert!(check_source("http://10.0.0.5:9000", list).is_ok());
+        assert!(check_source("https://trainer.internal/api/jobs/9", list).is_ok());
+        assert!(check_source("http://TRAINER.internal:8080/x", list).is_ok());
+        assert!(check_source("https://shim.internal/other", list).is_ok());
+        for bad in [
+            "http://10.0.0.5:9001/x",
+            "http://10.0.0.6:9000/x",
             "http://169.254.169.254/latest/meta-data",
-            list
-        ));
-        assert!(!source_allowed("https://trainer.internal/other", list));
+            "http://trainer.internal.evil.example/x",
+            "http://eviltrainer.internal/x",
+            "http://shim.internal:8443/x",
+        ] {
+            assert_eq!(
+                check_source(bad, list),
+                Err(SourceRefusal::NotListed),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn userinfo_and_non_http_schemes_are_refused() {
+        let list = "trainer.internal";
+        for bad in [
+            "http://trainer.internal@evil.example/x",
+            "http://trainer.internal:80@evil.example/x",
+            "http://user:pw@trainer.internal/x",
+        ] {
+            assert!(
+                matches!(
+                    check_source(bad, list),
+                    Err(SourceRefusal::Userinfo | SourceRefusal::NotListed)
+                ),
+                "{bad}"
+            );
+        }
+        assert_eq!(
+            check_source("http://user@trainer.internal/x", list),
+            Err(SourceRefusal::Userinfo)
+        );
+        for bad in [
+            "file:///etc/passwd",
+            "ftp://trainer.internal/x",
+            "trainer.internal/x",
+            "",
+        ] {
+            assert!(
+                matches!(check_source(bad, list), Err(SourceRefusal::Invalid(_))),
+                "{bad}"
+            );
+        }
+    }
+
+    fn tmp_dir(tag: &str) -> std::path::PathBuf {
+        let d = std::env::temp_dir().join(format!("adapter-pull-{tag}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        d
+    }
+
+    async fn pull(url: String, list: &str, dir: &std::path::Path) -> StatusCode {
+        pull_adapter_from(
+            PullAdapterRequest {
+                job_id: "j1".into(),
+                source_url: url,
+            },
+            list,
+            dir,
+        )
+        .await
+        .into_response()
+        .status()
+    }
+
+    #[tokio::test]
+    async fn pull_refuses_when_list_empty_and_fetches_when_listed() {
+        let src = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(b"abc".to_vec()))
+            .mount(&src)
+            .await;
+        let url = format!("{}/download", src.uri());
+        let dir = tmp_dir("ok");
+        assert_eq!(pull(url.clone(), "", &dir).await, StatusCode::FORBIDDEN);
+        assert!(src.received_requests().await.unwrap().is_empty());
+        let list = format!("127.0.0.1:{}", src.address().port());
+        assert_eq!(pull(url, &list, &dir).await, StatusCode::OK);
+        assert_eq!(std::fs::read(dir.join("j1.tar.gz")).unwrap(), b"abc");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[tokio::test]
+    async fn pull_refuses_unlisted_host_without_connecting() {
+        let src = MockServer::start().await;
+        let dir = tmp_dir("unlisted");
+        let url = format!("{}/download", src.uri());
+        assert_eq!(
+            pull(url, "trainer.internal", &dir).await,
+            StatusCode::FORBIDDEN
+        );
+        assert!(src.received_requests().await.unwrap().is_empty());
+        assert!(!dir.join("j1.tar.gz").exists());
+    }
+
+    #[tokio::test]
+    async fn pull_does_not_follow_redirect_to_an_unlisted_host() {
+        let target = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(ResponseTemplate::new(200).set_body_bytes(b"secret".to_vec()))
+            .mount(&target)
+            .await;
+        let listed = MockServer::start().await;
+        Mock::given(method("GET"))
+            .respond_with(
+                ResponseTemplate::new(302)
+                    .insert_header("location", format!("{}/steal", target.uri())),
+            )
+            .mount(&listed)
+            .await;
+        let dir = tmp_dir("redirect");
+        // Only the first server's host:port is listed; both are on 127.0.0.1,
+        // so the port is what separates "listed" from "unlisted".
+        let list = format!("127.0.0.1:{}", listed.address().port());
+        let status = pull(format!("{}/download", listed.uri()), &list, &dir).await;
+        assert_eq!(status, StatusCode::BAD_GATEWAY);
+        assert_eq!(listed.received_requests().await.unwrap().len(), 1);
+        assert!(
+            target.received_requests().await.unwrap().is_empty(),
+            "redirect target must never be contacted"
+        );
+        assert!(!dir.join("j1.tar.gz").exists());
     }
 }
