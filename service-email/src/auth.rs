@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0 OR MIT
+// SPDX-License-Identifier: Apache-2.0
 
 //! EWS credential reader — consumes a pre-acquired OAuth 2.0 access
 //! token from the `AZURE_ACCESS_TOKEN` environment variable.
